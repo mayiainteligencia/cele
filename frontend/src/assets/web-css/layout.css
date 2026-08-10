@@ -1,0 +1,662 @@
+/* ============================================
+   Cerebro Electoral — LAYOUT
+   ============================================
+   Escenario principal, sidebar, barra flotante
+   y breakpoints.
+
+   El home es un lienzo: la imagen ocupa todo y
+   las tarjetas flotan encima. Las páginas
+   internas (dashboard, agente, perfil…) pisan
+   .main con su propio display en su CSS.
+   ============================================ */
+
+.main {
+  position: relative;
+  min-height: 100vh;
+  margin-left: calc(var(--sidebar-width) + var(--space-lg));
+  padding: var(--space-lg) var(--space-xl) var(--space-xl) var(--space-md);
+  padding-top: calc(var(--filter-bar-height) + var(--space-xl));
+  overflow: hidden;
+}
+
+
+/* ════════════════════════════════════════════
+   ESCENARIO DEL HOME
+   ════════════════════════════════════════════
+   La imagen llena el bloque; el título y las
+   tarjetas se posicionan sobre ella.
+   ════════════════════════════════════════════ */
+
+/* Ancho de la tarjeta y radio del mordisco: los usan
+   tanto la tarjeta como el logo que encaja en él. */
+.main--home {
+  --svc-card-w: min(380px, 42vw);
+  --svc-notch: 56px;      /* radio del mordisco */
+  --svc-notch-up: 18px;   /* qué tan arriba del borde inferior */
+  --dc-logo-r: 42px;      /* radio real del logo, borde incluido */
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: var(--filter-bar-height) var(--space-lg) var(--space-lg);
+}
+
+/* ── Imagen de fondo: cubre el viewport entero ── */
+
+.bg-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  /* Fotograma de respaldo: se ve si el video no carga
+     o si el sistema pide menos movimiento. */
+  background: #0b1220 url('/assets/images/earth.png') center / cover no-repeat;
+}
+
+.bg-stage__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* El video ya viene montado ida y vuelta, así que el
+   loop nativo basta: no hace falta invertirlo por JS. */
+@media (prefers-reduced-motion: reduce) {
+  .bg-stage__video { display: none; }
+}
+
+/* Velo para que el texto blanco siempre tenga contraste */
+.bg-stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.18) 0%, transparent 32%),
+    linear-gradient(0deg, rgba(15, 23, 42, 0.16) 0%, transparent 32%);
+}
+
+/* Todo lo demás va por encima de la imagen */
+body[data-page="inicio"] .main,
+body[data-page="inicio"] .sidebar,
+body[data-page="inicio"] .filter-bar {
+  position: relative;
+  z-index: var(--z-cards);
+}
+
+body[data-page="inicio"] .sidebar { position: fixed; z-index: var(--z-sidebar); }
+body[data-page="inicio"] .filter-bar { position: fixed; z-index: var(--z-filter-bar); }
+
+.hero {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.hero__content {
+  flex: 1;
+  padding: var(--space-2xl) var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.hero__content .text-hero {
+  text-align: center;
+  max-width: 12ch;
+}
+
+.hero__description {
+  margin-top: var(--space-xl);
+  align-self: flex-start;
+  max-width: 34ch;
+  color: rgba(255, 255, 255, 0.90);
+  text-shadow: 0 1px 16px rgba(15, 23, 42, 0.6);
+}
+
+
+/* ── Tarjetas flotantes sobre la imagen ──
+   El selector lleva .main--home a propósito: así gana
+   sobre .gated (auth.css), que pone position:relative
+   y sacaría la tarjeta de su sitio al bloquearla. */
+
+.main--home .stats-card,
+.main--home .service-card {
+  position: absolute;
+  bottom: var(--space-xl);
+  z-index: var(--z-cards);
+  padding: var(--space-lg);
+  /* Radio grande: las tarjetas repiten las formas
+     redondeadas de la arquitectura de la imagen. */
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.main--home .stats-card {
+  left: var(--space-xl);
+  bottom: var(--space-2xl);
+  width: min(340px, 40vw);
+}
+
+.main--home .service-card {
+  right: var(--space-xl);
+  width: var(--svc-card-w);
+  bottom: var(--space-2xl);
+  gap: var(--space-md);
+
+  /* Forma orgánica: en vez de un rectángulo, la tarjeta
+     se muerde en la esquina inferior izquierda para dejar
+     pasar el logo. El radio asimétrico rompe la simetría. */
+  border-radius: var(--radius-xl) var(--radius-xl) var(--radius-xl) 56px;
+  -webkit-mask-image: radial-gradient(circle var(--svc-notch)
+    at 0 calc(100% - var(--svc-notch-up)), transparent 99.5%, #000 100%);
+  mask-image: radial-gradient(circle var(--svc-notch)
+    at 0 calc(100% - var(--svc-notch-up)), transparent 99.5%, #000 100%);
+}
+
+/* El logo se acomoda dentro del mordisco */
+body[data-page="inicio"] .dc-logo {
+  left: auto;
+  /* Concéntrico con el mordisco */
+  right: calc(var(--space-xl) + var(--svc-card-w) - var(--dc-logo-r));
+  bottom: calc(var(--space-2xl) + var(--svc-notch-up) - var(--dc-logo-r));
+  transform: none;
+}
+
+body[data-page="inicio"] .dc-logo:hover {
+  transform: scale(1.06);
+}
+
+
+/* ════════════════════════════════════════════
+   STATS CARD
+   ════════════════════════════════════════════ */
+
+.stats-card__desc {
+  max-width: 320px;
+}
+
+.stats-card__bottom {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: var(--space-sm);
+}
+
+.stats-card__metric {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  margin-right: auto;
+}
+
+.stats-card__avatars {
+  display: flex;
+}
+
+.stats-card__avatars .avatar {
+  margin-left: -10px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+}
+
+.stats-card__avatars .avatar:first-child {
+  margin-left: 0;
+}
+
+
+/* ════════════════════════════════════════════
+   SERVICE CARD
+   ════════════════════════════════════════════ */
+
+.service-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-md);
+}
+
+.service-card__location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--space-2xs);
+}
+
+.service-card__specs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-sm) var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-light);
+}
+
+.service-card__actions {
+  display: flex;
+  gap: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-light);
+}
+
+
+/* ════════════════════════════════════════════
+   SIDEBAR
+   ════════════════════════════════════════════ */
+
+.sidebar {
+  position: fixed;
+  left: var(--space-lg);
+  top: calc(var(--filter-bar-height) + var(--space-xl));
+  bottom: var(--space-xl);
+  width: var(--sidebar-width);
+  z-index: var(--z-sidebar);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-sm);
+  padding: 0;
+  /* Sin riel: cada icono es un círculo independiente */
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  animation: fadeInLeft 0.6s ease forwards;
+}
+
+.sidebar__avatar {
+  margin-bottom: var(--space-sm);
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+  align-items: center;
+}
+
+
+/* ════════════════════════════════════════════
+   BARRA FLOTANTE SUPERIOR
+   ════════════════════════════════════════════ */
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 6px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  position: fixed;
+  top: var(--space-md);
+  left: calc(var(--sidebar-width) + var(--space-xl));
+  right: var(--space-lg);
+  z-index: var(--z-filter-bar);
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+
+/* ════════════════════════════════════════════
+   HEADER TIPO NOTCH
+   ════════════════════════════════════════════
+   Tres piezas sueltas: pill izquierda, notch
+   colgando del borde superior, pill derecha.
+   ════════════════════════════════════════════ */
+
+.filter-bar--notch {
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0 var(--space-lg);
+  gap: var(--space-md);
+  justify-content: space-between;
+  align-items: flex-start;
+  /* El contenedor no se ve: solo posiciona */
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-radius: 0;
+  pointer-events: none;
+}
+
+
+.filter-bar--notch > * {
+  pointer-events: auto;
+}
+
+/* Piezas laterales, independientes del notch */
+.topbar-side,
+.filter-bar--notch #auth-slot > * {
+  margin-top: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 18px 8px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.90);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 10px 30px -10px rgba(23, 30, 56, 0.35);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-heading);
+  white-space: nowrap;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.topbar-side:hover,
+.filter-bar--notch #auth-slot > *:hover {
+  transform: scale(1.04);
+  box-shadow: 0 14px 36px -10px rgba(23, 30, 56, 0.45);
+}
+
+.topbar-side__icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--accent-blue-light);
+  color: var(--accent-navy);
+}
+
+.topbar-side__icon svg { width: 15px; height: 15px; }
+
+/* El notch cuelga del borde: arriba recto, abajo muy redondo.
+   Va absoluto para quedar centrado en el viewport sin que lo
+   desplacen los anchos distintos de las piezas laterales. */
+.topbar-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 10px 12px 14px;
+  min-width: min(560px, 46vw);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(28px) saturate(170%);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  box-shadow: 0 14px 40px -14px rgba(23, 30, 56, 0.45);
+  /* Animación propia: fadeInUp pisaría el translateX
+     del centrado y el notch se iría a la derecha. */
+  animation: notchDrop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes notchDrop {
+  from { opacity: 0; transform: translateX(-50%) translateY(-14px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+
+/* ════════════════════════════════════════════
+   LOGO Y BURBUJA DEL AGENTE
+   ════════════════════════════════════════════ */
+
+.dc-logo {
+  position: fixed;
+  bottom: var(--space-2xl);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-cards);
+}
+
+.agent-bubble {
+  position: fixed;
+  bottom: var(--space-xl);
+  right: var(--space-xl);
+  z-index: var(--z-agent);
+}
+
+body[data-page="inicio"] .agent-bubble {
+  bottom: auto;
+  top: calc(var(--filter-bar-height) + var(--space-2xl));
+  right: var(--space-2xl);
+}
+
+
+/* ════════════════════════════════════════════
+   BLOBS (decorativos)
+   ════════════════════════════════════════════ */
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: var(--z-blobs);
+}
+
+.blob--primary {
+  width: 350px;
+  height: 350px;
+  background: var(--blob-primary);
+  top: -50px;
+  right: 10%;
+}
+
+.blob--secondary {
+  width: 250px;
+  height: 250px;
+  background: var(--blob-secondary);
+  bottom: 20%;
+  left: 5%;
+}
+
+
+/* ════════════════════════════════════════════
+   RESPONSIVE — Tablet (≤ 1024px)
+   ════════════════════════════════════════════
+   Las tarjetas dejan de flotar y bajan a flujo
+   normal: encima de la imagen no caben.
+   ════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .main {
+    margin-left: 0;
+    padding: var(--space-md);
+    padding-bottom: calc(var(--sidebar-width-mobile) + var(--space-2xl));
+  }
+
+  .main--home {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    padding-bottom: calc(var(--sidebar-width-mobile) + var(--space-2xl));
+  }
+
+  .hero {
+    flex: none;
+    min-height: 420px;
+    border-radius: var(--radius-lg);
+  }
+
+  body[data-page="inicio"] .agent-bubble {
+    bottom: var(--space-xl);
+    top: auto;
+    right: var(--space-xl);
+  }
+
+  .hero__content {
+    position: relative;
+    padding: var(--space-2xl) var(--space-lg);
+    min-height: 420px;
+    justify-content: center;
+  }
+
+  .main--home .stats-card,
+  .main--home .service-card {
+    position: relative;
+    inset: auto;
+    width: auto;
+  }
+
+  .main--home .service-card {
+    border-radius: var(--radius-xl);
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .sidebar {
+    top: auto;
+    bottom: var(--space-sm);
+    left: var(--space-sm);
+    right: var(--space-sm);
+    width: auto;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 0;
+  }
+
+  .sidebar__avatar { margin-bottom: 0; }
+
+  .sidebar__nav {
+    flex-direction: row;
+    gap: var(--space-sm);
+    width: auto;
+  }
+
+  .sidebar__logout { margin-top: 0; }
+
+  .filter-bar {
+    position: static;
+    margin: 0 0 var(--space-md) 0;
+    flex-wrap: wrap;
+    border-radius: var(--radius-lg);
+  }
+
+  /* Sin borde superior del que colgar, el notch
+     pasa a ser una tarjeta más de la columna. */
+  .filter-bar--notch {
+    padding: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-xs);
+  }
+
+
+  .topbar-notch {
+    position: static;
+    transform: none;
+    animation: fadeInUp 0.5s ease both;
+    min-width: 0;
+    width: 100%;
+    padding: 8px;
+    /* Apilado no cuelga de ningún borde: radio normal */
+    border-radius: var(--radius-lg);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .topbar-side,
+  .filter-bar--notch #auth-slot > * {
+    margin-top: 0;
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .filter-bar--notch #auth-slot { width: 100%; }
+
+  body[data-page="inicio"] .filter-bar { position: static; }
+
+
+
+
+  /* components.css define .dc-logo{display:flex} y se carga
+     después: hace falta más especificidad para ocultarlo. */
+  body .dc-logo {
+    display: none;
+  }
+
+  .blob--primary { width: 220px; height: 220px; }
+  .blob--secondary { width: 160px; height: 160px; }
+}
+
+
+/* ════════════════════════════════════════════
+   RESPONSIVE — Mobile (≤ 768px)
+   ════════════════════════════════════════════
+   La sidebar se convierte en barra inferior.
+   ════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .main,
+  .main--home {
+    padding: var(--space-sm);
+    padding-bottom: calc(var(--sidebar-width-mobile) + var(--space-2xl));
+  }
+
+  /* La barra se apila y deja de ser fija: apilada mide
+     tres renglones y taparía el hero. */
+  .filter-bar {
+    margin: 0 var(--space-sm) var(--space-sm);
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xs);
+  }
+
+  .filter-bar > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .filter-bar .brief-input {
+    flex: 1 1 100%;
+    order: 2;
+  }
+
+  .filter-bar .filter-pill--cta {
+    flex: 1 1 auto;
+    justify-content: center;
+    margin-left: 0;
+    order: 3;
+  }
+
+  .filter-bar #auth-slot {
+    flex: 1 1 auto;
+    order: 4;
+  }
+
+  .filter-bar #auth-slot > * { width: 100%; justify-content: center; }
+
+  .sidebar { gap: var(--space-xs); }
+  .sidebar__nav { gap: var(--space-xs); }
+
+  .hero {
+    min-height: 340px;
+    border-radius: var(--radius-md);
+  }
+
+  .hero__content {
+    min-height: 340px;
+    padding: var(--space-xl) var(--space-md);
+  }
+
+  .hero__description {
+    align-self: center;
+    text-align: center;
+  }
+
+  .service-card__specs {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-bubble {
+    bottom: calc(var(--sidebar-width-mobile) + var(--space-xl));
+    right: var(--space-md);
+  }
+}

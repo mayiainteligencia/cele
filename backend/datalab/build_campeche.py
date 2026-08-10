@@ -51,8 +51,11 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[2]
 KML = RAIZ / "backend/datalab/uploads/campeche_escuelas.kml"
-OUT_JSON = RAIZ / "frontend/src/data/campeche.json"
-OUT_GEO = RAIZ / "frontend/public/data/geo.json"
+# Destino principal: el frontend estatico (web/). Los dos de frontend/ son del
+# React que se esta reemplazando; se pueden borrar cuando termine la migracion.
+OUT_JSON = RAIZ / "web/data/campeche.json"
+OUT_GEO = RAIZ / "web/data/geo.json"
+OUT_LEGACY = [RAIZ / "frontend/src/data/campeche.json", RAIZ / "frontend/public/data/geo.json"]
 
 KML_URL = ("https://www.google.com/maps/d/kml"
            "?mid=1flJedNDzc7hAyX4R9UWW3JEElcVInWw&forcekml=1")
@@ -684,6 +687,10 @@ def build():
     OUT_GEO.parent.mkdir(parents=True, exist_ok=True)
     OUT_JSON.write_text(json.dumps(datos, ensure_ascii=False, indent=1), encoding="utf8")
     OUT_GEO.write_text(json.dumps(padron, ensure_ascii=False), encoding="utf8")
+    # Copias para el React heredado, mientras siga en pie.
+    for destino, contenido in zip(OUT_LEGACY, (datos, padron)):
+        if destino.parent.exists():
+            destino.write_text(json.dumps(contenido, ensure_ascii=False), encoding="utf8")
     return datos, padron
 
 

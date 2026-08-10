@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { ResponsiveLayout } from './components/ResponsiveLayout';
-import { Sidebar } from './components/Sidebar';
-import { Header } from './components/Header';
+import { useState, useEffect } from 'react';
+import { WebSidebar } from './components/WebSidebar';
+import { WebHeader } from './components/WebHeader';
+import { Inicio } from './components/Inicio';
 import { Dashboard } from './components/Dashboard';
 import { Ciberseguridad } from './components/departamentos/Ciberseguridad';
 import { Playground } from './components/departamentos/Playground';
@@ -17,54 +17,78 @@ import { ResultadosElectorales } from './components/ResultadosElectorales';
 import { AlertasElectoral } from './components/AlertasElectoral';
 import { ToastProvider } from './components/electoral/toast';
 import { ConfirmProvider } from './components/electoral/confirm';
-import { brandingConfig } from './config/branding';
-import { tituloDe } from './config/menu';
-
 
 import './responsive.css';
 
 function App() {
-  const [activeSection, setActiveSection] = useState('dashboard');
-  const { colores } = brandingConfig;
+  const [activeSection, setActiveSection] = useState('inicio');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sectionFromUrl = params.get('section');
+    if (sectionFromUrl) {
+      setActiveSection(sectionFromUrl);
+    }
+  }, []);
 
   const renderContent = () => {
     switch (activeSection) {
+      case 'inicio':         return <Inicio onSectionChange={setActiveSection} />;
       case 'dashboard':      return <Dashboard onSectionChange={setActiveSection} />;
       case 'ciberseguridad': return <Ciberseguridad />;
       case 'playground':     return <Playground />;
       case 'academia':       return <Academia />;
-
-      case 'monitor': return <MonitorMedios />;
-      case 'monitoria': return <MonitorIA />;
-      case 'comando': return <ComandoCentral />;
-      case 'mapa': return <MapaCampeche />;
-      case 'resultados': return <ResultadosElectorales />;
-      case 'alertas': return <AlertasElectoral />;
-      case 'digital': return <MonitorDigital />;
-      case 'electoral': return <InteligenciaElectoral />;
+      case 'monitor':        return <MonitorMedios />;
+      case 'monitoria':      return <MonitorIA />;
+      case 'comando':        return <ComandoCentral />;
+      case 'mapa':           return <MapaCampeche />;
+      case 'resultados':     return <ResultadosElectorales />;
+      case 'alertas':        return <AlertasElectoral />;
+      case 'digital':        return <MonitorDigital />;
+      case 'electoral':      return <InteligenciaElectoral />;
       default:               return <Dashboard onSectionChange={setActiveSection} />;
     }
   };
 
+  // La portada va sobre el video, a sangre; las secciones sobre los blobs,
+  // igual que en el diseño original (index.html vs dashboard.html).
+  const esPortada = activeSection === 'inicio';
+
   return (
     <ToastProvider>
-     <ConfirmProvider>
-      <ResponsiveLayout
-        activeSection={activeSection}
-        onSectionChange={setActiveSection}
-        header={<Header title={tituloDe(activeSection)} onSectionChange={setActiveSection} />}
-        sidebar={
-          <Sidebar
-            activeSection={activeSection}
-            onSectionChange={setActiveSection}
-          />
-        }
-      >
-        <div style={{ flex: 1, overflow: 'auto', backgroundColor: colores.fondoPrincipal }}>
+      <ConfirmProvider>
+        {esPortada ? (
+          <div className="bg-stage" aria-hidden="true">
+            <video
+              className="bg-stage__video"
+              src="/assets/images/earth1.mp4"
+              poster="/assets/images/earth.png"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+            />
+          </div>
+        ) : (
+          <div className="bg-blobs" aria-hidden="true">
+            <div className="blob blob-1" />
+            <div className="blob blob-2" />
+            <div className="blob blob-3" />
+          </div>
+        )}
+
+        {/* Barra superior (notch) */}
+        <WebHeader activeSection={activeSection} onSectionChange={setActiveSection} />
+
+        {/* Sidebar lateral */}
+        <WebSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+
+        {/* Contenido principal */}
+        <main className={`main ${esPortada ? 'main--home' : 'main--app'}`} id="main-content">
           {renderContent()}
-        </div>
-      </ResponsiveLayout>
-     </ConfirmProvider>
+        </main>
+      </ConfirmProvider>
     </ToastProvider>
   );
 }
