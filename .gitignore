@@ -2,9 +2,12 @@ node_modules
 .DS_Store
 *.log
 
-# ── Artefactos generados por backend/datalab/build_campeche.py ──
-# No se versionan: se regeneran con `python3 backend/datalab/build_campeche.py --fetch`
-# Ver COMO_CORRER.md § Datos de Campeche.
+# ── Artefactos de backend/datalab/build_campeche.py ──
+# campeche.json y geo.json SÍ se versionan: el build de Vercel clona del repo y
+# no corre Python, así que si no están el `tsc` falla con
+#   "Cannot find module './campeche.json'".
+# Pesan 55 kB y 1.9 MB; se regeneran con:
+#   python3 backend/datalab/build_campeche.py --fetch
+#
+# El KML no: son 7.8 MB y se re-descarga con --fetch.
 backend/datalab/uploads/campeche_escuelas.kml
-frontend/src/data/campeche.json
-frontend/public/data/geo.json
