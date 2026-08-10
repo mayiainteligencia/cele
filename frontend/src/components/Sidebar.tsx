@@ -1,72 +1,16 @@
 import React, { useState } from 'react';
-import {
-  PanelLeftClose,
-  PanelLeftOpen,
-  LayoutDashboard,
-  TrendingUp,
-  Shield,
-  GraduationCap,
-  Code2,
-  Radio,
-  BrainCircuit,
-  Vote,
-  Globe,
-  Command,
-  ClipboardList,
-  Bell,
-} from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { brandingConfig } from '../config/branding';
-
-// Import anterior por si llegase a utilizarse nuevamente
-/* import { 
-  LayoutDashboard,
-  Users,
-  DollarSign,
-  Package,
-  TrendingUp,
-  Cpu,
-  Building2,
-  Shield,
-  GraduationCap,
-  Code2,
-} from 'lucide-react'; */
- 
+import { menuPrincipal, menuExtra } from '../config/menu';
 
 interface SidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
 }
-// Dejamos el menú anterior por si alguna de las secciones o todas las secciones se llegasen a requerir después
-/* const menuItems = [
-  { id: 'dashboard', nombre: 'Dashboard General', icono: LayoutDashboard },
-  { id: 'rh', nombre: 'Recursos Humanos', icono: Users },
-  { id: 'finanzas', nombre: 'Finanzas y Contabilidad', icono: DollarSign },
-  { id: 'operaciones', nombre: 'Operaciones', icono: Package },
-  { id: 'ventas', nombre: 'Ventas y Marketing', icono: TrendingUp },
-  { id: 'ti', nombre: 'Tecnologías de la Información', icono: Cpu },
-  { id: 'administracion', nombre: 'Administración', icono: Building2 },
-  { id: 'analiticos', nombre: 'Analíticos', icono: TrendingUp}
-];
- */
 
-const menuItems = [
-  { id: 'dashboard', nombre: 'Dashboard General', icono: LayoutDashboard },
-  // { id: 'analiticos', nombre: 'Analíticos', icono: TrendingUp},
-  { id: 'monitor', nombre: 'Monitor de Medios', icono: Radio },  // ← NUEVO
-  { id: 'monitoria', nombre: 'Cerebro Electoral', icono: BrainCircuit },
-  { id: 'comando', nombre: 'Comando Central', icono: Command },
-  { id: 'resultados', nombre: 'Resultados', icono: ClipboardList },
-  { id: 'alertas', nombre: 'Alertas', icono: Bell },
-  { id: 'digital', nombre: 'Monitor Digital', icono: Globe },
-  { id: 'electoral', nombre: 'Inteligencia Electoral', icono: Vote },
-];
-
-
-const extraSections = [
-  { id: 'ciberseguridad', nombre: 'CiberSeguridad', icono: Shield },
-  { id: 'playground', nombre: 'Playground', icono: Code2 },
-  { id: 'academia', nombre: 'Academia', icono: GraduationCap },
-];
+// El menu vive en config/menu.ts — unica fuente para sidebar, bottom nav y titulo.
+const menuItems = menuPrincipal;
+const extraSections = menuExtra;
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => {
   const { empresa, colores } = brandingConfig;

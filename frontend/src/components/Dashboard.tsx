@@ -4,7 +4,7 @@ import { WelcomeHeader } from './modules/dashboardModules/WelcomeHeader';
 import { HeroCard } from './modules/dashboardModules/Herocard';
 import { ProductivityChart } from './modules/dashboardModules/Productivitychart';
 import { ResumenElectoralCards } from './modules/dashboardModules/ResumenElectoralCards';
-import { MapaMexicoDashboard } from './modules/dashboardModules/MapaMexicoDashboard';
+import { MapaCampecheCard } from './modules/dashboardModules/MapaCampecheCard';
 import { RadiosEscuchadasCard } from './modules/dashboardModules/RadiosEscuchadasCard';
 import { PalabrasBuscadasCard } from './modules/dashboardModules/PalabrasBuscadasCard';
 import { CSVGeneradosCard } from './modules/dashboardModules/CSVGeneradosCard';
@@ -34,7 +34,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSectionChange }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 16 }}>
               <HeroCard onNavigate={onSectionChange} />
               <ResumenElectoralCards onSectionChange={onSectionChange} />
-              <MapaMexicoDashboard />
+              <MapaCampecheCard onSectionChange={onSectionChange} />
               <RadiosEscuchadasCard />
               <PalabrasBuscadasCard />
               <CSVGeneradosCard />
@@ -49,7 +49,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSectionChange }) => {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div style={{ height: 620 }}>
-                  <MapaMexicoDashboard />
+                  <MapaCampecheCard onSectionChange={onSectionChange} />
                 </div>
                 <RadiosEscuchadasCard />
                 <PalabrasBuscadasCard />

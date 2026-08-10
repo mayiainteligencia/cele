@@ -11,7 +11,10 @@ import {
 } from 'lucide-react';
 import { brandingConfig } from '../config/branding';
 import { SECCIONES, buscarSeccion } from '../data/asistente';
-import { porAnio, ULTIMO, fmt } from '../data/electoral';
+import {
+  ESTADO, escuelasResumen, localidadesResumen, controlCalidad,
+  casillasVigentes, forensia, fmt,
+} from '../data/campeche';
 import { BrainCanvas } from './modules/dashboardModules/BrainCanvas';
 import { useConfirm } from './electoral/confirm';
 import { useToast } from './electoral/toast';
@@ -31,13 +34,27 @@ interface Notification {
   plan?: string;
 }
 
-const D = porAnio[ULTIMO];
+// Avisos sobre el estado real del sistema (que se procesó, qué falta por conectar).
+// NO se inventan hallazgos electorales: mientras no haya fuente real, una
+// notificación con un número de votos sería exactamente el dato que parece
+// vigente sin serlo.
+const pendientes = controlCalidad.items.filter(c => c.estado === 'vacio').length;
 const notificacionesEstaticas: Notification[] = [
-  { id: 1, tipo: 'urgente', titulo: 'Oportunidad: 6 municipios por ≤5 votos',        mensaje: `El PRI quedó a ≤5 votos de ganar en 6 municipios. Un plan de movilización focalizada podría voltearlos. Revisa Alertas.`, tiempo: 'Hace 3 min',  leida: false, plan: 'Desplegar movilización focalizada en los 6 municipios de margen mínimo para intentar voltearlos.' },
-  { id: 2, tipo: 'alerta',  titulo: 'Detección en radio · MVS 102.5',               mensaje: `Nueva mención del PRI en Tlacolula, sentimiento positivo. Escucha el testigo en Monitor de Medios.`,                        tiempo: 'Hace 8 min',  leida: false },
-  { id: 3, tipo: 'alerta',  titulo: `Abstención crítica (${D.abstProm}%)`, mensaje: `Santo Domingo Ixcatlán registra 96.7% de abstención histórica. Foco de trabajo para movilización.`,                        tiempo: 'Hace 22 min', leida: false, plan: 'Reforzar estructura territorial en las plazas de mayor abstención histórica.' },
-  { id: 4, tipo: 'exito',   titulo: 'Cómputo de ganadores completado',              mensaje: `El PRI ganó ${fmt(D.ganadosPRI)} de ${fmt(D.totalMunicipios)} municipios (${D.sharePRI}% de la votación) en ${ULTIMO}.`,     tiempo: 'Hace 1 hora', leida: true  },
-  { id: 5, tipo: 'info',    titulo: `${D.segundaFuerza} avanza como 2ª fuerza`,      mensaje: `${D.segundaFuerza} concentra ${D.ganadosSegunda} municipios. Vigilar su avance de cara a la próxima elección.`,           tiempo: 'Hace 2 horas', leida: true  },
+  { id: 1, tipo: 'alerta',  titulo: `${pendientes} bloques sin fuente conectada`,
+    mensaje: `De ${controlCalidad.items.length} bloques del libro maestro, ${pendientes} no tienen fuente real —entre ellos secciones, casillas y distritos. Revisa el estado en Comando Central.`,
+    tiempo: 'Hoy', leida: false },
+  { id: 2, tipo: 'info',    titulo: 'Casillas 2027 pendientes de aprobación',
+    mensaje: casillasVigentes.nota ?? 'Sin acuerdos ni encartes publicados por el INE.',
+    tiempo: 'Hoy', leida: false },
+  { id: 3, tipo: 'alerta',  titulo: 'Resultados históricos sin verificar',
+    mensaje: 'Las cifras de votación son de ejemplo hasta conectar el SICEE del INE. No usarlas para decidir.',
+    tiempo: 'Hoy', leida: false },
+  { id: 4, tipo: 'exito',   titulo: 'Catálogo de escuelas procesado',
+    mensaje: `${fmt(escuelasResumen.resumen.planteles)} planteles de ${ESTADO.nombre} en ${fmt(escuelasResumen.resumen.sitios)} sitios distintos (SIGED). Ninguno se da por casilla: todos entran como ubicación potencial.`,
+    tiempo: 'Hoy', leida: true },
+  { id: 5, tipo: 'info',    titulo: `${fmt(localidadesResumen.resumen.total)} localidades derivadas`,
+    mensaje: `${forensia.items.length} comprobaciones de forensia quedaron definidas; ninguna puede correr sin datos por sección y casilla.`,
+    tiempo: 'Hoy', leida: true },
 ];
 
 export const Header: React.FC<HeaderProps> = ({ title, onSectionChange }) => {

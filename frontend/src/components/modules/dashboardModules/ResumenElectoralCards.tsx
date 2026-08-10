@@ -1,13 +1,17 @@
 import React from 'react';
 import { Command, ClipboardList, Bell, ArrowUpRight, ChevronRight } from 'lucide-react';
 import { brandingConfig } from '../../../config/branding';
-import { porAnio, REPRESENTANTES, ULTIMO, fmt, PARTIDO_COLOR } from '../../../data/electoral';
+import {
+  ESTADO, localidadesResumen, controlCalidad, municipios,
+  forensia, resultadosDe, fmt, colorPartido,
+} from '../../../data/campeche';
 
 const { colores } = brandingConfig;
 const V = colores.primario;
-const D = porAnio[ULTIMO];
 
-type Row = { label: string; value: string; color?: string };
+// `pendiente` apaga el valor: sin fuente real, la cifra no puede leerse igual
+// que un dato verificado (mismo criterio que <Kpi pendiente> del kit).
+type Row = { label: string; value: string; color?: string; pendiente?: boolean };
 
 const Card: React.FC<{
   icon: React.ElementType; titulo: string; subtitulo: string; seccion: string;
@@ -39,7 +43,7 @@ const Card: React.FC<{
       {rows.map((r, i) => (
         <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: colores.fondoSecundario, border: `1px solid ${colores.borde}`, borderRadius: 12, padding: '11px 13px' }}>
           <span style={{ fontSize: 13, color: colores.textoMedio, fontWeight: 500 }}>{r.label}</span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: r.color || colores.textoClaro, fontVariantNumeric: 'tabular-nums' }}>{r.value}</span>
+          <span style={{ fontSize: 14, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: r.pendiente ? colores.textoOscuro : (r.color || colores.textoClaro) }}>{r.value}</span>
         </div>
       ))}
     </div>
@@ -51,27 +55,32 @@ const Card: React.FC<{
 );
 
 export const ResumenElectoralCards: React.FC<{ onSectionChange?: (s: string) => void }> = ({ onSectionChange }) => {
-  const topPartidos = Object.entries(D.votosPorPartido).slice(0, 3);
+  const gub = resultadosDe('gubernatura');
+  const ultima = gub.items[gub.items.length - 1];
+  const top3 = Object.entries(ultima.votosPorPartido)
+    .sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const pendientes = controlCalidad.items.filter(c => c.estado === 'vacio').length;
+
   return (
     <>
       <Card
-        icon={Command} titulo="Comando Central" subtitulo={`México · ${ULTIMO}`} seccion="comando" onGo={onSectionChange} cta="Abrir comando"
+        icon={Command} titulo="Comando Central" subtitulo={`${ESTADO.nombre} · INEGI 2020`} seccion="comando" onGo={onSectionChange} cta="Abrir comando"
         rows={[
-          { label: 'Municipios ganados PRI', value: `${fmt(D.ganadosPRI)} / ${fmt(D.totalMunicipios)}` },
-          { label: 'Votación PRI', value: `${D.sharePRI}%`, color: PARTIDO_COLOR.PRI },
-          { label: 'Representantes', value: fmt(REPRESENTANTES.total) },
+          { label: 'Población total', value: fmt(ESTADO.poblacion2020) },
+          { label: 'Municipios', value: String(municipios.items.length) },
+          { label: 'Localidades', value: fmt(localidadesResumen.resumen.total) },
         ]}
       />
       <Card
-        icon={ClipboardList} titulo="Resultados" subtitulo="Elecciones municipales" seccion="resultados" onGo={onSectionChange} cta="Ver resultados"
-        rows={topPartidos.map(([p, v]) => ({ label: p, value: `${fmt(v)}`, color: PARTIDO_COLOR[p] }))}
+        icon={ClipboardList} titulo="Resultados" subtitulo={`Gubernatura ${ultima.anio} · ejemplo`} seccion="resultados" onGo={onSectionChange} cta="Ver resultados"
+        rows={top3.map(([p, v]) => ({ label: p, value: fmt(v), color: colorPartido(p), pendiente: true }))}
       />
       <Card
-        icon={Bell} titulo="Alertas" subtitulo="Focos de atención" seccion="alertas" onGo={onSectionChange} cta="Revisar alertas"
+        icon={Bell} titulo="Alertas y forensia" subtitulo="Cuadrito 2" seccion="alertas" onGo={onSectionChange} cta="Revisar alertas"
         rows={[
-          { label: 'Municipios recuperables', value: fmt(D.recuperables.length), color: V },
-          { label: 'Abstención promedio', value: `${D.abstProm}%`, color: colores.advertencia },
-          { label: `2ª fuerza (${D.segundaFuerza})`, value: `${D.ganadosSegunda} mun.` },
+          { label: 'Comprobaciones definidas', value: String(forensia.items.length), color: V },
+          { label: 'Bloques sin fuente', value: `${pendientes} / ${controlCalidad.items.length}`, color: colores.advertencia },
+          { label: 'Alertas abiertas', value: '—', pendiente: true },
         ]}
       />
     </>

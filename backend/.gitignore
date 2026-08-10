@@ -1,7 +1,13 @@
 .env
 monitorsol/
 
-# datalab: solo se sube uploads/ (Excel fuente). El resto (datos derivados,
-# scripts, reportes, venv) tiene informacion sensible → NO subir.
+# datalab: por defecto NO se sube (datos derivados, reportes, venv pueden
+# tener informacion sensible). Excepciones explicitas abajo.
 datalab/*
 !datalab/uploads/
+# El pipeline SI se versiona: sin el, campeche.json no es reproducible y se
+# repite la historia de agregar_electoral.py, que se perdio con su dataset.
+!datalab/build_campeche.py
+
+# El KML pesa 7.8 MB y se re-descarga con --fetch.
+datalab/uploads/campeche_escuelas.kml

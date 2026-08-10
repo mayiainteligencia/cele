@@ -1,24 +1,39 @@
-// Cerebro / asistente front-only (sin backend, sin Gemini).
-// Navega a secciones y responde preguntas con los datos que ya tenemos en mano.
-import { porAnio, ULTIMO, fmt, proyeccionPRI } from './electoral';
+// Asistente front-only (sin backend, sin Gemini). Navega a secciones y responde
+// con los datos que ya tenemos en mano.
+//
+// Regla central del spec: toda respuesta declara su clase — Dato (viene de una
+// fuente), Cálculo (sale de una fórmula), Estimación (sale de un modelo),
+// Inferencia (interpretación) o Recomendación (sujeta a autorización humana).
+// Mientras un bloque no tenga fuente real, la respuesta correcta es decir que no
+// se sabe: inventar una cifra es justo lo que el spec prohíbe.
+import { menuItems } from '../config/menu';
+import {
+  ESTADO, municipios, localidadesResumen, escuelasResumen, controlCalidad,
+  casillasVigentes, secciones as bloqueSecciones, forensia, resultadosDe, fmt,
+} from './campeche';
 
-const D = porAnio[ULTIMO];
-
+export type Clase = 'Dato' | 'Cálculo' | 'Estimación' | 'Inferencia' | 'Recomendación';
 export type Seccion = { id: string; titulo: string; alias: string[] };
 
-export const SECCIONES: Seccion[] = [
-  { id: 'dashboard',      titulo: 'Dashboard General',      alias: ['inicio', 'principal', 'home', 'general', 'panel'] },
-  { id: 'comando',        titulo: 'Comando Central',        alias: ['comando', 'mando', 'central'] },
-  { id: 'resultados',     titulo: 'Resultados Electorales', alias: ['resultados', 'votos', 'eleccion', 'elecciones'] },
-  { id: 'alertas',        titulo: 'Alertas',                alias: ['alertas', 'focos', 'riesgos', 'atencion'] },
-  { id: 'monitoria',      titulo: 'Cerebro Electoral',      alias: ['cerebro', 'monitor ia', 'mayia'] },
-  { id: 'monitor',        titulo: 'Monitor de Medios',      alias: ['medios', 'radio', 'testigos'] },
-  { id: 'digital',        titulo: 'Monitor Digital',        alias: ['digital', 'web', 'redes'] },
-  { id: 'electoral',      titulo: 'Inteligencia Electoral', alias: ['inteligencia', 'electoral', 'sentimiento'] },
-  { id: 'ciberseguridad', titulo: 'CiberSeguridad',         alias: ['ciber', 'seguridad'] },
-  { id: 'playground',     titulo: 'Playground',             alias: ['playground', 'pruebas'] },
-  { id: 'academia',       titulo: 'Academia',               alias: ['academia', 'cursos'] },
-];
+const ALIAS: Record<string, string[]> = {
+  dashboard:      ['inicio', 'principal', 'home', 'general', 'panel'],
+  comando:        ['comando', 'mando', 'central'],
+  resultados:     ['resultados', 'votos', 'eleccion', 'elecciones'],
+  alertas:        ['alertas', 'focos', 'riesgos', 'atencion', 'forensia', 'anomalias'],
+  mapa:           ['mapa', 'territorio', 'casillas', 'escuelas', 'geografia'],
+  monitoria:      ['cerebro', 'monitor ia', 'mayia'],
+  monitor:        ['medios', 'radio', 'testigos'],
+  digital:        ['digital', 'web', 'redes'],
+  electoral:      ['inteligencia', 'electoral', 'sentimiento'],
+  ciberseguridad: ['ciber', 'seguridad'],
+  playground:     ['playground', 'pruebas'],
+  academia:       ['academia', 'cursos'],
+};
+
+// Deriva del menu unico: una seccion nueva queda navegable sin tocar este archivo.
+export const SECCIONES: Seccion[] = menuItems.map(m => ({
+  id: m.id, titulo: m.nombre, alias: ALIAS[m.id] ?? [],
+}));
 
 export const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
@@ -33,7 +48,9 @@ export function buscarSeccion(q: string): Seccion[] {
 
 const VERBOS_NAV = ['ve al', 've a', 'ir al', 'ir a', 'entra', 'llevame', 'vamos a', 'muestrame', 'muestra', 'abre', 'abrir', 'ir '];
 
-export type Respuesta = { text: string; navigateTo?: string };
+export type Respuesta = { text: string; clase?: Clase; navigateTo?: string };
+
+const pendientes = () => controlCalidad.items.filter(c => c.estado === 'vacio');
 
 export function responder(texto: string): Respuesta {
   const t = norm(texto);
@@ -47,33 +64,85 @@ export function responder(texto: string): Respuesta {
     }
   }
 
-  // ── Preguntas sobre los datos ──
-  if (/(redes|social|facebook|twitter|instagram|tiktok)/.test(t)) {
-    return { text: `En redes sociales la conversación crece: ${fmt(Math.round(D.votosPRI / 1000))}K menciones estimadas esta semana, +18% vs la anterior. El sentimiento a favor ronda el ${D.recuperables ? 46 : 46}%. Abre Monitor Digital para el detalle.`, navigateTo: undefined };
+  // ── Lo que sí tiene fuente ──
+  if (/(poblacion|habitantes|cuanta gente)/.test(t)) {
+    return {
+      clase: 'Dato',
+      text: `${ESTADO.nombre} tiene ${fmt(ESTADO.poblacion2020)} habitantes según el Censo 2020 del INEGI, repartidos en ${municipios.items.length} municipios y ${fmt(localidadesResumen.resumen.total)} localidades con plantel registrado.`,
+    };
   }
-  if (/(a mi favor|a favor|me ven|como me ven|sentimiento|apoyo)/.test(t)) {
-    return { text: `La gente te ve mayormente a favor: 46% positivo, 34% neutral, 20% negativo. En tus plazas fuertes el positivo sube. Revisa Inteligencia Electoral para el desglose por estación.` };
+  if (/(escuela|plantel|inmueble|donde.*casilla|sede)/.test(t)) {
+    return {
+      clase: 'Dato',
+      text: `Hay ${fmt(escuelasResumen.resumen.planteles)} planteles en el catálogo del SIGED, en ${fmt(escuelasResumen.resumen.sitios)} sitios distintos (varios comparten predio). Todos están clasificados como ubicación potencial: ninguno es casilla hasta que el INE lo apruebe.`,
+      navigateTo: 'mapa',
+    };
   }
-  if (/(que dicen|dicen de mi|hablan de mi|menciones|narrativa)/.test(t)) {
-    return { text: `Lo que más dicen de ti: seguridad y obras (positivo), dudas sobre empleo (neutral). Tu último spot se cita textual en 3 estaciones. ${D.segundaFuerza} es tu principal competencia con ${D.ganadosSegunda} municipios.` };
+  if (/(municipio|cuantos municipios)/.test(t)) {
+    return {
+      clase: 'Dato',
+      text: `${municipios.items.length} municipios, con claves INEGI 001 a 013. Los más recientes son Seybaplaya y Dzitbalché.`,
+    };
   }
-  if (/(ultima mencion|mencion.*radio|radio.*mencion|en radio)/.test(t)) {
-    return { text: `Tu última mención en radio fue hace 8 min en MVS Radio 102.5: "…el PRI mantiene ventaja en Tlacolula…", sentimiento positivo. Abre Monitor de Medios para escuchar el testigo.` };
+  if (/(calidad|fuentes|que falta|pendiente|cobertura)/.test(t)) {
+    const p = pendientes();
+    return {
+      clase: 'Cálculo',
+      text: `${p.length} de ${controlCalidad.items.length} bloques del libro maestro no tienen fuente conectada. Entre ellos: ${p.slice(0, 4).map(x => x.hoja).join(', ')}.`,
+      navigateTo: 'comando',
+    };
   }
-  if (/(municipios ganados|como vamos|cuantos municipios|vamos en municipios)/.test(t)) {
-    return { text: `Vas fuerte: el PRI ganó ${fmt(D.ganadosPRI)} de ${fmt(D.totalMunicipios)} municipios (${D.sharePRI}% de la votación, ${fmt(D.votosPRI)} votos). Hay ${D.recuperables.length} municipios recuperables por margen mínimo.` };
+  if (/(forensia|anomalia|irregularidad|fraude)/.test(t)) {
+    return {
+      clase: 'Dato',
+      text: `Hay ${forensia.items.length} comprobaciones de forensia definidas (Cuadrito 2). Ninguna puede correr todavía: casi todas necesitan datos por sección o por casilla, y esos bloques están vacíos.`,
+      navigateTo: 'alertas',
+    };
   }
-  if (/(abstencion|participacion)/.test(t)) {
-    return { text: `La abstención promedio es ${D.abstProm}%. Hay plazas con más de 90% de abstención histórica — foco de movilización en Alertas.` };
+
+  // ── Lo que NO tiene fuente: se dice, no se inventa ──
+  if (/(casilla|cuantas casillas|2027)/.test(t)) {
+    return {
+      clase: 'Dato',
+      text: `No lo sé todavía. ${casillasVigentes.nota ?? 'Las casillas de 2027 dependen de los acuerdos del INE.'} Usar la cifra de 2024 como si fuera la de 2027 sería incorrecto.`,
+    };
   }
-  if (/(competencia|segunda fuerza|rival|oposicion)/.test(t)) {
-    return { text: `Tu segunda fuerza es ${D.segundaFuerza} con ${D.ganadosSegunda} municipios, ${D.ganadosPRI - D.ganadosSegunda} plazas por debajo del PRI.` };
+  if (/(seccion|secciones|distrito)/.test(t)) {
+    return {
+      clase: 'Dato',
+      text: `Sin dato: ${bloqueSecciones.hoja} está vacío. Requiere el Marco Geográfico Electoral del INE. No se puede estimar desde municipio sin volverlo inservible para forensia.`,
+    };
   }
-  if (/(prediccion|proyeccion|proxima eleccion|2027|futuro)/.test(t)) {
-    return { text: `Proyección: si la tendencia se mantiene, el PRI llegaría a ~${proyeccionPRI()}% la próxima elección (venía de ${porAnio['1998'].sharePRI}% en 1998 a ${D.sharePRI}% en ${ULTIMO}).` };
+  if (/(resultado|voto|gano|ganador|eleccion|participacion|abstencion)/.test(t)) {
+    const gub = resultadosDe('gubernatura');
+    const u = gub.items[gub.items.length - 1];
+    return {
+      clase: 'Estimación',
+      text: `Cuidado: las cifras cargadas son de ejemplo, no resultados reales. En el dataset de prueba, la gubernatura ${u.anio} da ${u.ganador} arriba de ${u.segundo} por ${u.margenPuntos} puntos, con ${u.participacion}% de participación. Se sustituye al conectar el SICEE del INE.`,
+      navigateTo: 'resultados',
+    };
+  }
+  if (/(redes|social|facebook|twitter|instagram|tiktok|mencion|medios|sentimiento|que dicen)/.test(t)) {
+    return {
+      clase: 'Dato',
+      text: 'Todavía no hay fuente de medios ni de redes conectada para Campeche. Monitor de Medios sí captura radio en vivo, pero sus testigos aún no alimentan el análisis electoral.',
+      navigateTo: 'monitor',
+    };
+  }
+  if (/(prediccion|proyeccion|proxima eleccion|futuro|quien va a ganar)/.test(t)) {
+    return {
+      clase: 'Estimación',
+      text: 'No hay proyección publicable. El modelo del anexo 1.7 exige escenarios con intervalo de incertidumbre y backtesting contra elecciones ya celebradas; sin resultados históricos reales no se puede calibrar ni medir su error.',
+    };
+  }
+  if (/(encuesta|poll)/.test(t)) {
+    return {
+      clase: 'Dato',
+      text: 'No hay encuestas cargadas. El alta pasa por el flujo del Cuadrito 6: metodología, tamaño de muestra, margen de error y aprobación humana antes de entrar al modelo.',
+    };
   }
 
   return {
-    text: 'Puedo dirigirte a una sección ("ve a Alertas") o responderte: cómo vamos en municipios ganados, qué dicen de ti, cómo te ve la gente, cómo vamos en redes, o tu última mención en radio.',
+    text: `Puedo llevarte a una sección ("ve a Alertas") o responderte sobre lo que sí tiene fuente: población, municipios, localidades, escuelas y estado de las fuentes. Sobre resultados, casillas, encuestas o medios te voy a decir que todavía no hay dato — ${pendientes().length} bloques siguen sin conectar.`,
   };
 }

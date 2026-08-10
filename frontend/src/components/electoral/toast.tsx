@@ -19,13 +19,15 @@ type Ctx = { push: (t: Omit<Toast, 'id'>) => void };
 const ToastCtx = createContext<Ctx>({ push: () => {} });
 export const useToast = () => useContext(ToastCtx);
 
-// "Eventos en vivo": lo que iria llegando del monitoreo de radio (dummy, guionado).
+// "Eventos en vivo": estado real del sistema mientras no haya fuentes conectadas.
+// Un toast con un hallazgo electoral inventado se lee igual que uno real — por eso
+// aqui solo van hechos sobre el propio dataset, no sobre la eleccion.
 const LIVE: Omit<Toast, 'id'>[] = [
-  { kind: 'info', title: 'Detección en radio · MVS 102.5', msg: 'Mención del PRI en Tlacolula. Revisa Alertas para el detalle.' },
-  { kind: 'suggestion', title: 'MAYIA sugiere', msg: '6 municipios se perdieron por ≤5 votos. Sugerimos activar movilización focalizada.' },
-  { kind: 'alert', title: 'Abstención alta', msg: 'Santo Domingo Ixcatlán registró 96.7% de abstención histórica. Foco de trabajo.' },
-  { kind: 'info', title: 'Detección en radio · Fórmula 104.1', msg: 'La 2ª fuerza (PRD) mencionada en franja matutina. Vigilar avance.' },
-  { kind: 'suggestion', title: 'MAYIA sugiere', msg: 'Plaza fuerte TOTAL 2010 (585,231 votos PRI). Núcleo a proteger de cara al 2027.' },
+  { kind: 'info', title: 'Catálogo territorial listo', msg: '2 274 planteles del SIGED cargados como ubicaciones potenciales de casilla.' },
+  { kind: 'alert', title: 'Bloques sin fuente', msg: 'Secciones, casillas y distritos siguen vacíos: la forensia no puede correr.' },
+  { kind: 'info', title: 'Casillas 2027', msg: 'Pendientes de aprobación oficial del INE. No se rellenan con la cifra de 2024.' },
+  { kind: 'suggestion', title: 'MAYIA sugiere', msg: 'Conectar PREP y cómputos distritales habilita seis comprobaciones de forensia de una sola vez.' },
+  { kind: 'alert', title: 'Resultados de ejemplo', msg: 'La votación cargada es simulada. No usarla para decidir hasta conectar el SICEE.' },
 ];
 
 export const ToastProvider: React.FC<{ children: React.ReactNode; live?: boolean }> = ({ children, live = true }) => {

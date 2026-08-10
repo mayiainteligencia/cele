@@ -12,11 +12,13 @@ import { MonitorIA } from './components/MonitorIA';
 import { MonitorDigital } from './components/MonitorDigital';
 import { InteligenciaElectoral } from './components/InteligenciaElectoral';
 import { ComandoCentral } from './components/ComandoCentral';
+import { MapaCampeche } from './components/MapaCampeche';
 import { ResultadosElectorales } from './components/ResultadosElectorales';
 import { AlertasElectoral } from './components/AlertasElectoral';
 import { ToastProvider } from './components/electoral/toast';
 import { ConfirmProvider } from './components/electoral/confirm';
 import { brandingConfig } from './config/branding';
+import { tituloDe } from './config/menu';
 
 
 import './responsive.css';
@@ -24,24 +26,6 @@ import './responsive.css';
 function App() {
   const [activeSection, setActiveSection] = useState('dashboard');
   const { colores } = brandingConfig;
-
-  const getTitulo = () => {
-    const titulos: Record<string, string> = {
-      dashboard:      'Dashboard General',
-      ciberseguridad: 'CiberSeguridad',
-      playground:     'Playground',
-      academia:       'Academia',
-
-      monitor: 'Monitor de Medios',
-      monitoria: 'Cerebro Electoral',
-      comando: 'Comando Central',
-      resultados: 'Resultados Electorales',
-      alertas: 'Alertas',
-      digital: 'Monitor Digital',
-      electoral: 'Inteligencia Electoral',
-    };
-    return titulos[activeSection] || 'Dashboard';
-  };
 
   const renderContent = () => {
     switch (activeSection) {
@@ -53,6 +37,7 @@ function App() {
       case 'monitor': return <MonitorMedios />;
       case 'monitoria': return <MonitorIA />;
       case 'comando': return <ComandoCentral />;
+      case 'mapa': return <MapaCampeche />;
       case 'resultados': return <ResultadosElectorales />;
       case 'alertas': return <AlertasElectoral />;
       case 'digital': return <MonitorDigital />;
@@ -67,7 +52,7 @@ function App() {
       <ResponsiveLayout
         activeSection={activeSection}
         onSectionChange={setActiveSection}
-        header={<Header title={getTitulo()} onSectionChange={setActiveSection} />}
+        header={<Header title={tituloDe(activeSection)} onSectionChange={setActiveSection} />}
         sidebar={
           <Sidebar
             activeSection={activeSection}

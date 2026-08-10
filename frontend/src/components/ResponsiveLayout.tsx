@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Menu, X, LayoutDashboard, TrendingUp, Shield,
-  Code2, GraduationCap, ChevronRight, Radio, BrainCircuit, Vote, Globe,
-  Command, ClipboardList, Bell
-} from 'lucide-react';
+import { Menu, X, ChevronRight } from 'lucide-react';
 import { brandingConfig } from '../config/branding';
+import { menuItems } from '../config/menu';
 
 interface ResponsiveLayoutProps {
   activeSection: string;
@@ -14,20 +11,6 @@ interface ResponsiveLayoutProps {
   sidebarR?: React.ReactNode;
   children: React.ReactNode;
 }
-
-const menuItems = [
-  { id: 'dashboard',      nombre: 'Dashboard General', icono: LayoutDashboard },
-  { id: 'monitor',     nombre: 'Monitor de Medios',         icono: Radio      },
-  { id: 'monitoria',   nombre: 'Cerebro Electoral',                icono: BrainCircuit },
-  { id: 'comando',     nombre: 'Comando Central',           icono: Command    },
-  { id: 'resultados',  nombre: 'Resultados',                icono: ClipboardList },
-  { id: 'alertas',     nombre: 'Alertas',                   icono: Bell       },
-  { id: 'digital',     nombre: 'Monitor Digital',           icono: Globe      },
-  { id: 'electoral',   nombre: 'Inteligencia Electoral',    icono: Vote       },
-  { id: 'ciberseguridad', nombre: 'CiberSeguridad',     icono: Shield          },
-  { id: 'playground',     nombre: 'Playground',         icono: Code2           },
-  { id: 'academia',       nombre: 'Academia',            icono: GraduationCap   },
-];
 
 export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
   activeSection,

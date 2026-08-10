@@ -1,6 +1,12 @@
-// Datos electorales reales (Oaxaca, COMPILADO.xlsx) precomputados por
-// backend/datalab/agregar_electoral.py. NO editar electoral.json a mano:
-// correr `python3 agregar_electoral.py` para regenerarlo.
+// ⚠️ PAUSADO — dataset de Oaxaca. El sistema opera sobre Campeche: usar
+// `data/campeche.ts`. Este archivo y electoral.json se conservan como
+// referencia; se retiran del flujo activo en F2, cuando ComandoCentral,
+// ResultadosElectorales y AlertasElectoral se recableen a campeche.ts.
+//
+// Datos reales (Oaxaca, COMPILADO.xlsx). El script que lo genero
+// (agregar_electoral.py) NO existe en el repo: electoral.json no es
+// reproducible. No intentar regenerarlo; si se necesita Oaxaca otra vez,
+// hay que reescribir el pipeline desde backend/datalab/uploads/ANALISIS.xlsx.
 import raw from './electoral.json';
 
 export type TopMuni = { municipio: string; votosPRI: number; ganador: string };

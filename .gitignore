@@ -1,0 +1,10 @@
+node_modules
+.DS_Store
+*.log
+
+# ── Artefactos generados por backend/datalab/build_campeche.py ──
+# No se versionan: se regeneran con `python3 backend/datalab/build_campeche.py --fetch`
+# Ver COMO_CORRER.md § Datos de Campeche.
+backend/datalab/uploads/campeche_escuelas.kml
+frontend/src/data/campeche.json
+frontend/public/data/geo.json

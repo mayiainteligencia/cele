@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Brain, Check, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { brandingConfig } from '../../config/branding';
+import type { Proc } from '../../data/campeche';
 import { useToast } from './toast';
 import { useConfirm } from './confirm';
 
@@ -11,7 +12,9 @@ export const keyframes = `
 @keyframes elFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes elPulse{0%,100%{opacity:1}50%{opacity:.35}}
 @keyframes elPop{0%{transform:scale(1)}45%{transform:scale(.97)}100%{transform:scale(1)}}
-@media (prefers-reduced-motion: reduce){.el-anim,.el-pulse{animation:none!important}}
+@keyframes elSpin{to{transform:rotate(360deg)}}
+.el-spin{animation:elSpin .9s linear infinite}
+@media (prefers-reduced-motion: reduce){.el-anim,.el-pulse,.el-spin{animation:none!important}}
 `;
 
 // ── Punto "LIVE" parpadeante ──
@@ -22,9 +25,50 @@ export const LiveDot: React.FC<{ label?: string }> = ({ label = 'LIVE' }) => (
   </span>
 );
 
+// ── Sello de procedencia ──
+// Obligatorio en todo panel que muestre cifras. El spec exige que una estimacion
+// nunca se lea como un hecho: aqui la clase, la fuente y la fecha de corte van
+// pegadas al dato, no en una nota al pie que nadie mira.
+const CLASE_COLOR: Record<Proc['clase'], string> = {
+  Dato: colores.exito,
+  Calculo: '#0047AB',
+  Estimacion: colores.advertencia,
+  Inferencia: colores.advertencia,
+  Recomendacion: V,
+};
+const CLASE_LABEL: Record<Proc['clase'], string> = {
+  Dato: 'Dato', Calculo: 'Cálculo', Estimacion: 'Estimación',
+  Inferencia: 'Inferencia', Recomendacion: 'Recomendación',
+};
+
+export const Procedencia: React.FC<{ proc: Proc; compact?: boolean }> = ({ proc, compact }) => {
+  const c = CLASE_COLOR[proc.clase];
+  return (
+    <div
+      title={`${CLASE_LABEL[proc.clase]} · fuente: ${proc.fuente} · corte: ${proc.fechaCorte} · confianza ${proc.confianza}`}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
+        fontSize: 10.5, fontWeight: 600, color: colores.textoOscuro, lineHeight: 1.4,
+      }}
+    >
+      <span style={{
+        fontWeight: 800, letterSpacing: '.04em', textTransform: 'uppercase',
+        color: c, background: `${c}18`, padding: '2px 7px', borderRadius: 999,
+      }}>
+        {CLASE_LABEL[proc.clase]}
+      </span>
+      {!compact && (
+        <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {proc.fuente} · corte {proc.fechaCorte} · confianza {proc.confianza}
+        </span>
+      )}
+    </div>
+  );
+};
+
 // ── Panel / tarjeta contenedora ──
-export const Panel: React.FC<{ title?: string; icon?: React.ReactNode; right?: React.ReactNode; children: React.ReactNode; style?: React.CSSProperties }> =
-({ title, icon, right, children, style }) => (
+export const Panel: React.FC<{ title?: string; icon?: React.ReactNode; right?: React.ReactNode; proc?: Proc; children: React.ReactNode; style?: React.CSSProperties }> =
+({ title, icon, right, proc, children, style }) => (
   <section style={{
     background: colores.fondoClaro, border: `1px solid ${colores.borde}`, borderRadius: 18,
     padding: 20, boxShadow: colores.sombra, animation: 'elFadeUp .4s ease both', ...style,
@@ -39,15 +83,30 @@ export const Panel: React.FC<{ title?: string; icon?: React.ReactNode; right?: R
       </header>
     )}
     {children}
+    {proc && (
+      <footer style={{ marginTop: 14, paddingTop: 11, borderTop: `1px solid ${colores.borde}` }}>
+        <Procedencia proc={proc} />
+      </footer>
+    )}
   </section>
 );
 
 // ── KPI tile ──
-export const Kpi: React.FC<{ label: string; value: string; delta?: string; up?: boolean; sub?: string }> =
-({ label, value, delta, up, sub }) => (
-  <div style={{ background: colores.fondoClaro, border: `1px solid ${colores.borde}`, borderRadius: 14, padding: 16, boxShadow: colores.sombra }}>
+// `pendiente` marca una cifra que no tiene fuente real todavia. El spec exige
+// que ninguna cifra se presente sin fuente: apagarla visualmente es la diferencia
+// entre "no lo sabemos" y "vale cero".
+export const Kpi: React.FC<{ label: string; value: string; delta?: string; up?: boolean; sub?: string; pendiente?: boolean }> =
+({ label, value, delta, up, sub, pendiente }) => (
+  <div style={{
+    background: colores.fondoClaro, border: `1px dashed ${colores.borde}`, borderRadius: 14,
+    padding: 16, boxShadow: colores.sombra,
+    ...(pendiente ? {} : { borderStyle: 'solid' }),
+  }}>
     <div style={{ fontSize: 12, color: colores.textoOscuro, fontWeight: 600, marginBottom: 8 }}>{label}</div>
-    <div style={{ fontSize: 28, fontWeight: 800, color: colores.textoClaro, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{value}</div>
+    <div style={{
+      fontSize: 28, fontWeight: 800, fontVariantNumeric: 'tabular-nums', lineHeight: 1,
+      color: pendiente ? colores.textoOscuro : colores.textoClaro,
+    }}>{value}</div>
     {(delta || sub) && (
       <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 8, fontSize: 12, color: up === false ? colores.peligro : colores.exito, fontWeight: 600 }}>
         {up !== undefined && (up ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />)}
@@ -58,8 +117,11 @@ export const Kpi: React.FC<{ label: string; value: string; delta?: string; up?: 
   </div>
 );
 
-// ── Tarjeta de insight de MAYIA (Análisis / Predicción / Sugerencia) ──
-type InsightKind = 'Análisis' | 'Predicción' | 'Sugerencia';
+// ── Tarjeta de insight de MAYIA ──
+// Las clases son las de la "regla central" del spec: toda salida del copiloto
+// declara si es un dato de fuente, un cálculo, la salida de un modelo, una
+// interpretación o una acción sujeta a autorización humana.
+type InsightKind = 'Dato' | 'Cálculo' | 'Estimación' | 'Inferencia' | 'Recomendación';
 export const Insight: React.FC<{ kind: InsightKind; title: string; children: React.ReactNode; plan?: string }> =
 ({ kind, title, children, plan }) => {
   const { push } = useToast();
@@ -71,7 +133,11 @@ export const Insight: React.FC<{ kind: InsightKind; title: string; children: Rea
       push({ kind: 'success', title: 'Plan activado', msg: plan! });
     }
   };
-  const kindColor = kind === 'Predicción' ? '#0047AB' : kind === 'Sugerencia' ? V : colores.textoClaro;
+  // Mismo codigo de color que <Procedencia>: la clase se lee igual en todo el sistema.
+  const kindColor = ({
+    Dato: colores.exito, 'Cálculo': '#0047AB', 'Estimación': colores.advertencia,
+    'Inferencia': colores.advertencia, 'Recomendación': V,
+  } as Record<InsightKind, string>)[kind];
 
   if (state === 'descartado') return null;
 
