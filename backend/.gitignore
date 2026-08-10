@@ -1,0 +1,7 @@
+.env
+monitorsol/
+
+# datalab: solo se sube uploads/ (Excel fuente). El resto (datos derivados,
+# scripts, reportes, venv) tiene informacion sensible → NO subir.
+datalab/*
+!datalab/uploads/
