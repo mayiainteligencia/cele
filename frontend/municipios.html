@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Catálogo de los 13 Municipios de Campeche — Cerebro Electoral (CE).">
+  <title>13 Municipios de Campeche — Cerebro Electoral (CE)</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/colors.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/auth.css">
+
+  <style>
+    .mun-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: var(--space-md);
+    }
+    .mun-card {
+      padding: var(--space-md) var(--space-lg);
+      border-radius: var(--radius-md);
+      background: var(--glass-bg-active);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      transition: transform var(--transition-base);
+    }
+    .mun-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--glass-border-hover);
+    }
+  </style>
+</head>
+<body data-page="municipios">
+
+  <!-- BARRA SUPERIOR -->
+  <header class="filter-bar filter-bar--notch" id="filter-bar">
+    <a href="index.html" class="topbar-side" style="gap:10px;">
+      <span class="ce-brand-badge" style="font-size:1.1rem; padding: 2px 8px; border-radius:6px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3);">CE</span>
+      <span style="font-weight:700; color:var(--text-heading); font-size:0.95rem;">13 Municipios</span>
+    </a>
+
+    <div class="topbar-notch">
+      <nav class="subnav-bar">
+        <a class="subnav-btn" href="index.html"><i data-lucide="home" class="icon-xs"></i> <span>Inicio</span></a>
+        <a class="subnav-btn" href="mando.html"><i data-lucide="bar-chart-3" class="icon-xs"></i> <span>Centro de Mando</span></a>
+        <a class="subnav-btn" href="cartografia.html"><i data-lucide="map" class="icon-xs"></i> <span>Cartografía</span></a>
+        <a class="subnav-btn subnav-btn--active" href="municipios.html"><i data-lucide="building-2" class="icon-xs"></i> <span>13 Municipios</span></a>
+        <a class="subnav-btn" href="infraestructura.html"><i data-lucide="school" class="icon-xs"></i> <span>Infraestructura</span></a>
+        <a class="subnav-btn" href="fuentes.html"><i data-lucide="database" class="icon-xs"></i> <span>Fuentes</span></a>
+      </nav>
+    </div>
+
+    <div id="auth-slot"></div>
+  </header>
+
+  <!-- NAVEGACIÓN LATERAL -->
+  <nav class="sidebar" id="sidebar" aria-label="Navegación principal"></nav>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="main" id="main-content" style="padding-top: calc(var(--filter-bar-height) + var(--space-md));">
+    <div class="mando-workspace animate-fade-in-up">
+
+      <section class="mando-header">
+        <div class="mando-header__title-box">
+          <h1><i data-lucide="building-2" style="color:var(--accent-cyan);"></i> Catálogo Municipal de Campeche (13 Municipios)</h1>
+          <p>Estructura político-administrativa autorizada. Incluye los municipios de Dzitbalché (04013) y Seybaplaya (04012) independizados.</p>
+        </div>
+
+        <div class="mando-header__pills">
+          <span class="badge badge--success">13 Cabeceras Independientes</span>
+          <span class="badge badge--neutral">INEGI Marco Geoestadístico 2024</span>
+        </div>
+      </section>
+
+      <!-- KPI Summary de Municipios -->
+      <section class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-card__label"><span>Total Municipios</span><i data-lucide="building-2" class="icon-xs"></i></div>
+          <div class="kpi-card__value">13</div>
+          <div class="kpi-card__sub">100% Georeferenciados por INEGI</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__label"><span>Nuevos Municipios</span><i data-lucide="sparkles" class="icon-xs" style="color:var(--accent-cyan);"></i></div>
+          <div class="kpi-card__value" style="color:var(--accent-cyan);">2</div>
+          <div class="kpi-card__sub">Dzitbalché (04013) y Seybaplaya (04012)</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__label"><span>Mayor Infraestructura CCT</span><i data-lucide="school" class="icon-xs"></i></div>
+          <div class="kpi-card__value" style="font-size:1.4rem;">Campeche (04002)</div>
+          <div class="kpi-card__sub">486 Planteles educativos CCT</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__label"><span>Cobertura Cartográfica</span><i data-lucide="check-circle-2" class="icon-xs" style="color:#22c55e;"></i></div>
+          <div class="kpi-card__value" style="color:#22c55e;">100%</div>
+          <div class="kpi-card__sub">Sin municipios colapsados</div>
+        </div>
+      </section>
+
+      <!-- Bar de Búsqueda y Filtrado -->
+      <div style="display:flex; justify-content:space-between; align-items:center; background:var(--glass-bg); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
+        <div style="display:flex; align-items:center; gap:10px; width:100%; max-width:400px; background:rgba(15,23,42,0.6); padding:8px 14px; border-radius:var(--radius-full); border:1px solid var(--glass-border);">
+          <i data-lucide="search" class="icon-xs" style="color:var(--text-muted);"></i>
+          <input type="text" id="input-buscar-mun" placeholder="Buscar municipio o clave INEGI..." style="background:transparent; border:none; color:var(--text-body); font-size:0.85rem; width:100%;">
+        </div>
+        <span style="font-size:0.8rem; color:var(--text-muted);">Mostrando 13 de 13 municipios</span>
+      </div>
+
+      <!-- Grid con la lista de los 13 municipios -->
+      <section class="mun-grid" id="grid-municipios-detalle"></section>
+
+    </div>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      Promise.all([
+        fetch('data/geo/municipios.geojson').then(r => r.json()),
+        fetch('data/geo/escuelas_campeche.geojson').then(r => r.json()),
+        fetch('data/geo/cabeceras_municipales.geojson').then(r => r.json())
+      ]).then(([munGeo, escGeo, cabGeo]) => {
+        const escuelas = {};
+        const alumnado = {};
+        escGeo.features.forEach(f => {
+          const k = f.properties.cve_mun;
+          if (!k) return;
+          escuelas[k] = (escuelas[k] || 0) + 1;
+          alumnado[k] = (alumnado[k] || 0) + (f.properties.alumnos_total || 0);
+        });
+
+        const cabeceras = {};
+        cabGeo.features.forEach(f => {
+          cabeceras[f.properties.cve_mun] = f.properties.cabecera;
+        });
+
+        const grid = document.getElementById('grid-municipios-detalle');
+        const inputSearch = document.getElementById('input-buscar-mun');
+
+        const renderGrid = (filtro = '') => {
+          if (!grid) return;
+          const termino = filtro.toLowerCase().trim();
+
+          const munFiltrados = munGeo.features.filter(f => {
+            const p = f.properties;
+            const cve = p.cve_mun || p.cvegeo || '';
+            const nombre = (p.nombre || '').toLowerCase();
+            return nombre.includes(termino) || cve.includes(termino);
+          });
+
+          grid.innerHTML = munFiltrados.map(f => {
+            const p = f.properties;
+            const cve = p.cve_mun || p.cvegeo;
+            const nEscuelas = escuelas[cve] || escuelas[cve?.slice(-3)] || 0;
+            const nAlumnado = alumnado[cve] || alumnado[cve?.slice(-3)] || 0;
+            const esNuevo = ['04012', '04013'].includes(cve);
+
+            return `
+              <div class="mun-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Clave INEGI: ${cve}</span>
+                  ${esNuevo ? `<span class="badge badge--success" style="font-size:0.68rem;">Independizado</span>` : ''}
+                </div>
+                <h3 style="font-family:var(--font-heading); font-weight:800; color:var(--text-heading); font-size:1.2rem;">${p.nombre}</h3>
+                <p style="font-size:0.82rem; color:var(--text-muted);">Cabecera: <strong style="color:var(--text-body);">${cabeceras[cve] || p.nombre}</strong></p>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px; background:rgba(15,23,42,0.4); padding:10px; border-radius:var(--radius-xs);">
+                  <div>
+                    <span style="font-size:0.7rem; color:var(--text-muted); display:block;">Inmuebles CCT</span>
+                    <strong style="color:var(--text-heading); font-size:1rem;">${nEscuelas}</strong>
+                  </div>
+                  <div>
+                    <span style="font-size:0.7rem; color:var(--text-muted); display:block;">Alumnado</span>
+                    <strong style="color:var(--text-heading); font-size:1rem;">${nAlumnado.toLocaleString('es-MX')}</strong>
+                  </div>
+                </div>
+
+                <a href="mando.html" class="action-btn" style="margin-top:8px; text-decoration:none; justify-content:center;">
+                  <i data-lucide="map-pin" class="icon-xs"></i> <span>Ver en Mapa</span>
+                </a>
+              </div>`;
+          }).join('');
+
+          lucide.createIcons();
+        };
+
+        renderGrid();
+        inputSearch?.addEventListener('input', (e) => renderGrid(e.target.value));
+      });
+    });
+  </script>
+</body>
+</html>

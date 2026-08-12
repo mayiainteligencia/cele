@@ -11,3 +11,7 @@ node_modules
 #
 # El KML no: son 7.8 MB y se re-descarga con --fetch.
 backend/datalab/uploads/campeche_escuelas.kml
+
+# KML crudo de Google My Maps (7.8 MB). Se re-descarga con:
+#   python3 frontend/data/geo/build_geo.py --fetch
+frontend/data/geo/.cache_mymaps.kml

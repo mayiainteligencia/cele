@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Tablero Unificado de Alertas — Cerebro Electoral (CE).">
+  <title>Tablero Unificado de Alertas — Cerebro Electoral (CE)</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/colors.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+<body data-page="alertas">
+
+  <header class="filter-bar filter-bar--notch" id="filter-bar">
+    <a href="index.html" class="topbar-side" style="gap:10px;">
+      <span class="ce-brand-badge" style="font-size:1.1rem; padding: 2px 8px; border-radius:6px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3);">CE</span>
+      <span style="font-weight:700; color:var(--text-heading); font-size:0.95rem;">Tablero de Alertas</span>
+    </a>
+
+    <div class="topbar-notch">
+      <nav class="subnav-bar">
+        <a class="subnav-btn" href="index.html"><i data-lucide="home" class="icon-xs"></i> <span>Inicio</span></a>
+        <a class="subnav-btn" href="mando.html"><i data-lucide="bar-chart-3" class="icon-xs"></i> <span>Centro de Mando</span></a>
+        <a class="subnav-btn subnav-btn--active" href="alertas.html"><i data-lucide="bell" class="icon-xs"></i> <span>Alertas</span></a>
+        <a class="subnav-btn" href="municipios.html"><i data-lucide="building-2" class="icon-xs"></i> <span>13 Municipios</span></a>
+        <a class="subnav-btn" href="fuentes.html"><i data-lucide="database" class="icon-xs"></i> <span>Fuentes</span></a>
+      </nav>
+    </div>
+
+    <div id="auth-slot"></div>
+  </header>
+
+  <nav class="sidebar" id="sidebar" aria-label="Navegación principal"></nav>
+
+  <main class="main" id="main-content" style="padding-top: calc(var(--filter-bar-height) + var(--space-md));">
+    <div class="mando-workspace animate-fade-in-up">
+
+      <section class="mando-header">
+        <div class="mando-header__title-box">
+          <h1><i data-lucide="bell" style="color:var(--accent-cyan);"></i> Tablero Unificado de Alertas Operativas</h1>
+          <p>Consolidado central de eventos, incidentes de medios, desinformación, variaciones financieras y forensia con responsable asignado.</p>
+        </div>
+
+        <div class="mando-header__pills">
+          <span class="badge badge--success">Monitoreo 24/7</span>
+          <span class="badge badge--neutral">Asignación de Responsable</span>
+        </div>
+      </section>
+
+      <section class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg);">
+        <h3 class="text-h3" style="margin-bottom:var(--space-sm);">Bandeja Unificada de Incidentes y Evidencia</h3>
+        <p style="font-size:0.85rem; color:var(--text-body);">
+          Cada alerta cuenta con nivel de urgencia (Verde, Amarillo, Naranja, Rojo), fuente verificada, evidencia adjunta y responsable ejecutivo asignado.
+        </p>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

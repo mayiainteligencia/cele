@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Dashboard Electoral - Campeche</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+<style>
+  html, body { height: 100%; margin: 0; padding: 0; font-family: sans-serif; }
+  #map { height: 100%; width: 100%; }
+  .info-box {
+    position: absolute; top: 10px; right: 10px; z-index: 1000;
+    background: white; padding: 10px 14px; border-radius: 6px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.4); font-size: 13px; max-width: 220px;
+  }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+<div class="info-box">
+  <b>Campeche</b><br>
+  Límite estatal cargado desde <code>campeche.geojson</code>.<br>
+  Aquí se pueden agregar más capas: municipios, secciones electorales, casillas, escuelas, etc.
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+  // Mapa centrado en Campeche
+  const map = L.map('map').setView([19.26, -90.5], 7);
+
+  // Capa base (OpenStreetMap, gratis, sin necesidad de API key)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 18
+  }).addTo(map);
+
+  // Cargar el límite estatal de Campeche
+  fetch('campeche.geojson')
+    .then(res => res.json())
+    .then(data => {
+      const campecheLayer = L.geoJSON(data, {
+        style: {
+          color: '#1a5276',
+          weight: 2,
+          fillColor: '#5dade2',
+          fillOpacity: 0.15
+        },
+        onEachFeature: function (feature, layer) {
+          layer.bindPopup('<b>' + feature.properties.state_name + '</b>');
+        }
+      }).addTo(map);
+
+      // Ajustar el zoom automáticamente al polígono
+      map.fitBounds(campecheLayer.getBounds());
+    })
+    .catch(err => console.error('Error cargando campeche.geojson:', err));
+
+  // ---------------------------------------------------------
+  // EJEMPLO: cómo agregar tus puntos del KML (escuelas, casillas, etc.)
+  // convertidos previamente a GeoJSON.
+  // ---------------------------------------------------------
+  /*
+  fetch('puntos_escuelas.geojson')
+    .then(res => res.json())
+    .then(data => {
+      L.geoJSON(data, {
+        pointToLayer: function (feature, latlng) {
+          return L.circleMarker(latlng, {
+            radius: 6,
+            fillColor: '#e74c3c',
+            color: '#c0392b',
+            weight: 1,
+            fillOpacity: 0.8
+          });
+        },
+        onEachFeature: function (feature, layer) {
+          const nombre = feature.properties.name || 'Sin nombre';
+          layer.bindPopup('<b>' + nombre + '</b>');
+        }
+      }).addTo(map);
+    });
+  */
+</script>
+
+</body>
+</html>

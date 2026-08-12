@@ -1,0 +1,677 @@
+/* ============================================
+   DCMarketAg — COMPONENTS
+   ============================================
+   Todos los componentes visuales reutilizables.
+   Colores via variables de colors.css.
+   ============================================ */
+
+/* ════════════════════════════════════════════
+   SIDEBAR ICONS
+   ════════════════════════════════════════════ */
+
+/* Cada icono es un círculo suelto con su propio vidrio */
+.sidebar__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  color: var(--sidebar-icon);
+  background: var(--superficie);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 22px -8px rgba(23, 30, 56, 0.35);
+  transition: all var(--transition-base);
+  position: relative;
+}
+
+.sidebar__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Inactivo: solo un halo claro. Activo: navy sólido. */
+.sidebar__icon:hover {
+  background: var(--superficie-hover);
+  color: var(--accent-navy);
+  transform: scale(1.08);
+}
+
+.sidebar__icon--active,
+.sidebar__icon--active:hover {
+  background: var(--sidebar-icon-bg-active);
+  color: var(--sidebar-icon-active);
+  border-color: transparent;
+  box-shadow: 0 10px 26px -6px rgba(34, 27, 94, 0.6);
+}
+
+/* Tooltip */
+.sidebar__icon[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-4px);
+  background: var(--accent-navy);
+  color: var(--text-on-accent);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all var(--transition-fast);
+}
+
+.sidebar__icon:hover[data-tooltip]::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+@media (max-width: 768px) {
+  .sidebar__icon {
+    width: 42px;
+    height: 42px;
+  }
+  .sidebar__icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  .sidebar__icon[data-tooltip]::after {
+    display: none;
+  }
+}
+
+
+/* ════════════════════════════════════════════
+   AVATAR
+   ════════════════════════════════════════════ */
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: var(--glass-bg);
+  border: 2px solid var(--glass-border);
+  color: var(--text-muted);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.avatar--sm {
+  width: 44px;
+  height: 44px;
+  font-size: 0.85rem;
+}
+
+.avatar--xs {
+  width: 32px;
+  height: 32px;
+  font-size: 0.65rem;
+  border-width: 1.5px;
+  background: var(--accent-blue-light);
+  color: var(--accent-navy);
+}
+
+.avatar--ce {
+  background: var(--accent-navy);
+  border-color: var(--accent-blue-light);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.25);
+  text-decoration: none;
+}
+
+.ce-brand-badge {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+/* ════════════════════════════════════════════
+   FILTER PILLS
+   ════════════════════════════════════════════ */
+
+.filter-pill {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 10px var(--space-md);
+  background: var(--pill-bg);
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+}
+
+.filter-pill:hover {
+  background: var(--superficie-hover);
+  border-color: var(--glass-border-hover);
+  transform: scale(1.03);
+  box-shadow: var(--glass-shadow);
+}
+
+.filter-pill__icon {
+  width: 16px;
+  height: 16px;
+}
+
+.filter-pill__label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--pill-label);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.filter-pill__value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.filter-pill__chevron {
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  transition: transform var(--transition-fast);
+}
+
+.filter-pill--dropdown {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px var(--space-md);
+  position: relative;
+  background: transparent;
+}
+
+.filter-pill--dropdown:hover {
+  background: var(--glass-bg);
+  box-shadow: none;
+}
+
+.filter-pill--dropdown .filter-pill__chevron {
+  position: absolute;
+  right: var(--space-sm);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.filter-pill--dropdown {
+  padding-right: var(--space-xl);
+}
+
+.filter-pill--back {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-heading);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.filter-pill--back:hover {
+  background: var(--glass-bg);
+}
+
+.filter-pill--cta {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border-color: var(--btn-primary-bg);
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 11px var(--space-lg);
+  margin-left: auto;
+}
+
+.filter-pill--cta:hover {
+  background: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
+  transform: scale(1.05);
+  box-shadow: 0 10px 30px -6px rgba(34, 27, 94, 0.45);
+}
+
+.filter-pill--cta .filter-pill__icon {
+  color: var(--text-on-accent);
+}
+
+
+/* ════════════════════════════════════════════
+   BUTTONS
+   ════════════════════════════════════════════ */
+
+.btn-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-base);
+  flex-shrink: 0;
+}
+
+.btn-circle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-circle--glass {
+  background: var(--superficie);
+  border: 1px solid var(--glass-border);
+  color: var(--text-heading);
+}
+
+.btn-circle--glass:hover {
+  background: var(--superficie-hover);
+  transform: scale(1.08) rotate(3deg);
+  box-shadow: var(--glass-shadow-hover);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-full);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all var(--transition-base);
+}
+
+.btn-primary:hover {
+  background: var(--btn-primary-hover);
+  transform: scale(1.05);
+  box-shadow: 0 12px 32px -8px rgba(34, 27, 94, 0.5);
+}
+
+.btn-glass {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-full);
+  background: var(--btn-glass-bg);
+  border: 1px solid var(--btn-glass-border);
+  color: var(--btn-glass-text);
+  font-weight: 500;
+  font-size: 0.9rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all var(--transition-base);
+}
+
+.btn-glass:hover {
+  background: var(--glass-bg-hover);
+  transform: scale(1.05);
+  box-shadow: var(--glass-shadow-hover);
+}
+
+
+/* ════════════════════════════════════════════
+   SPECS
+   ════════════════════════════════════════════ */
+
+.spec {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-body);
+}
+
+.spec svg {
+  width: 15px;
+  height: 15px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.spec__value {
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.spec__label {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+
+/* ════════════════════════════════════════════
+   ACTION BUTTONS (like, bookmark, share)
+   ════════════════════════════════════════════ */
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+  transition: all var(--transition-base);
+  background: transparent;
+}
+
+/* El círculo es el ::before; el icono y el contador van dentro */
+.action-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.action-btn__circle {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-full);
+  background: var(--superficie);
+  border: 1px solid var(--glass-border);
+  color: var(--text-heading);
+  transition: all var(--transition-base);
+}
+
+.action-btn:hover { color: var(--text-heading); }
+
+.action-btn:hover .action-btn__circle {
+  transform: scale(1.08);
+  background: var(--superficie-hover);
+  box-shadow: var(--glass-shadow);
+}
+
+.action-btn.active .action-btn__circle {
+  background: var(--accent-coral);
+  border-color: var(--accent-coral);
+  color: var(--text-on-accent);
+}
+
+.action-btn.active { color: var(--accent-coral); }
+
+
+/* ════════════════════════════════════════════
+   ICON HELPER
+   ════════════════════════════════════════════ */
+
+.icon-xs {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+
+/* ════════════════════════════════════════════
+   DC LOGO
+   ════════════════════════════════════════════ */
+
+.dc-logo {
+  width: 76px;
+  height: 76px;
+  border-radius: var(--radius-full);
+  background: var(--accent-navy);
+  color: var(--text-on-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: 0.04em;
+  border: 4px solid var(--border-medium);
+  box-shadow: 0 16px 40px -10px rgba(34, 27, 94, 0.55);
+  transition: all var(--transition-base);
+}
+
+.dc-logo:hover {
+  transform: translateX(-50%) scale(1.06);
+  box-shadow: 0 20px 50px -10px rgba(34, 27, 94, 0.65);
+}
+
+
+/* ════════════════════════════════════════════
+   AGENT FLOATING BUBBLE
+   ════════════════════════════════════════════ */
+
+.agent-bubble {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background: var(--accent-blue);
+  color: var(--text-on-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px -6px rgba(91, 141, 239, 0.55);
+  transition: all var(--transition-base);
+}
+
+.agent-bubble svg {
+  width: 24px;
+  height: 24px;
+}
+
+.agent-bubble:hover {
+  background: var(--accent-navy);
+  transform: scale(1.08);
+  box-shadow: 0 14px 38px -8px rgba(34, 27, 94, 0.5);
+}
+
+
+/* ════════════════════════════════════════════
+   SERVICE CARDS (for dashboard grid)
+   ════════════════════════════════════════════ */
+
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-lg);
+  padding: var(--space-lg) 0;
+}
+
+.service-grid-card {
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  transition: all var(--transition-base);
+  cursor: pointer;
+}
+
+.service-grid-card:hover {
+  transform: translateY(-6px);
+}
+
+.service-grid-card__provider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.service-grid-card__price {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2xs);
+  margin-top: auto;
+}
+
+.service-grid-card__price-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.service-grid-card__price-period {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.service-grid-card__cta {
+  margin-top: var(--space-sm);
+}
+
+
+/* ════════════════════════════════════════════
+   NEGOTIATION TIMELINE
+   ════════════════════════════════════════════ */
+
+.timeline {
+  position: relative;
+  padding: var(--space-lg) 0;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border-medium);
+  transform: translateX(-50%);
+}
+
+.timeline__round {
+  display: flex;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-xl);
+  position: relative;
+}
+
+.timeline__round::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 24px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  background: var(--accent-blue);
+  border: 3px solid var(--glass-border);
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.timeline__agent-card {
+  flex: 1;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+}
+
+.timeline__agent-card--left {
+  text-align: right;
+}
+
+
+/* ════════════════════════════════════════════
+   STATUS BADGES
+   ════════════════════════════════════════════ */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-2xs) var(--space-sm);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.status-badge--success {
+  background: var(--proc-recomendacion-bg);
+  color: var(--status-success);
+}
+
+.status-badge--pending {
+  background: var(--sev-media-bg);
+  color: var(--status-pending);
+}
+
+.status-badge--rejected {
+  background: var(--sev-critica-bg);
+  color: var(--status-rejected);
+}
+
+.status-badge--meeting {
+  background: var(--proc-calculo-bg);
+  color: var(--status-meeting);
+}
+
+
+/* ════════════════════════════════════════════
+   BLUR OVERLAY (for guest users)
+   ════════════════════════════════════════════ */
+
+.blur-overlay {
+  position: relative;
+}
+
+.blur-overlay__content {
+  filter: var(--blur-amount);
+  pointer-events: none;
+  user-select: none;
+}
+
+.blur-overlay__cta {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: var(--z-overlay);
+  text-align: center;
+  padding: var(--space-xl);
+  border-radius: var(--radius-md);
+}
+
+.blur-overlay__timer {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent-coral);
+  margin-bottom: var(--space-md);
+}
+
+
+/* ════════════════════════════════════════════
+   PUNTO DE ESTADO
+   ════════════════════════════════════════════
+   Vive aquí y no en negociacion.css porque lo
+   usan el agente, el perfil y el chat.
+   ════════════════════════════════════════════ */
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: all var(--transition-base);
+}
+
+.status-dot--idle     { background: var(--text-muted); }
+.status-dot--thinking { background: var(--accent-warm); animation: pulse 1s ease infinite; }
+.status-dot--active   { background: var(--status-success); }
+.status-dot--done     { background: var(--status-success); }
+.status-dot--meeting  { background: var(--status-meeting); }

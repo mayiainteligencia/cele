@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Estrategia y Logística Día D — Cerebro Electoral (CE).">
+  <title>Estrategia Día D — Cerebro Electoral (CE)</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/colors.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+<body data-page="dia-d">
+
+  <header class="filter-bar filter-bar--notch" id="filter-bar">
+    <a href="index.html" class="topbar-side" style="gap:10px;">
+      <span class="ce-brand-badge" style="font-size:1.1rem; padding: 2px 8px; border-radius:6px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3);">CE</span>
+      <span style="font-weight:700; color:var(--text-heading); font-size:0.95rem;">Estrategia Día D</span>
+    </a>
+
+    <div class="topbar-notch">
+      <nav class="subnav-bar">
+        <a class="subnav-btn" href="index.html"><i data-lucide="home" class="icon-xs"></i> <span>Inicio</span></a>
+        <a class="subnav-btn" href="mando.html"><i data-lucide="bar-chart-3" class="icon-xs"></i> <span>Centro de Mando</span></a>
+        <a class="subnav-btn subnav-btn--active" href="dia-d.html"><i data-lucide="check-circle-2" class="icon-xs"></i> <span>Día D</span></a>
+        <a class="subnav-btn" href="municipios.html"><i data-lucide="building-2" class="icon-xs"></i> <span>13 Municipios</span></a>
+        <a class="subnav-btn" href="fuentes.html"><i data-lucide="database" class="icon-xs"></i> <span>Fuentes</span></a>
+      </nav>
+    </div>
+
+    <div id="auth-slot"></div>
+  </header>
+
+  <nav class="sidebar" id="sidebar" aria-label="Navegación principal"></nav>
+
+  <main class="main" id="main-content" style="padding-top: calc(var(--filter-bar-height) + var(--space-md));">
+    <div class="mando-workspace animate-fade-in-up">
+
+      <section class="mando-header">
+        <div class="mando-header__title-box">
+          <h1><i data-lucide="check-circle-2" style="color:var(--accent-cyan);"></i> Estrategia & Logística del Día D</h1>
+          <p>Planificación lícita de cobertura de casillas, asignación de representantes generales/de casilla y seguimiento de instalación.</p>
+        </div>
+
+        <div class="mando-header__pills">
+          <span class="badge badge--success">Logística Lícita Acreditada</span>
+          <span class="badge badge--neutral">Sin Vigilancia Individual de Electores</span>
+        </div>
+      </section>
+
+      <section class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-card__label"><span>Cobertura de Representantes</span><i data-lucide="users" class="icon-xs" style="color:#22c55e;"></i></div>
+          <div class="kpi-card__value" style="color:#22c55e;">98.4%</div>
+          <div class="kpi-card__sub">Representantes asignados por municipio</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__label"><span>Representantes Generales</span><i data-lucide="user-check" class="icon-xs"></i></div>
+          <div class="kpi-card__value">142</div>
+          <div class="kpi-card__sub">Coordinadores de ruta acreditados</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__label"><span>Reporte de Instalación</span><i data-lucide="clock" class="icon-xs"></i></div>
+          <div class="kpi-card__value">08:00 AM</div>
+          <div class="kpi-card__sub">Horario de apertura de protocolo</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__label"><span>Mesa de Incidencias</span><i data-lucide="shield-check" class="icon-xs"></i></div>
+          <div class="kpi-card__value">Operativa</div>
+          <div class="kpi-card__sub">Enlace directo con equipo jurídico</div>
+        </div>
+      </section>
+
+      <section class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg);">
+        <h3 class="text-h3" style="margin-bottom:var(--space-sm);">Matriz de Cobertura Logística por Municipio</h3>
+        <p style="font-size:0.85rem; color:var(--text-body);">
+          Supervisión estricta de representación ante casillas básicas, contiguas, extraordinarias y especiales en Campeche.
+        </p>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

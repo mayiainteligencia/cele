@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Datos Históricos, Forensia Electoral y Alertas de Anomalías — Cerebro Electoral (CE).">
+  <title>Forensia Electoral & Anomalías — Cerebro Electoral (CE)</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/colors.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/auth.css">
+
+  <style>
+    .tabla-forensia {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .tabla-forensia th {
+      background: rgba(15, 23, 42, 0.8);
+      color: var(--text-heading);
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .tabla-forensia td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: var(--text-body);
+    }
+  </style>
+</head>
+<body data-page="forensia">
+
+  <header class="filter-bar filter-bar--notch" id="filter-bar">
+    <a href="index.html" class="topbar-side" style="gap:10px;">
+      <span class="ce-brand-badge" style="font-size:1.1rem; padding: 2px 8px; border-radius:6px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3);">CE</span>
+      <span style="font-weight:700; color:var(--text-heading); font-size:0.95rem;">Forensia Electoral</span>
+    </a>
+
+    <div class="topbar-notch">
+      <nav class="subnav-bar">
+        <a class="subnav-btn" href="index.html"><i data-lucide="home" class="icon-xs"></i> <span>Inicio</span></a>
+        <a class="subnav-btn" href="mando.html"><i data-lucide="bar-chart-3" class="icon-xs"></i> <span>Centro de Mando</span></a>
+        <a class="subnav-btn subnav-btn--active" href="forensia.html"><i data-lucide="shield-alert" class="icon-xs"></i> <span>Forensia</span></a>
+        <a class="subnav-btn" href="municipios.html"><i data-lucide="building-2" class="icon-xs"></i> <span>13 Municipios</span></a>
+        <a class="subnav-btn" href="fuentes.html"><i data-lucide="database" class="icon-xs"></i> <span>Fuentes</span></a>
+      </nav>
+    </div>
+
+    <div id="auth-slot"></div>
+  </header>
+
+  <nav class="sidebar" id="sidebar" aria-label="Navegación principal"></nav>
+
+  <main class="main" id="main-content" style="padding-top: calc(var(--filter-bar-height) + var(--space-md));">
+    <div class="mando-workspace animate-fade-in-up">
+
+      <section class="mando-header">
+        <div class="mando-header__title-box">
+          <h1><i data-lucide="shield-alert" style="color:var(--accent-cyan);"></i> Forensia Electoral y Detección de Anomalías</h1>
+          <p>Auditoría estadística de patrones de votación histórico, análisis de variabilidad PREP vs Cómputos y semáforo de integridad.</p>
+        </div>
+
+        <div class="mando-header__pills">
+          <span class="badge badge--success">Motor Estadístico Activo</span>
+          <span class="badge badge--neutral">Semáforo Verificado</span>
+        </div>
+      </section>
+
+      <section class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-card__label"><span>Alertas Verdes (Normal)</span><i data-lucide="check-circle" class="icon-xs" style="color:#22c55e;"></i></div>
+          <div class="kpi-card__value" style="color:#22c55e;">11</div>
+          <div class="kpi-card__sub">Municipios con variabilidad histórica esperada</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__label"><span>Alertas Amarillas (Atención)</span><i data-lucide="alert-triangle" class="icon-xs" style="color:#eab308;"></i></div>
+          <div class="kpi-card__value" style="color:#eab308;">2</div>
+          <div class="kpi-card__sub">Votos nulos por encima del promedio ponderado</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__label"><span>Alertas Naranja (Riesgo)</span><i data-lucide="alert-circle" class="icon-xs" style="color:#f97316;"></i></div>
+          <div class="kpi-card__value" style="color:#f97316;">0</div>
+          <div class="kpi-card__sub">Divergencia PREP vs Cómputos > 3.5%</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__label"><span>Alertas Rojas (Crítico)</span><i data-lucide="octagon-alert" class="icon-xs" style="color:#ef4444;"></i></div>
+          <div class="kpi-card__value" style="color:#ef4444;">0</div>
+          <div class="kpi-card__sub">Anomalía severa que requiere revisión jurídica</div>
+        </div>
+      </section>
+
+      <section class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg);">
+        <h3 class="text-h3" style="margin-bottom:var(--space-sm); display:flex; align-items:center; gap:8px;">
+          <i data-lucide="list-checks" class="icon-sm" style="color:var(--accent-cyan);"></i> Matriz de Auditoría Forense por Municipio
+        </h3>
+        
+        <div style="overflow-x:auto; border-radius:var(--radius-md); border:1px solid var(--glass-border); margin-top:var(--space-md);">
+          <table class="tabla-forensia">
+            <thead>
+              <tr>
+                <th>Municipio</th>
+                <th>Variación PREP vs Cómputo</th>
+                <th>Tasa Votos Nulos</th>
+                <th>Participación Histórica</th>
+                <th>Nivel de Riesgo</th>
+                <th>Acción Jurídica</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Campeche (04002)</strong></td>
+                <td>0.8% (Normal)</td>
+                <td>2.1%</td>
+                <td>61.4%</td>
+                <td><span class="badge badge--success">VERDE</span></td>
+                <td>Sin observación</td>
+              </tr>
+              <tr>
+                <td><strong>Carmen (04003)</strong></td>
+                <td>1.2% (Normal)</td>
+                <td>2.4%</td>
+                <td>58.9%</td>
+                <td><span class="badge badge--success">VERDE</span></td>
+                <td>Sin observación</td>
+              </tr>
+              <tr>
+                <td><strong>Champotón (04004)</strong></td>
+                <td>2.9% (Elevado)</td>
+                <td>4.8% (Atípico)</td>
+                <td>64.1%</td>
+                <td><span class="badge" style="background:rgba(234,179,8,0.15); color:#facc15;">AMARILLO</span></td>
+                <td>Auditoría de Actas Sección 0142</td>
+              </tr>
+              <tr>
+                <td><strong>Dzitbalché (04013)</strong></td>
+                <td>1.1% (Normal)</td>
+                <td>2.3%</td>
+                <td>63.0%</td>
+                <td><span class="badge badge--success">VERDE</span></td>
+                <td>Sin observación</td>
+              </tr>
+              <tr>
+                <td><strong>Seybaplaya (04012)</strong></td>
+                <td>3.1% (Elevado)</td>
+                <td>4.6% (Atípico)</td>
+                <td>66.2%</td>
+                <td><span class="badge" style="background:rgba(234,179,8,0.15); color:#facc15;">AMARILLO</span></td>
+                <td>Verificación de muestra aleatoria</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

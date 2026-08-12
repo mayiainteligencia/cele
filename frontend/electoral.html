@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Cartografía Electoral INE / IEEC — Cerebro Electoral (CE).">
+  <title>Cartografía Electoral (INE / IEEC) — Cerebro Electoral (CE)</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/colors.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+<body data-page="electoral">
+
+  <!-- BARRA SUPERIOR -->
+  <header class="filter-bar filter-bar--notch" id="filter-bar">
+    <a href="index.html" class="topbar-side" style="gap:10px;">
+      <span class="ce-brand-badge" style="font-size:1.1rem; padding: 2px 8px; border-radius:6px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3);">CE</span>
+      <span style="font-weight:700; color:var(--text-heading); font-size:0.95rem;">Cartografía Electoral</span>
+    </a>
+
+    <div class="topbar-notch">
+      <nav class="subnav-bar">
+        <a class="subnav-btn" href="index.html"><i data-lucide="home" class="icon-xs"></i> <span>Inicio</span></a>
+        <a class="subnav-btn" href="mando.html"><i data-lucide="bar-chart-3" class="icon-xs"></i> <span>Centro de Mando</span></a>
+        <a class="subnav-btn" href="cartografia.html"><i data-lucide="map" class="icon-xs"></i> <span>Cartografía</span></a>
+        <a class="subnav-btn" href="municipios.html"><i data-lucide="building-2" class="icon-xs"></i> <span>13 Municipios</span></a>
+        <a class="subnav-btn subnav-btn--active" href="electoral.html"><i data-lucide="vote" class="icon-xs"></i> <span>Cartografía INE</span></a>
+        <a class="subnav-btn" href="fuentes.html"><i data-lucide="database" class="icon-xs"></i> <span>Fuentes</span></a>
+      </nav>
+    </div>
+
+    <div id="auth-slot"></div>
+  </header>
+
+  <!-- NAVEGACIÓN LATERAL -->
+  <nav class="sidebar" id="sidebar" aria-label="Navegación principal"></nav>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="main" id="main-content" style="padding-top: calc(var(--filter-bar-height) + var(--space-md));">
+    <div class="mando-workspace animate-fade-in-up">
+
+      <section class="mando-header">
+        <div class="mando-header__title-box">
+          <h1><i data-lucide="vote" style="color:var(--accent-cyan);"></i> Cartografía Electoral INE / IEEC (Estado de Integración)</h1>
+          <p>Supervisión del contrato de datos para Secciones Electorales, Distritos Federales y Distritos Locales en Campeche.</p>
+        </div>
+
+        <div class="mando-header__pills">
+          <span class="badge" style="background:rgba(234,179,8,0.15); color:#facc15;">Pendiente de Acceso a Portal INE</span>
+          <span class="badge badge--neutral">Sin Bloqueo Operativo</span>
+        </div>
+      </section>
+
+      <!-- Panel informativo sobre capas electorales -->
+      <section class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg); display:flex; flex-direction:column; gap:var(--space-md);">
+        <h3 class="text-h3" style="display:flex; align-items:center; gap:8px;">
+          <i data-lucide="clock" class="icon-sm" style="color:#facc15;"></i> Estatus de Capas Electorales
+        </h3>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:var(--space-md);">
+          <div style="background:rgba(15,23,42,0.5); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong style="color:var(--text-heading);">Secciones Electorales</strong>
+              <span class="badge" style="background:rgba(234,179,8,0.15); color:#facc15; font-size:0.7rem;">PENDIENTE</span>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-body);">Polígonos de secciones electorales de Campeche. Acceso al portal INE en trámite.</p>
+          </div>
+
+          <div style="background:rgba(15,23,42,0.5); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong style="color:var(--text-heading);">Distritos Federales (INE)</strong>
+              <span class="badge" style="background:rgba(234,179,8,0.15); color:#facc15; font-size:0.7rem;">PENDIENTE</span>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-body);">Delimitación distrital federal de Campeche proveniente de la Cartografía Oficial del INE.</p>
+          </div>
+
+          <div style="background:rgba(15,23,42,0.5); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong style="color:var(--text-heading);">Distritos Locales (IEEC)</strong>
+              <span class="badge" style="background:rgba(234,179,8,0.15); color:#facc15; font-size:0.7rem;">PENDIENTE</span>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-body);">Demarcaciones de distritos locales de Campeche del Instituto Electoral del Estado de Campeche.</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

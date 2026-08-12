@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Cerebro Electoral (CE) — Centro de mando ejecutivo de inteligencia geoespacial y cartografía electoral de Campeche (Entidad 04).">
+  <title>Centro de Mando Ejecutivo — Cerebro Electoral (CE)</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Leaflet 1.9.4 CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Lucide Icons (CDN) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Hojas de estilo -->
+  <link rel="stylesheet" href="css/colors.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/mapa.css">
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+<body data-page="mando">
+
+  <!-- ════════════════════════════════════════
+       BARRA SUPERIOR (Riel Nivel 1 + Riel Nivel 2)
+       ════════════════════════════════════════ -->
+  <header class="filter-bar filter-bar--notch" id="filter-bar">
+
+    <!-- Marca: izquierda -->
+    <a href="index.html" class="topbar-side" style="gap:10px;">
+      <span class="ce-brand-badge" style="font-size:1.1rem; padding: 2px 8px; border-radius:6px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3);">CE</span>
+      <span style="font-weight:700; color:var(--text-heading); font-size:0.95rem;">Cerebro Electoral</span>
+    </a>
+
+    <!-- Riel de 2º Nivel: Navegación por módulos -->
+    <div class="topbar-notch">
+      <nav class="subnav-bar">
+        <a class="subnav-btn" href="index.html">
+          <i data-lucide="home" class="icon-xs"></i>
+          <span>Inicio (Video)</span>
+        </a>
+        <button class="subnav-btn subnav-btn--active" data-view="mando">
+          <i data-lucide="bar-chart-3" class="icon-xs"></i>
+          <span>Centro de Mando</span>
+        </button>
+        <button class="subnav-btn" data-view="mapa">
+          <i data-lucide="map" class="icon-xs"></i>
+          <span>Mapa & Capas</span>
+        </button>
+        <button class="subnav-btn" data-view="municipios">
+          <i data-lucide="building-2" class="icon-xs"></i>
+          <span>13 Municipios</span>
+        </button>
+        <button class="subnav-btn" data-view="fuentes">
+          <i data-lucide="database" class="icon-xs"></i>
+          <span>Trazabilidad</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Filtros rápidos de coloreado -->
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button class="filter-pill" id="btn-colorear-escuelas" style="font-size:0.78rem;">
+        <i data-lucide="school" class="icon-xs"></i>
+        <span>Escuelas / Mun</span>
+      </button>
+      <button class="filter-pill" id="btn-colorear-alumnado" style="font-size:0.78rem;">
+        <i data-lucide="users" class="icon-xs"></i>
+        <span>Alumnado</span>
+      </button>
+    </div>
+  </header>
+
+
+  <!-- ════════════════════════════════════════
+       NAVEGACIÓN LATERAL (Riel vertical principal)
+       ════════════════════════════════════════ -->
+  <nav class="sidebar" id="sidebar" aria-label="Navegación principal"></nav>
+
+
+  <!-- ════════════════════════════════════════
+       CONTENIDO PRINCIPAL — CENTRO DE MANDO
+       ════════════════════════════════════════ -->
+  <main class="main" id="main-content" style="padding-top: calc(var(--filter-bar-height) + var(--space-md));">
+
+    <div class="mando-workspace animate-fade-in-up">
+
+      <!-- Header Informativo -->
+      <section class="mando-header">
+        <div class="mando-header__title-box">
+          <h1>
+            <i data-lucide="shield-check" style="color:var(--accent-cyan);"></i>
+            Centro de Mando Ejecutivo — Campeche (04)
+          </h1>
+          <p>Supervisión territorial integral, infraestructura educativa (CCT SEP) y catálogo municipal de 13 cabeceras.</p>
+        </div>
+
+        <div class="mando-header__pills">
+          <span class="badge badge--success" style="padding:6px 12px; font-weight:600; display:flex; align-items:center; gap:6px;">
+            <span class="status-dot status-dot--active"></span> Marco INEGI 2024 (corte agosto)
+          </span>
+          <span class="badge badge--neutral" style="padding:6px 12px; font-weight:600;">
+            13 Municipios (100% Cobertura)
+          </span>
+        </div>
+      </section>
+
+      <!-- KPI Grid de 4 Indicadores -->
+      <section class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-card__label">
+            <span>Municipios Autónomos</span>
+            <i data-lucide="building-2" class="icon-xs" style="color:var(--accent-cyan);"></i>
+          </div>
+          <div class="kpi-card__value">13</div>
+          <div class="kpi-card__sub">Incluye Dzitbalché y Seybaplaya independientes</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__label">
+            <span>Infraestructura CCT</span>
+            <i data-lucide="school" class="icon-xs" style="color:var(--accent-blue);"></i>
+          </div>
+          <div class="kpi-card__value">2,274</div>
+          <div class="kpi-card__sub">Inmuebles educativos geolocalizados (SEP)</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__label">
+            <span>Sitios Físicos Únicos</span>
+            <i data-lucide="map-pin" class="icon-xs" style="color:var(--accent-gold);"></i>
+          </div>
+          <div class="kpi-card__value">1,482</div>
+          <div class="kpi-card__sub">Coordenadas geográficas sin duplicados</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__label">
+            <span>Capas INE / IEEC</span>
+            <i data-lucide="clock" class="icon-xs" style="color:var(--text-muted);"></i>
+          </div>
+          <div class="kpi-card__value" style="font-size:1.4rem; color:var(--text-muted);">3 Pendientes</div>
+          <div class="kpi-card__sub">Secciones y Distritos en proceso de acceso</div>
+        </div>
+      </section>
+
+      <!-- Layout Principal: Mapa Interactivo + Riel Municipal -->
+      <section class="mando-grid">
+        
+        <!-- Contenedor del Mapa -->
+        <div class="mando-map-box">
+          <div class="mando-map-card" id="mapa-ejecutivo"></div>
+        </div>
+
+        <!-- Riel de Inspección Municipal (13 Municipios) -->
+        <div class="mando-rail-card">
+          <div class="mando-rail-title">
+            <span>13 Municipios de Campeche</span>
+            <span class="badge" style="font-size:0.72rem;">04mun</span>
+          </div>
+
+          <div class="municipios-lista" id="lista-municipios">
+            <!-- Se llena dinámicamente desde app.js -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Panel de Trazabilidad y Fuentes de Datos -->
+      <section class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg); margin-top:var(--space-md);" id="seccion-trazabilidad">
+        <h3 class="text-h3" style="margin-bottom:var(--space-sm); display:flex; align-items:center; gap:8px;">
+          <i data-lucide="database" class="icon-sm" style="color:var(--accent-cyan);"></i>
+          Trazabilidad y Estado de Capas
+        </h3>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:var(--space-md);">
+          <div style="background:rgba(15,23,42,0.5); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong style="color:var(--text-heading); font-size:0.9rem;">Marco Geoestadístico INEGI 2024</strong>
+              <span class="badge badge--success" style="font-size:0.7rem;">DISPONIBLE</span>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-body); margin-bottom:8px;">
+              Corte agosto 2024, entidad 04. 13 polígonos municipales reales convertidos a GeoJSON desde EPSG:6372 / Lambert Conformal Conic.
+            </p>
+            <span style="font-size:0.72rem; color:var(--text-muted);">Archivos: municipios.geojson, limite_estatal.geojson, localidades.geojson, ageb_urbanas.geojson, ageb_rurales.geojson</span>
+          </div>
+
+          <div style="background:rgba(15,23,42,0.5); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong style="color:var(--text-heading); font-size:0.9rem;">Catálogo CCT — SEP Campeche</strong>
+              <span class="badge badge--success" style="font-size:0.7rem;">DISPONIBLE</span>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-body); margin-bottom:8px;">
+              2,274 registros de centros de trabajo educativos con nivel, sostenimiento, alumnado y número de aulas.
+            </p>
+            <span style="font-size:0.72rem; color:var(--text-muted);">Archivo: escuelas_campeche.geojson (2.11 MB)</span>
+          </div>
+
+          <div style="background:rgba(15,23,42,0.5); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong style="color:var(--text-heading); font-size:0.9rem;">Cartografía Electoral INE / IEEC</strong>
+              <span class="badge" style="font-size:0.7rem; background:rgba(234,179,8,0.15); color:#facc15;">PENDIENTE</span>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-body); margin-bottom:8px;">
+              Polígonos de Secciones electorales, Distritos Federales y Distritos Locales. Acceso al portal INE en gestión.
+            </p>
+            <span style="font-size:0.72rem; color:var(--text-muted);">No bloquea la plataforma — capas inhabilitadas con origen documentado</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- Componentes JS -->
+  <script src="js/mapa.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
