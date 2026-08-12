@@ -14,11 +14,11 @@
    ============================================ */
 
 :root {
-  /* ── Fondo de página ── */
-  --bg-start:           #0a0e17;    /* Casi negro, azulado */
-  --bg-mid:             #0e1524;    /* Azul muy profundo */
-  --bg-end:             #0b1120;    /* Vuelve a cerrar oscuro */
-  --bg-gradient:        linear-gradient(160deg, var(--bg-start) 0%, var(--bg-mid) 45%, var(--bg-end) 100%);
+  /* ── Fondo de página (Oscuro uniforme constante) ── */
+  --bg-start:           #080c14;
+  --bg-mid:             #0a0f1d;
+  --bg-end:             #080c14;
+  --bg-gradient:        linear-gradient(180deg, #080c14 0%, #0a0f1d 50%, #080c14 100%);
 
   /* ── Glassmorphism ──
      En oscuro el vidrio es luz añadida, no blanco
