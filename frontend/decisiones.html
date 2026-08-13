@@ -3,68 +3,220 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Sala de Decisiones Estratégicas — Cerebro Electoral (CE).">
+  <meta name="description" content="Sala de Decisiones Estratégicas y Simulación de Escenarios 2027 — Cerebro Electoral (CE).">
   <title>Sala de Decisiones — Cerebro Electoral (CE)</title>
-
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- Estilos -->
   <link rel="stylesheet" href="css/colors.css">
   <link rel="stylesheet" href="css/design-system.css">
   <link rel="stylesheet" href="css/animations.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/auth.css">
+  <style>
+    .decision-card {
+      background: var(--glass-bg-active);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .decision-card:hover {
+      border-color: var(--glass-border-hover);
+      transform: translateY(-2px);
+    }
+    .decision-card--urgente { border-left: 3px solid var(--sev-critica); }
+    .decision-card--media   { border-left: 3px solid var(--sev-media); }
+    .decision-card--normal  { border-left: 3px solid var(--status-success); }
+
+    .scenario-row {
+      display: grid;
+      grid-template-columns: 180px 1fr 100px 90px 90px;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--velo-05);
+      font-size: 0.82rem;
+    }
+    .scenario-row:hover { background: var(--glass-bg-hover); }
+    .scenario-header {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+    .pp-bar { height: 4px; border-radius: 2px; background: var(--velo-08); overflow:hidden; }
+    .pp-fill { height: 100%; border-radius: 2px; }
+    .status-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-align: center;
+      white-space: nowrap;
+    }
+  </style>
 </head>
 <body data-page="decisiones">
 
-  <header class="filter-bar filter-bar--notch" id="filter-bar">
-    <a href="index.html" class="topbar-side" style="gap:10px;">
-      <span class="ce-brand-badge" style="font-size:1.1rem; padding: 2px 8px; border-radius:6px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3);">CE</span>
-      <span style="font-weight:700; color:var(--text-heading); font-size:0.95rem;">Sala de Decisiones</span>
-    </a>
 
-    <div class="topbar-notch">
-      <nav class="subnav-bar">
-        <a class="subnav-btn" href="index.html"><i data-lucide="home" class="icon-xs"></i> <span>Inicio</span></a>
-        <a class="subnav-btn" href="mando.html"><i data-lucide="bar-chart-3" class="icon-xs"></i> <span>Centro de Mando</span></a>
-        <a class="subnav-btn subnav-btn--active" href="decisiones.html"><i data-lucide="compass" class="icon-xs"></i> <span>Decisiones</span></a>
-        <a class="subnav-btn" href="municipios.html"><i data-lucide="building-2" class="icon-xs"></i> <span>13 Municipios</span></a>
-        <a class="subnav-btn" href="fuentes.html"><i data-lucide="database" class="icon-xs"></i> <span>Fuentes</span></a>
-      </nav>
-    </div>
-
-    <div id="auth-slot"></div>
-  </header>
 
   <nav class="sidebar" id="sidebar" aria-label="Navegación principal"></nav>
 
-  <main class="main" id="main-content" style="padding-top: calc(var(--filter-bar-height) + var(--space-md));">
+  <main class="main" id="main-content" style="padding-top:calc(var(--filter-bar-height) + var(--space-md));">
     <div class="mando-workspace animate-fade-in-up">
 
       <section class="mando-header">
         <div class="mando-header__title-box">
-          <h1><i data-lucide="compass" style="color:var(--accent-cyan);"></i> Sala de Decisiones Estratégicas & Simulación 2027</h1>
-          <p>Entorno ejecutivo para sesiones de trabajo, análisis de escenarios probabilísticos y firmas de acuerdos digitales.</p>
+          <h1><i data-lucide="compass" style="color:var(--accent-cyan);"></i> Sala de Decisiones & Simulación de Escenarios 2027</h1>
+          <p>Panel ejecutivo de inteligencia predictiva. Recomendaciones generadas por agentes CE — toda decisión requiere validación humana del comité estratégico.</p>
         </div>
-
         <div class="mando-header__pills">
-          <span class="badge badge--success">Revisión Humana Obligatoria</span>
-          <span class="badge badge--neutral">Simulación de Escenarios 2027</span>
+          <span class="badge badge--success">CE-Estratégico Activo</span>
+          <span class="badge badge--neutral">Revisión Humana Obligatoria</span>
         </div>
       </section>
 
+      <!-- KPIs de la Simulación -->
+      <section class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-card__label"><span>Municipios En Riesgo</span><i data-lucide="alert-triangle" class="icon-xs" style="color:var(--sev-critica);"></i></div>
+          <div class="kpi-card__value" style="color:var(--sev-critica);" id="dec-cnt-riesgo">3</div>
+          <div class="kpi-card__sub">Calkiní, Champotón, Seybaplaya</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label"><span>Municipios Competitivos</span><i data-lucide="minus" class="icon-xs" style="color:var(--sev-media);"></i></div>
+          <div class="kpi-card__value" style="color:var(--sev-media);">5</div>
+          <div class="kpi-card__sub">Margen &lt;5pp — requieren atención</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label"><span>Municipios Favorables</span><i data-lucide="trending-up" class="icon-xs" style="color:var(--status-success);"></i></div>
+          <div class="kpi-card__value" style="color:var(--status-success);">5</div>
+          <div class="kpi-card__sub">Ventaja &gt;5pp confirmada por encuestas</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label"><span>Acciones Pendientes</span><i data-lucide="list-checks" class="icon-xs"></i></div>
+          <div class="kpi-card__value">7</div>
+          <div class="kpi-card__sub">Recomendaciones sin confirmar por comité</div>
+        </div>
+      </section>
+
+      <!-- Alerta Ejecutiva del Agente -->
+      <div style="background:var(--sev-critica-bg); border:1px solid var(--sev-critica-bg); border-radius:var(--radius-md); padding:var(--space-md); display:flex; gap:var(--space-md); align-items:flex-start;">
+        <i data-lucide="cpu" style="color:var(--sev-critica); width:20px; height:20px; flex-shrink:0; margin-top:2px;"></i>
+        <div>
+          <strong style="color:var(--sev-critica); font-size:0.85rem; display:block; margin-bottom:4px;">CE-Estratégico — Diagnóstico del 12 Ago 2026, 20:21 hrs</strong>
+          <p style="font-size:0.83rem; color:var(--text-body); line-height:1.5;">
+            El modelo bayesiano identifica <strong style="color:var(--sev-critica);">3 municipios en zona de riesgo</strong> con ventaja negativa frente a la oposición:
+            <strong>Calkiní (−3.1pp)</strong>, <strong>Champotón (−4.7pp)</strong> y <strong>Seybaplaya (−2.3pp)</strong>.
+            En escenario de alta participación (+3pp sobre historial), Calkiní y Seybaplaya podrían revertirse.
+            Candelaria es el municipio más volátil con margen de solo +0.9pp — un movimiento de 800 votos cambia el resultado.
+          </p>
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-top:8px;">
+            Fuentes: Histórico electoral 2018–2024 (INE/IEEC) · Encuestas validadas (14 estudios, Poll of Polls) · Cobertura territorial CCT SEP.
+            Intervalo de confianza: ±2.4pp. Estimación — no certeza.
+          </p>
+        </div>
+      </div>
+
+      <!-- Tabla Completa de Escenarios por Municipio -->
+      <section class="glass-strong" style="border-radius:var(--radius-lg); overflow:hidden;">
+        <div style="padding:var(--space-md) var(--space-lg); border-bottom:1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="font-family:var(--font-heading); font-size:1rem; font-weight:700; color:var(--text-heading); display:flex; align-items:center; gap:8px;">
+            <i data-lucide="table-2" style="color:var(--accent-cyan); width:16px; height:16px;"></i>
+            Proyección por Municipio — 13 Cabeceras Campeche
+          </h3>
+          <span style="font-size:0.75rem; color:var(--text-muted);">Actualizado por CE-Estratégico · Ago 2026</span>
+        </div>
+
+        <div class="scenario-row scenario-header" style="padding:8px 14px; background:var(--panel-fondo);">
+          <div>Municipio</div>
+          <div>Razón del Diagnóstico</div>
+          <div>Ventaja est.</div>
+          <div>Escenario</div>
+          <div>Acción</div>
+        </div>
+
+        <div id="tabla-escenarios"></div>
+      </section>
+
+      <!-- Plan de Acción Recomendado por el Agente -->
+      <section style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
+
+        <div class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg);">
+          <h3 style="font-family:var(--font-heading); font-size:1rem; font-weight:700; color:var(--text-heading); margin-bottom:var(--space-md); display:flex; align-items:center; gap:8px;">
+            <i data-lucide="alert-triangle" style="color:var(--sev-critica); width:16px; height:16px;"></i>
+            Acciones ALTA Prioridad
+          </h3>
+          <div style="display:flex; flex-direction:column; gap:10px;" id="acciones-alta"></div>
+        </div>
+
+        <div class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg);">
+          <h3 style="font-family:var(--font-heading); font-size:1rem; font-weight:700; color:var(--text-heading); margin-bottom:var(--space-md); display:flex; align-items:center; gap:8px;">
+            <i data-lucide="clock" style="color:var(--sev-media); width:16px; height:16px;"></i>
+            Acciones MEDIA Prioridad
+          </h3>
+          <div style="display:flex; flex-direction:column; gap:10px;" id="acciones-media"></div>
+        </div>
+      </section>
+
+      <!-- Escenarios de Simulación 2027 -->
       <section class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg);">
-        <h3 class="text-h3" style="margin-bottom:var(--space-sm);">Panel de Sesiones Ejecutivas</h3>
-        <p style="font-size:0.85rem; color:var(--text-body);">
-          Simulador de escenarios probabilísticos. Ninguna recomendación de IA se ejecuta automáticamente sin aprobación formal del comité.
+        <h3 style="font-family:var(--font-heading); font-size:1rem; font-weight:700; color:var(--text-heading); margin-bottom:var(--space-md); display:flex; align-items:center; gap:8px;">
+          <i data-lucide="layers" style="color:var(--accent-cyan); width:16px; height:16px;"></i>
+          Simulación de Escenarios Globales 2027
+        </h3>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:var(--space-md);">
+          <div style="background:var(--proc-recomendacion-bg); border:1px solid var(--proc-recomendacion-bg); border-radius:var(--radius-md); padding:var(--space-md);">
+            <div style="font-size:0.78rem; font-weight:700; color:var(--status-success); text-transform:uppercase; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+              <i data-lucide="sun" style="width:13px;height:13px;"></i> Escenario Optimista
+            </div>
+            <div style="font-size:1.8rem; font-weight:800; color:var(--status-success); font-family:var(--font-heading);">10–11</div>
+            <div style="font-size:0.78rem; color:var(--text-body); margin-top:4px;">municipios favorables</div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:6px; line-height:1.4;">
+              Participación +4pp sobre histórico. Movilización efectiva en zonas de riesgo. Sin anomalías electorales.
+            </div>
+          </div>
+          <div style="background:var(--sev-media-bg); border:1px solid var(--sev-media-bg); border-radius:var(--radius-md); padding:var(--space-md);">
+            <div style="font-size:0.78rem; font-weight:700; color:var(--sev-media); text-transform:uppercase; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+              <i data-lucide="cloud" style="width:13px;height:13px;"></i> Escenario Base (actual)
+            </div>
+            <div style="font-size:1.8rem; font-weight:800; color:var(--sev-media); font-family:var(--font-heading);">7–8</div>
+            <div style="font-size:0.78rem; color:var(--text-body); margin-top:4px;">municipios favorables</div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:6px; line-height:1.4;">
+              Tendencia actual sin cambios. 3 municipios en riesgo sin revertir. Candelaria como municipio pivote.
+            </div>
+          </div>
+          <div style="background:var(--sev-critica-bg); border:1px solid var(--sev-critica-bg); border-radius:var(--radius-md); padding:var(--space-md);">
+            <div style="font-size:0.78rem; font-weight:700; color:var(--sev-critica); text-transform:uppercase; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+              <i data-lucide="cloud-rain" style="width:13px;height:13px;"></i> Escenario Pesimista
+            </div>
+            <div style="font-size:1.8rem; font-weight:800; color:var(--sev-critica); font-family:var(--font-heading);">4–5</div>
+            <div style="font-size:0.78rem; color:var(--text-body); margin-top:4px;">municipios favorables</div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:6px; line-height:1.4;">
+              Participación baja. Voto diferenciado en la capital. Sin movilización efectiva en Carmen y Candelaria.
+            </div>
+          </div>
+        </div>
+        <p style="font-size:0.72rem; color:var(--text-muted); margin-top:var(--space-md); padding-top:var(--space-sm); border-top:1px solid var(--velo-05);">
+          Modelo probabilístico CE-Estratégico. Intervalos de incertidumbre ±2.4pp. Ningún escenario es certeza — requiere validación del comité estratégico antes de tomar decisiones de campaña.
         </p>
+      </section>
+
+      <!-- Consola de Agentes -->
+      <section class="glass-strong" style="padding:var(--space-md); border-radius:var(--radius-lg);">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+          <span style="display:inline-block;width:7px;height:7px;background:var(--accent-cyan);border-radius:50%;box-shadow:0 0 6px var(--accent-cyan);" class="animate-pulse"></span>
+          <strong style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-heading); font-family:var(--font-heading);">CE-Estratégico — Monitor en Vivo</strong>
+          <i data-lucide="cpu" class="icon-xs" style="color:var(--accent-cyan); margin-left:auto;"></i>
+        </div>
+        <div id="live-agents-feed" style="font-size:0.72rem; font-family:monospace; display:flex; flex-direction:column; gap:5px;"></div>
       </section>
 
     </div>
@@ -72,6 +224,102 @@
 
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
-  <script>lucide.createIcons();</script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // Usar los mismos datos de app.js
+      const tabla = document.getElementById('tabla-escenarios');
+      if (tabla && typeof MUNICIPIOS_PREDICCION !== 'undefined') {
+        tabla.innerHTML = MUNICIPIOS_PREDICCION.map(m => {
+          const cfg = ESCENARIO_CFG[m.escenario];
+          const signo = m.ventaja > 0 ? '+' : '';
+          const pct = Math.max(0, Math.min(100, 50 + m.ventaja * 3));
+          const prioridadLabel = m.escenario === 'riesgo' ? 'URGENTE' :
+                                 (m.escenario === 'competitivo' ? 'ATENCIÓN' : 'ESTABLE');
+          return `
+            <div class="scenario-row">
+              <div>
+                <strong style="color:var(--text-heading);">${m.nombre}</strong>
+                <div style="font-size:0.68rem; color:var(--text-muted);">Clave ${m.clave}</div>
+              </div>
+              <div>
+                <div style="font-size:0.78rem; color:var(--text-body); margin-bottom:4px;">${m.razon}</div>
+                <div class="pp-bar"><div class="pp-fill" style="width:${pct}%; background:${cfg.color};"></div></div>
+              </div>
+              <div style="text-align:center;">
+                <strong style="color:${cfg.color}; font-size:0.9rem;">${signo}${m.ventaja}pp</strong>
+              </div>
+              <div>
+                <span class="status-tag" style="background:${cfg.bg}; color:${cfg.color}; border:1px solid ${cfg.border};">${cfg.label}</span>
+              </div>
+              <div>
+                <span class="status-tag" style="
+                  background:${m.escenario === 'riesgo' ? 'var(--sev-critica-bg)' : m.escenario === 'competitivo' ? 'var(--sev-media-bg)' : 'var(--proc-recomendacion-bg)'};
+                  color:${m.escenario === 'riesgo' ? 'var(--sev-critica)' : m.escenario === 'competitivo' ? 'var(--sev-media)' : 'var(--status-success)'};
+                ">${prioridadLabel}</span>
+              </div>
+            </div>`;
+        }).join('');
+      }
+
+      // Llenar acciones ALTA
+      const alta = document.getElementById('acciones-alta');
+      const ACCIONES_ALTA = [
+        { mun: 'Champotón', agente: 'CE-Forense', texto: 'Auditoría preventiva de actas en Sección 0142. Solicitar actas digitalizadas al IEEC.' },
+        { mun: 'Candelaria', agente: 'CE-Estratégico', texto: 'Desplegar brigadas de movilización — margen de solo 800 votos estimados. Máxima prioridad.' },
+        { mun: 'Calkiní', agente: 'CE-Sentinel-1', texto: 'Reforzar 8 casillas críticas con representantes de casilla adicionales. Activar red de contacto.' },
+      ];
+      if (alta) {
+        alta.innerHTML = ACCIONES_ALTA.map(a => `
+          <div class="decision-card decision-card--urgente">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="color:var(--text-heading); font-size:0.85rem;">${a.mun}</strong>
+              <span style="font-size:0.68rem; color:var(--sev-critica); background:var(--sev-critica-bg); padding:2px 8px; border-radius:4px;">[${a.agente}]</span>
+            </div>
+            <p style="font-size:0.78rem; color:var(--text-body); line-height:1.4;">${a.texto}</p>
+            <div style="display:flex; gap:8px;">
+              <button onclick="this.textContent='Confirmado'; this.style.background='var(--proc-recomendacion-bg)'; this.style.color='var(--status-success)';" style="font-size:0.72rem; padding:4px 10px; border-radius:4px; background:var(--sev-critica-bg); color:var(--sev-critica); border:1px solid var(--sev-critica-bg); cursor:pointer; transition:all 0.2s;">
+                Confirmar Acción
+              </button>
+              <button onclick="this.textContent='Descartado';" style="font-size:0.72rem; padding:4px 10px; border-radius:4px; background:var(--velo-05); color:var(--text-muted); border:1px solid var(--velo-10); cursor:pointer;">
+                Descartar
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Llenar acciones MEDIA
+      const media = document.getElementById('acciones-media');
+      const ACCIONES_MEDIA = [
+        { mun: 'Seybaplaya', agente: 'CE-Forense', texto: 'Validar padrón nominal actualizado del nuevo municipio. Confirmar representante general.' },
+        { mun: 'Carmen', agente: 'CE-Sentinel-2', texto: 'Activar 12 representantes adicionales en zona sur de Ciudad del Carmen.' },
+        { mun: 'Escárcega', agente: 'CE-Medios', texto: 'Campaña de activación en polígonos de crecimiento demográfico. Enfoque en voto joven.' },
+        { mun: 'Dzitbalché', agente: 'CE-Encuestas', texto: 'Reforzar datos de padrón e integrar nuevo estudio de encuesta local.' },
+      ];
+      if (media) {
+        media.innerHTML = ACCIONES_MEDIA.map(a => `
+          <div class="decision-card decision-card--media">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="color:var(--text-heading); font-size:0.85rem;">${a.mun}</strong>
+              <span style="font-size:0.68rem; color:var(--sev-media); background:var(--sev-media-bg); padding:2px 8px; border-radius:4px;">[${a.agente}]</span>
+            </div>
+            <p style="font-size:0.78rem; color:var(--text-body); line-height:1.4;">${a.texto}</p>
+            <div style="display:flex; gap:8px;">
+              <button onclick="this.textContent='Confirmado'; this.style.background='var(--proc-recomendacion-bg)'; this.style.color='var(--status-success)';" style="font-size:0.72rem; padding:4px 10px; border-radius:4px; background:var(--sev-media-bg); color:var(--sev-media); border:1px solid var(--sev-media-bg); cursor:pointer; transition:all 0.2s;">
+                Confirmar Acción
+              </button>
+              <button onclick="this.textContent='Descartado';" style="font-size:0.72rem; padding:4px 10px; border-radius:4px; background:var(--velo-05); color:var(--text-muted); border:1px solid var(--velo-10); cursor:pointer;">
+                Descartar
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      CE.initAgents('decisiones');
+      lucide.createIcons();
+    });
+  </script>
 </body>
 </html>

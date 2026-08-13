@@ -197,4 +197,52 @@
   --grafica-grid:       rgba(190, 214, 255, 0.07);
   --grafica-eje:        rgba(190, 214, 255, 0.20);
   --grafica-tooltip-bg: rgba(14, 21, 36, 0.96);
+
+  /* ════════════════════════════════════════════
+     TINTES Y SUPERFICIES
+     ════════════════════════════════════════════
+     Creados al limpiar 289 colores hardcoded que
+     estaban repartidos en 21 archivos. Cada uno
+     cubre un uso que se repetía literal en varias
+     páginas; no son valores nuevos inventados.
+     ════════════════════════════════════════════ */
+
+  /* Fondo de tarjeta dentro de un panel. Era rgba(15,23,42,·) suelto. */
+  --panel-fondo:        rgba(15, 23, 42, 0.50);
+  --panel-fondo-tenue:  rgba(15, 23, 42, 0.40);
+  --panel-fondo-alto:   rgba(15, 23, 42, 0.80);
+
+  /* Superficies muy oscuras: popups, barras fijas, overlays. */
+  --superficie-honda:   rgba(11, 17, 32, 0.92);
+  --superficie-solida:  rgba(11, 17, 32, 0.96);
+  --overlay-fondo:      rgba(8, 12, 20, 0.80);
+  --overlay-fondo-alto: rgba(8, 12, 20, 0.95);
+
+  /* Tintes de cian: actividad de agentes y estados en vivo. */
+  --cyan-tinte-xs:      rgba(34, 211, 238, 0.06);
+  --cyan-tinte-sm:      rgba(34, 211, 238, 0.10);
+  --cyan-tinte:         rgba(34, 211, 238, 0.15);
+  --cyan-tinte-md:      rgba(34, 211, 238, 0.25);
+  --cyan-tinte-lg:      rgba(34, 211, 238, 0.40);
+  --cyan-transparente:  rgba(34, 211, 238, 0);
+  --cyan-halo:          0 0 6px rgba(34, 211, 238, 0.50);
+
+  /* Sombras. Antes eran rgba(23,30,56,·) y rgba(34,27,94,·),
+     residuo del tema claro donde la sombra era azul-violeta. */
+  --sombra-sm:          0 8px 22px -8px rgba(0, 0, 0, 0.45);
+  --sombra-md:          0 10px 30px -10px rgba(0, 0, 0, 0.55);
+  --sombra-lg:          0 16px 40px -10px rgba(0, 0, 0, 0.65);
+  --sombra-negra:       rgba(0, 0, 0, 0.20);
+  --sombra-negra-alta:  rgba(0, 0, 0, 0.50);
+
+  /* Velos blancos: bordes y superficies apenas visibles. */
+  --velo-01:            rgba(255, 255, 255, 0.02);
+  --velo-05:            rgba(255, 255, 255, 0.05);
+  --velo-08:            rgba(255, 255, 255, 0.08);
+  --velo-10:            rgba(255, 255, 255, 0.10);
+
+  /* Marca CE. El degradado del monograma es identidad, no paleta de UI:
+     por eso vive aparte y no se reusa para nada más. */
+  --marca-ce-desde:     #38bdf8;
+  --marca-ce-hasta:     #818cf8;
 }

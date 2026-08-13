@@ -24,24 +24,7 @@
 </head>
 <body data-page="candidaturas">
 
-  <header class="filter-bar filter-bar--notch" id="filter-bar">
-    <a href="index.html" class="topbar-side" style="gap:10px;">
-      <span class="ce-brand-badge" style="font-size:1.1rem; padding: 2px 8px; border-radius:6px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3);">CE</span>
-      <span style="font-weight:700; color:var(--text-heading); font-size:0.95rem;">Perfiles Públicos</span>
-    </a>
 
-    <div class="topbar-notch">
-      <nav class="subnav-bar">
-        <a class="subnav-btn" href="index.html"><i data-lucide="home" class="icon-xs"></i> <span>Inicio</span></a>
-        <a class="subnav-btn" href="mando.html"><i data-lucide="bar-chart-3" class="icon-xs"></i> <span>Centro de Mando</span></a>
-        <a class="subnav-btn subnav-btn--active" href="candidaturas.html"><i data-lucide="users" class="icon-xs"></i> <span>Candidaturas</span></a>
-        <a class="subnav-btn" href="municipios.html"><i data-lucide="building-2" class="icon-xs"></i> <span>13 Municipios</span></a>
-        <a class="subnav-btn" href="fuentes.html"><i data-lucide="database" class="icon-xs"></i> <span>Fuentes</span></a>
-      </nav>
-    </div>
-
-    <div id="auth-slot"></div>
-  </header>
 
   <nav class="sidebar" id="sidebar" aria-label="Navegación principal"></nav>
 
@@ -68,6 +51,17 @@
       </section>
 
     </div>
+  
+      <!-- Consola de Agentes CE en Vivo -->
+      <section class="glass-strong" style="padding:var(--space-md); border-radius:var(--radius-lg);">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+          <span style="display:inline-block;width:7px;height:7px;background:var(--accent-cyan);border-radius:50%;box-shadow:0 0 6px var(--accent-cyan);" class="animate-pulse"></span>
+          <strong style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-heading); font-family:var(--font-heading);">Agentes CE — Monitor en Vivo</strong>
+          <i data-lucide="cpu" class="icon-xs" style="color:var(--accent-cyan); margin-left:auto;"></i>
+        </div>
+        <div id="live-agents-feed" style="font-size:0.72rem; font-family:monospace; display:flex; flex-direction:column; gap:5px;"></div>
+      </section>
+
   </main>
 
   <script src="js/auth.js"></script>

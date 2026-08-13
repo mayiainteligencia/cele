@@ -48,6 +48,12 @@
   --z-agent:      300;
 }
 
+/* Reset filter bar height on inner pages to collapse spacing top */
+body:not([data-page="inicio"]) {
+  --filter-bar-height: 0px !important;
+}
+
+
 
 /* ════════════════════════════════════════════
    CSS RESET
@@ -66,14 +72,14 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #080c14;
+  background-color: var(--bg-start);
 }
 
 body {
   font-family: var(--font-body);
   color: var(--text-body);
   background: var(--bg-gradient);
-  background-color: #080c14;
+  background-color: var(--bg-start);
   background-attachment: fixed;
   min-height: 100vh;
   line-height: 1.6;
@@ -222,7 +228,7 @@ input, select, textarea {
   backdrop-filter: blur(36px) saturate(170%);
   -webkit-backdrop-filter: blur(36px) saturate(170%);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 20px 60px -12px rgba(23, 30, 56, 0.22);
+  box-shadow: 0 20px 60px -12px var(--sombra-negra);
   border-radius: var(--radius-lg);
   position: relative;
   overflow: hidden;

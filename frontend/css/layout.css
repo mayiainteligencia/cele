@@ -49,7 +49,7 @@
   overflow: hidden;
   /* Fotograma de respaldo: se ve si el video no carga
      o si el sistema pide menos movimiento. */
-  background: #0b1220 url('../assets/images/earth.png') center / cover no-repeat;
+  background: var(--bg-mid) url('../assets/images/earth.png') center / cover no-repeat;
 }
 
 .bg-stage__video {
@@ -70,8 +70,8 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(15, 23, 42, 0.18) 0%, transparent 32%),
-    linear-gradient(0deg, rgba(15, 23, 42, 0.16) 0%, transparent 32%);
+    linear-gradient(180deg, var(--panel-fondo-tenue) 0%, transparent 32%),
+    linear-gradient(0deg, var(--panel-fondo-tenue) 0%, transparent 32%);
 }
 
 /* Todo lo demás va por encima de la imagen */
@@ -110,7 +110,7 @@ body[data-page="inicio"] .filter-bar { position: fixed; z-index: var(--z-filter-
   align-self: flex-start;
   max-width: 34ch;
   color: var(--text-hero);
-  text-shadow: 0 1px 16px rgba(15, 23, 42, 0.6);
+  text-shadow: 0 1px 16px var(--panel-fondo);
 }
 
 
@@ -149,8 +149,11 @@ body[data-page="inicio"] .filter-bar { position: fixed; z-index: var(--z-filter-
      se muerde en la esquina inferior izquierda para dejar
      pasar el logo. El radio asimétrico rompe la simetría. */
   border-radius: var(--radius-xl) var(--radius-xl) var(--radius-xl) 56px;
+  /* color-ok: en un mask-image el negro es el canal alfa "opaco",
+     no un color de la paleta. No tiene token ni debe tenerlo. */
   -webkit-mask-image: radial-gradient(circle var(--svc-notch)
     at 0 calc(100% - var(--svc-notch-up)), transparent 99.5%, #000 100%);
+  /* color-ok: canal alfa del mask, no color de paleta. */
   mask-image: radial-gradient(circle var(--svc-notch)
     at 0 calc(100% - var(--svc-notch-up)), transparent 99.5%, #000 100%);
 }
@@ -263,6 +266,18 @@ body[data-page="inicio"] .dc-logo:hover {
   animation: fadeInLeft 0.6s ease forwards;
 }
 
+@media (min-width: 769px) {
+  .sidebar {
+    overflow-y: auto;
+    overflow-x: visible;
+    scrollbar-width: none; /* Firefox */
+    padding-bottom: var(--space-md);
+  }
+  .sidebar::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+}
+
 .sidebar__avatar {
   margin-bottom: var(--space-sm);
 }
@@ -343,7 +358,7 @@ body[data-page="inicio"] .dc-logo:hover {
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 10px 30px -10px rgba(23, 30, 56, 0.35);
+  box-shadow: 0 10px 30px -10px var(--sombra-negra);
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-heading);
@@ -354,7 +369,7 @@ body[data-page="inicio"] .dc-logo:hover {
 .topbar-side:hover,
 .filter-bar--notch #auth-slot > *:hover {
   transform: scale(1.04);
-  box-shadow: 0 14px 36px -10px rgba(23, 30, 56, 0.45);
+  box-shadow: 0 14px 36px -10px var(--sombra-negra-alta);
 }
 
 .topbar-side__icon {
@@ -386,7 +401,7 @@ body[data-page="inicio"] .dc-logo:hover {
   background: var(--superficie);
   backdrop-filter: blur(28px) saturate(170%);
   -webkit-backdrop-filter: blur(28px) saturate(170%);
-  box-shadow: 0 14px 40px -14px rgba(23, 30, 56, 0.45);
+  box-shadow: 0 14px 40px -14px var(--sombra-negra-alta);
   /* Animación propia: fadeInUp pisaría el translateX
      del centrado y el notch se iría a la derecha. */
   animation: notchDrop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -715,7 +730,7 @@ body[data-page="inicio"] .agent-bubble {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--panel-fondo);
   padding: 4px;
   border-radius: var(--radius-full);
   border: 1px solid var(--glass-border);
@@ -799,7 +814,7 @@ body[data-page="inicio"] .agent-bubble {
   display: grid;
   grid-template-columns: 1fr 340px;
   gap: var(--space-md);
-  align-items: start;
+  align-items: stretch;
 }
 
 @media (max-width: 1024px) {
@@ -812,14 +827,16 @@ body[data-page="inicio"] .agent-bubble {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  height: 100%;
 }
 
 .mando-map-card {
-  height: min(650px, 68vh);
+  flex: 1;
   width: 100%;
   position: relative;
   border-radius: var(--radius-lg);
   overflow: hidden;
+  min-height: 480px;
 }
 
 .mando-rail-card {
@@ -831,7 +848,8 @@ body[data-page="inicio"] .agent-bubble {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  max-height: min(650px, 68vh);
+  height: 100%;
+  min-height: 480px;
 }
 
 .mando-rail-title {
@@ -858,7 +876,7 @@ body[data-page="inicio"] .agent-bubble {
   justify-content: space-between;
   padding: 10px 12px;
   border-radius: var(--radius-sm);
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--panel-fondo-tenue);
   border: 1px solid transparent;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -890,7 +908,42 @@ body[data-page="inicio"] .agent-bubble {
   font-weight: 600;
   padding: 2px 8px;
   border-radius: var(--radius-full);
-  background: rgba(56, 189, 248, 0.12);
+  background: var(--sev-preventiva-bg);
   color: var(--accent-cyan);
 }
 
+
+/* Segundo nivel de navegación: se inserta bajo .mando-header desde auth.js.
+   En pantallas chicas rueda en horizontal en vez de romper el layout. */
+.subnav-bar {
+  overflow-x: auto;
+  scrollbar-width: none;
+  max-width: 100%;
+  align-self: flex-start;
+}
+
+.subnav-bar::-webkit-scrollbar { display: none; }
+
+.subnav-btn { text-decoration: none; white-space: nowrap; }
+.subnav-btn svg { width: 14px; height: 14px; }
+
+@media (max-width: 640px) {
+  .subnav-bar { align-self: stretch; }
+  .subnav-btn span { display: none; }
+  .subnav-btn { padding: 8px 12px; }
+  .subnav-btn--active span { display: inline; }
+}
+
+/* Dos paneles lado a lado, para separar orígenes de datos que no deben
+   leerse como una sola cifra (INEGI vs INE). */
+.rejilla-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: var(--space-md);
+}
+
+.rejilla-2 .panel + .panel { margin-top: 0; }
+
+/* Franja de color que identifica el origen de un panel de un vistazo. */
+.panel--inegi { border-left: 3px solid var(--serie-3); }
+.panel--ine   { border-left: 3px solid var(--sev-media); }

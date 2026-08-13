@@ -11,7 +11,238 @@ document.addEventListener('DOMContentLoaded', () => {
   initExecutiveMap();
   initSubnav();
   initBackgroundMonitoring();
+  renderPredictiveDiagnostics();
 });
+
+/* ════════════════════════════════════════════
+   DIAGNÓSTICO PREDICTIVO — 13 MUNICIPIOS
+   Motor de inteligencia electoral de CE-Estratégico.
+   Cada municipio tiene un escenario probabilístico,
+   una ventaja estimada en puntos porcentuales (pp)
+   y una recomendación de acción concreta.
+   ════════════════════════════════════════════ */
+
+const MUNICIPIOS_PREDICCION = [
+  {
+    clave: '04001', nombre: 'Calkiní',
+    escenario: 'riesgo',
+    ventaja: -3.1,
+    participacion_hist: 61.2,
+    razon: 'Participación históricamente baja y voto dividido en 2021.',
+    accion: 'Reforzar representantes en 8 casillas críticas y activar brigada de movilización.',
+    agente: 'CE-Sentinel-1',
+  },
+  {
+    clave: '04002', nombre: 'Campeche',
+    escenario: 'competitivo',
+    ventaja: +2.8,
+    participacion_hist: 66.4,
+    razon: 'Capital con electorado urbano dividido. Alta presencia mediática.',
+    accion: 'Mantener cobertura total de casillas urbanas. Reforzar difusión en colonias norte.',
+    agente: 'CE-Medios',
+  },
+  {
+    clave: '04003', nombre: 'Carmen',
+    escenario: 'competitivo',
+    ventaja: +1.4,
+    participacion_hist: 58.9,
+    razon: 'El municipio más grande. Alta movilidad y diversidad de voto.',
+    accion: 'Activar 12 representantes adicionales en Ciudad del Carmen sur.',
+    agente: 'CE-Sentinel-2',
+  },
+  {
+    clave: '04004', nombre: 'Champotón',
+    escenario: 'riesgo',
+    ventaja: -4.7,
+    participacion_hist: 64.1,
+    razon: 'Forensia detectó anomalías en Sección 0142. Oposición con base territorial fuerte.',
+    accion: 'Auditoría preventiva de actas. Movilización en comunidades rurales urgente.',
+    agente: 'CE-Forense',
+  },
+  {
+    clave: '04005', nombre: 'Hecelchakán',
+    escenario: 'favorable',
+    ventaja: +8.3,
+    participacion_hist: 62.8,
+    razon: 'Voto histórico consolidado. Baja competencia en últimos 2 procesos.',
+    accion: 'Mantener presencia mínima y asegurar cobertura completa de casillas.',
+    agente: 'CE-Encuestas',
+  },
+  {
+    clave: '04006', nombre: 'Hopelchén',
+    escenario: 'favorable',
+    ventaja: +11.2,
+    participacion_hist: 59.3,
+    razon: 'Ventaja sólida en encuestas. Comunidades indígenas con voto estructurado.',
+    accion: 'Asegurar logística en zonas remotas. Representantes bilingües prioritarios.',
+    agente: 'CE-Sentinel-1',
+  },
+  {
+    clave: '04007', nombre: 'Palizada',
+    escenario: 'favorable',
+    ventaja: +7.6,
+    participacion_hist: 68.1,
+    razon: 'Municipio pequeño con alta participación y voto histórico sólido.',
+    accion: 'Cobertura garantizada. Monitorear Sección 0084 por anomalía previa de votos nulos.',
+    agente: 'CE-Forense',
+  },
+  {
+    clave: '04008', nombre: 'Tenabo',
+    escenario: 'favorable',
+    ventaja: +9.1,
+    participacion_hist: 63.5,
+    razon: 'Municipio pequeño con ventaja histórica consistente desde 2018.',
+    accion: 'Solo supervisión estándar. Sin intervención adicional requerida.',
+    agente: 'CE-Encuestas',
+  },
+  {
+    clave: '04009', nombre: 'Escárcega',
+    escenario: 'competitivo',
+    ventaja: +3.2,
+    participacion_hist: 60.7,
+    razon: 'Municipio en crecimiento demográfico. Voto joven no definido.',
+    accion: 'Campaña de activación en polígonos de nueva densidad poblacional.',
+    agente: 'CE-Medios',
+  },
+  {
+    clave: '04010', nombre: 'Calakmul',
+    escenario: 'favorable',
+    ventaja: +14.8,
+    participacion_hist: 55.4,
+    razon: 'Región rural con voto leal. Baja competencia de oposición registrada.',
+    accion: 'Asegurar acceso a casillas en comunidades ejidales remotas.',
+    agente: 'CE-Sentinel-1',
+  },
+  {
+    clave: '04011', nombre: 'Candelaria',
+    escenario: 'competitivo',
+    ventaja: +0.9,
+    participacion_hist: 61.8,
+    razon: 'Margen menor a 1pp. Definirá la contienda en escenario cerrado.',
+    accion: 'PRIORIDAD ALTA: Desplegar brigadas de movilización y activar red de contacto.',
+    agente: 'CE-Estratégico',
+  },
+  {
+    clave: '04012', nombre: 'Seybaplaya',
+    escenario: 'riesgo',
+    ventaja: -2.3,
+    participacion_hist: 66.2,
+    razon: 'Municipio nuevo independiente. Base de datos de padrón aún en consolidación.',
+    accion: 'Validar padrón nominal actualizado. Representantes asignados en revisión.',
+    agente: 'CE-Forense',
+  },
+  {
+    clave: '04013', nombre: 'Dzitbalché',
+    escenario: 'competitivo',
+    ventaja: +4.1,
+    participacion_hist: 63.0,
+    razon: 'Municipio nuevo. Encuesta local favorece pero con margen de error elevado.',
+    accion: 'Reforzar datos de padrón y asignar representante general coordinador.',
+    agente: 'CE-Encuestas',
+  },
+];
+
+const ESCENARIO_CFG = {
+  favorable:   { color: 'var(--status-success)', bg: 'var(--proc-recomendacion-bg)',   border: 'var(--proc-recomendacion-bg)',   label: 'Favorable',   icon: 'trending-up' },
+  competitivo: { color: 'var(--sev-media)', bg: 'var(--sev-media-bg)',   border: 'var(--sev-media-bg)',   label: 'Competitivo', icon: 'minus' },
+  riesgo:      { color: 'var(--sev-critica)', bg: 'var(--sev-critica-bg)',   border: 'var(--sev-critica-bg)',   label: 'En Riesgo',   icon: 'trending-down' },
+};
+
+const RECOMENDACIONES_GLOBALES = [
+  { prioridad: 'ALTA',   icon: 'alert-triangle', color: 'var(--sev-critica)', texto: 'Auditar actas de Champotón Sec. 0142 antes del día D.' },
+  { prioridad: 'ALTA',   icon: 'alert-triangle', color: 'var(--sev-critica)', texto: 'Movilización urgente en Candelaria — margen <1pp.' },
+  { prioridad: 'MEDIA',  icon: 'map-pin',         color: 'var(--sev-media)', texto: 'Asignar representante coordinador en Seybaplaya.' },
+  { prioridad: 'MEDIA',  icon: 'users',           color: 'var(--sev-media)', texto: 'Reforzar brigadas en Calkiní — 8 casillas críticas.' },
+  { prioridad: 'NORMAL', icon: 'check-circle-2',  color: 'var(--status-success)', texto: 'Mantener cobertura estándar en 6 municipios favorables.' },
+];
+
+function renderPredictiveDiagnostics() {
+  const grid = document.getElementById('mun-prediccion-grid');
+  if (!grid) return;
+
+  const counts = { favorable: 0, competitivo: 0, riesgo: 0 };
+  const munEnRiesgo = [];
+
+  grid.innerHTML = MUNICIPIOS_PREDICCION.map(m => {
+    const cfg = ESCENARIO_CFG[m.escenario];
+    counts[m.escenario]++;
+    if (m.escenario === 'riesgo') munEnRiesgo.push(m.nombre);
+
+    const signo = m.ventaja > 0 ? '+' : '';
+    return `
+      <div style="
+        background:${cfg.bg}; border:1px solid ${cfg.border};
+        border-radius:var(--radius-xs); padding:10px 12px;
+        display:flex; flex-direction:column; gap:4px;
+        cursor:default; transition:transform 0.2s;
+      " title="${m.accion}" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong style="font-size:0.82rem; color:var(--text-heading);">${m.nombre}</strong>
+          <span style="font-size:0.68rem; background:${cfg.bg}; color:${cfg.color}; border:1px solid ${cfg.border}; padding:2px 7px; border-radius:4px; font-weight:700;">${cfg.label}</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <i data-lucide="${cfg.icon}" style="color:${cfg.color}; width:13px; height:13px; flex-shrink:0;"></i>
+          <span style="font-size:0.78rem; font-weight:700; color:${cfg.color};">${signo}${m.ventaja}pp</span>
+          <span style="font-size:0.7rem; color:var(--text-muted);">vs. oposición</span>
+        </div>
+        <div style="font-size:0.7rem; color:var(--text-muted); line-height:1.3;">${m.razon}</div>
+        <div style="font-size:0.68rem; color:var(--text-muted); padding-top:2px; border-top:1px solid var(--velo-05);">
+          <span style="color:${cfg.color};">[${m.agente}]</span> ${m.accion.substring(0, 55)}…
+        </div>
+      </div>`;
+  }).join('');
+
+  // Contadores del resumen
+  const cF = document.getElementById('cnt-favorable');
+  const cC = document.getElementById('cnt-competitivo');
+  const cR = document.getElementById('cnt-riesgo');
+  const accion = document.getElementById('accion-resumen');
+  const alertaTexto = document.getElementById('alerta-agente-texto');
+  const panelAlerta = document.getElementById('panel-alerta-agente');
+
+  if (cF) cF.textContent = counts.favorable;
+  if (cC) cC.textContent = counts.competitivo;
+  if (cR) cR.textContent = counts.riesgo;
+
+  if (accion) {
+    if (counts.riesgo >= 3) {
+      accion.textContent = `Intervención urgente en ${counts.riesgo} municipios en riesgo`;
+    } else if (counts.riesgo > 0) {
+      accion.textContent = `Refuerzo focalizado en ${munEnRiesgo.join(' y ')}`;
+    } else {
+      accion.textContent = 'Sin intervención urgente requerida';
+    }
+  }
+
+  if (alertaTexto && panelAlerta) {
+    const texto = munEnRiesgo.length > 0
+      ? `<strong>${munEnRiesgo.length} municipios en zona de riesgo:</strong> ${munEnRiesgo.join(', ')}. El modelo estima una ventaja negativa sobre la oposición en estas zonas. Se requieren acciones de movilización y cobertura territorial inmediata.`
+      : 'Todos los municipios en escenario neutro o favorable. Mantener supervisión estándar.';
+    alertaTexto.innerHTML = texto;
+    if (munEnRiesgo.length === 0) {
+      panelAlerta.style.borderLeftColor = 'var(--status-success)';
+      panelAlerta.querySelector('i').style.color = 'var(--status-success)';
+      panelAlerta.querySelector('strong').style.color = 'var(--status-success)';
+    }
+  }
+
+  // Recomendaciones
+  const listaRec = document.getElementById('lista-recomendaciones');
+  if (listaRec) {
+    listaRec.innerHTML = RECOMENDACIONES_GLOBALES.map(r => `
+      <div style="display:flex; gap:8px; align-items:flex-start; padding:6px 8px; background:var(--panel-fondo-tenue); border-radius:6px;">
+        <i data-lucide="${r.icon}" style="color:${r.color}; width:13px; height:13px; flex-shrink:0; margin-top:2px;"></i>
+        <div style="min-width:0;">
+          <span style="font-size:0.65rem; font-weight:700; color:${r.color}; text-transform:uppercase;">${r.prioridad}</span>
+          <div style="font-size:0.75rem; color:var(--text-body); line-height:1.35;">${r.texto}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  if (window.lucide) lucide.createIcons();
+}
+
 
 function initExecutiveMap() {
   const elMapa = document.getElementById('mapa-ejecutivo');
@@ -153,7 +384,7 @@ const LOGS_AGENTES = [
   { prefix: '[CE-Forense]', text: 'Analizando actas de Champotón...', color: 'var(--accent-blue)' },
   { prefix: '[CE-Finanzas]', text: 'Auditoría presupuestal al 100%...', color: 'var(--accent-warm)' },
   { prefix: '[CE-Sentinel-2]', text: 'Verificando firmas de Seybaplaya...', color: 'var(--accent-cyan)' },
-  { prefix: '[CE-Medios]', text: 'Monitoreando Share of Voice en prensa local...', color: '#a78bfa' },
+  { prefix: '[CE-Medios]', text: 'Monitoreando Share of Voice en prensa local...', color: 'var(--accent-purple)' },
   { prefix: '[CE-Forense-2]', text: 'Escaneo de anomalías en Sección 0142 completado.', color: 'var(--accent-blue)' },
   { prefix: '[CE-Finanzas]', text: 'Validando comprobantes de gastos de campaña...', color: 'var(--accent-warm)' },
   { prefix: '[CE-Sentinel-1]', text: 'Analizando cobertura de representantes de casilla...', color: 'var(--accent-cyan)' },

@@ -3,101 +3,1299 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Monitoreo de Medios y Sentimiento Social — Cerebro Electoral (CE).">
-  <title>Monitoreo de Medios & Sentimiento — Cerebro Electoral (CE)</title>
-
-  <!-- Google Fonts -->
+  <meta name="description" content="MonitorSol — Monitoreo de emisoras de radio en tiempo real con transcripción Whisper y detección de keywords electorales. Cerebro Electoral (CE).">
+  <title>Monitoreo de Medios — Cerebro Electoral (CE)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Lucide Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- Estilos -->
   <link rel="stylesheet" href="css/colors.css">
   <link rel="stylesheet" href="css/design-system.css">
   <link rel="stylesheet" href="css/animations.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/auth.css">
+
+  <style>
+    /* ── Medios layout ─────────────────────────────── */
+    .medios-workspace {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: var(--space-md);
+      align-items: start;
+    }
+    .medios-main { display: flex; flex-direction: column; gap: var(--space-md); }
+    .medios-rail { display: flex; flex-direction: column; gap: var(--space-md); }
+
+    @media (max-width: 1024px) {
+      .medios-workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── Card de sesión activa ──────────────────────── */
+    .session-card {
+      background: var(--cyan-tinte-xs);
+      border: 1px solid var(--cyan-tinte);
+      border-radius: var(--radius-md);
+      padding: var(--space-sm) var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all 0.2s ease-in-out;
+      position: relative;
+      overflow: hidden;
+    }
+    .session-card:hover {
+      border-color: var(--cyan-tinte-md);
+      background: var(--cyan-tinte-sm);
+      transform: translateY(-1px);
+    }
+    .session-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0;
+      width: 3px; height: 100%;
+      background: var(--accent-cyan);
+    }
+    .session-card--stopped {
+      background: var(--velo-01);
+      border-color: var(--velo-05);
+    }
+    .session-card--stopped::before { background: var(--text-muted); }
+
+    /* Contenedor scrolleable para soportar 100+ sesiones */
+    .sessions-scroll-container {
+      max-height: 380px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-right: 4px;
+    }
+    
+    /* Custom Scrollbar for all panels */
+    .sessions-scroll-container::-webkit-scrollbar,
+    .transcript-box::-webkit-scrollbar,
+    #testigos-lista::-webkit-scrollbar,
+    #alertas-lista::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .sessions-scroll-container::-webkit-scrollbar-track,
+    .transcript-box::-webkit-scrollbar-track,
+    #testigos-lista::-webkit-scrollbar-track,
+    #alertas-lista::-webkit-scrollbar-track {
+      background: var(--velo-01);
+      border-radius: 4px;
+    }
+    .sessions-scroll-container::-webkit-scrollbar-thumb,
+    .transcript-box::-webkit-scrollbar-thumb,
+    #testigos-lista::-webkit-scrollbar-thumb,
+    #alertas-lista::-webkit-scrollbar-thumb {
+      background: var(--cyan-tinte);
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .sessions-scroll-container::-webkit-scrollbar-thumb:hover,
+    .transcript-box::-webkit-scrollbar-thumb:hover,
+    #testigos-lista::-webkit-scrollbar-thumb:hover,
+    #alertas-lista::-webkit-scrollbar-thumb:hover {
+      background: var(--cyan-tinte-lg);
+    }
+
+    /* ── Transcripción stream ─────────────────────── */
+    .transcript-box {
+      background: var(--overlay-fondo);
+      border: 1px solid var(--velo-08);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      min-height: 200px;
+      max-height: 320px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 1.7;
+      color: var(--text-body);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+
+    .transcript-line { animation: fadeInLine 0.4s ease; }
+    @keyframes fadeInLine {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .transcript-line--keyword {
+      color: var(--accent-cyan);
+      background: var(--cyan-tinte-xs);
+      border-radius: 4px;
+      padding: 4px 8px;
+      border-left: 2px solid var(--accent-cyan);
+    }
+    .transcript-line--keyword .kw-highlight {
+      background: var(--cyan-tinte);
+      border: 1px solid var(--cyan-tinte-md);
+      border-radius: 3px;
+      padding: 0 4px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+    }
+
+    /* ── Emisora selector ───────────────────────── */
+    .emisora-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 8px;
+    }
+    .emisora-btn {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xs);
+      padding: 8px 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .emisora-btn:hover {
+      background: var(--glass-bg-hover);
+      border-color: var(--glass-border-hover);
+      transform: translateY(-1px);
+    }
+    .emisora-btn--selected {
+      background: var(--cyan-tinte-sm);
+      border-color: var(--cyan-tinte-md);
+      box-shadow: 0 0 10px var(--cyan-tinte-xs);
+    }
+    .emisora-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Testigos / historial ─────────────────── */
+    .testigo-row {
+      background: var(--panel-fondo-tenue);
+      border: 1px solid var(--glass-border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      display: grid;
+      grid-template-columns: 120px 1fr auto;
+      gap: 12px;
+      align-items: flex-start;
+      animation: fadeInLine 0.3s ease;
+    }
+    .testigo-row--new { border-color: var(--cyan-tinte-md); background: var(--cyan-tinte-xs); }
+    .testigo-keyword {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      padding: 1px 6px; border-radius: 4px;
+      background: var(--cyan-tinte-sm);
+      color: var(--accent-cyan);
+      border: 1px solid var(--cyan-tinte);
+      white-space: nowrap;
+      display: inline-block;
+      text-align: center;
+    }
+
+    /* ── Keyword tags ─────────────────────────── */
+    .keyword-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-height: 90px;
+      overflow-y: auto;
+      padding: 4px;
+      border: 1px solid var(--velo-05);
+      background: var(--sombra-negra);
+      border-radius: 6px;
+    }
+    .kw-tag {
+      background: var(--cyan-tinte-xs);
+      border: 1px solid var(--cyan-tinte);
+      border-radius: var(--radius-full);
+      padding: 2px 8px;
+      font-size: 0.7rem;
+      color: var(--accent-cyan);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .kw-tag:hover { background: var(--cyan-tinte-sm); border-color: var(--accent-cyan); }
+    .kw-tag--active { background: var(--cyan-tinte); border-color: var(--accent-cyan); color: var(--text-hero); }
+
+    /* ── Radar indicator ──────────────────────── */
+    .radar-pulse {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.72rem; font-weight: 600; color: var(--accent-cyan);
+    }
+    .radar-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 0 0 var(--cyan-tinte-lg);
+      animation: radarPing 1.4s ease-out infinite;
+    }
+    @keyframes radarPing {
+      0%   { box-shadow: 0 0 0 0 var(--cyan-tinte-lg); }
+      70%  { box-shadow: 0 0 0 6px var(--cyan-transparente); }
+      100% { box-shadow: 0 0 0 0 var(--cyan-transparente); }
+    }
+    .radar-dot--stopped { background: var(--text-muted); animation: none; box-shadow: none; }
+
+    /* ── Input fields ─────────────────────────── */
+    .field-dark {
+      background: var(--overlay-fondo);
+      border: 1px solid var(--velo-08);
+      border-radius: var(--radius-xs);
+      padding: 6px 10px;
+      color: var(--text-heading);
+      font-size: 0.8rem;
+      width: 100%;
+      transition: border-color 0.2s;
+      font-family: var(--font-body);
+    }
+    .field-dark:focus { outline: none; border-color: var(--cyan-tinte-lg); }
+    .field-dark::placeholder { color: var(--text-muted); }
+
+    /* Waveform animation */
+    .waveform { display:flex; align-items:center; gap:2.5px; height:20px; }
+    .waveform-bar {
+      width: 2.5px; border-radius: 2px; background: var(--accent-cyan);
+      animation: wave 1.2s ease-in-out infinite;
+    }
+    .waveform-bar:nth-child(1) { animation-delay: 0s;    height: 40%; }
+    .waveform-bar:nth-child(2) { animation-delay: 0.1s;  height: 60%; }
+    .waveform-bar:nth-child(3) { animation-delay: 0.2s;  height: 100%; }
+    .waveform-bar:nth-child(4) { animation-delay: 0.15s; height: 80%; }
+    .waveform-bar:nth-child(5) { animation-delay: 0.05s; height: 50%; }
+    @keyframes wave {
+      0%, 100% { transform: scaleY(0.4); }
+      50%       { transform: scaleY(1); }
+    }
+    .waveform--stopped .waveform-bar {
+      animation: none;
+      background: var(--text-muted);
+      height: 3px !important;
+    }
+
+    /* Toast de keyword */
+    .kw-toast {
+      position: fixed; top: 80px; right: 20px; z-index: 9999;
+      background: var(--overlay-fondo-alto);
+      border: 1px solid var(--cyan-tinte-lg);
+      border-left: 3px solid var(--accent-cyan);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      min-width: 300px; max-width: 420px;
+      display: flex; align-items: flex-start; gap: 10px;
+      animation: slideInRight 0.3s ease;
+      backdrop-filter: blur(20px);
+    }
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(30px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Stats pill */
+    .stat-pill {
+      background: var(--panel-fondo-tenue);
+      border: 1px solid var(--velo-05);
+      border-radius: var(--radius-xs);
+      padding: 4px 8px;
+      text-align: center;
+      flex: 1;
+    }
+
+    /* Style for focused active session */
+    .session-card--active {
+      background: var(--cyan-tinte-sm) !important;
+      border: 1px solid var(--cyan-tinte-lg) !important;
+      box-shadow: 0 0 12px var(--cyan-tinte);
+    }
+
+    /* Horizontal scroll for suggested keywords */
+    .kw-sugeridas-scroll {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      white-space: nowrap;
+      padding: 4px 0;
+      flex: 1;
+    }
+    .kw-sugeridas-scroll::-webkit-scrollbar {
+      height: 3px;
+    }
+    .kw-sugeridas-scroll::-webkit-scrollbar-thumb {
+      background: var(--velo-10);
+      border-radius: 2px;
+    }
+
+  </style>
 </head>
 <body data-page="medios">
 
-  <header class="filter-bar filter-bar--notch" id="filter-bar">
-    <a href="index.html" class="topbar-side" style="gap:10px;">
-      <span class="ce-brand-badge" style="font-size:1.1rem; padding: 2px 8px; border-radius:6px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3);">CE</span>
-      <span style="font-weight:700; color:var(--text-heading); font-size:0.95rem;">Monitoreo de Medios</span>
-    </a>
 
-    <div class="topbar-notch">
-      <nav class="subnav-bar">
-        <a class="subnav-btn" href="index.html"><i data-lucide="home" class="icon-xs"></i> <span>Inicio</span></a>
-        <a class="subnav-btn" href="mando.html"><i data-lucide="bar-chart-3" class="icon-xs"></i> <span>Centro de Mando</span></a>
-        <a class="subnav-btn subnav-btn--active" href="medios.html"><i data-lucide="radio" class="icon-xs"></i> <span>Medios</span></a>
-        <a class="subnav-btn" href="municipios.html"><i data-lucide="building-2" class="icon-xs"></i> <span>13 Municipios</span></a>
-        <a class="subnav-btn" href="fuentes.html"><i data-lucide="database" class="icon-xs"></i> <span>Fuentes</span></a>
-      </nav>
-    </div>
-
-    <div id="auth-slot"></div>
-  </header>
 
   <nav class="sidebar" id="sidebar" aria-label="Navegación principal"></nav>
 
-  <main class="main" id="main-content" style="padding-top: calc(var(--filter-bar-height) + var(--space-md));">
-    <div class="mando-workspace animate-fade-in-up">
+  <main class="main" id="main-content" style="padding-top:calc(var(--filter-bar-height) + var(--space-md));">
+    <div style="max-width:1400px; margin:0 auto; padding:0 var(--space-md);">
 
-      <section class="mando-header">
+      <!-- Header -->
+      <section class="mando-header" style="margin-bottom:var(--space-md);">
         <div class="mando-header__title-box">
-          <h1><i data-lucide="radio" style="color:var(--accent-cyan);"></i> Monitoreo de Medios y Sentimiento Social</h1>
-          <p>Análisis de Share of Voice (SoV), volumen de menciones, polaridad de conversación y mapa de desinformación por verificar.</p>
+          <h1 style="display:flex; align-items:center; gap:10px;">
+            <i data-lucide="radio" style="color:var(--accent-cyan);"></i>
+            MonitorSol — Transcripción de Radio en Tiempo Real
+          </h1>
+          <p>Conecta a cualquier emisora en streaming, define palabras clave electorales y recibe alertas al instante. Motor: Whisper AI + FastAPI + WebSocket.</p>
         </div>
-
         <div class="mando-header__pills">
-          <span class="badge badge--success">Procesamiento NLP Activo</span>
-          <span class="badge badge--neutral">Medios Digitales & Prensa</span>
+          <span id="badge-backend" class="badge badge--neutral" style="display:flex; align-items:center; gap:6px;">
+            <i data-lucide="server" class="icon-xs"></i> Verificando backend...
+          </span>
+          <span id="badge-sesiones" class="badge badge--neutral">0 Sesiones activas</span>
         </div>
       </section>
 
-      <section class="kpi-grid">
+      <!-- KPIs -->
+      <section class="kpi-grid" style="margin-bottom:var(--space-md);">
         <div class="kpi-card">
-          <div class="kpi-card__label"><span>Share of Voice (SoV)</span><i data-lucide="pie-chart" class="icon-xs"></i></div>
-          <div class="kpi-card__value">41.8%</div>
-          <div class="kpi-card__sub">Cuota de conversación digital en Campeche</div>
+          <div class="kpi-card__label"><span>Sesiones Históricas</span><i data-lucide="history" class="icon-xs" style="color:var(--accent-cyan);"></i></div>
+          <div class="kpi-card__value" id="kpi-total-sesiones">—</div>
+          <div class="kpi-card__sub">Grabaciones en base de datos</div>
         </div>
-
         <div class="kpi-card">
-          <div class="kpi-card__label"><span>Sentimiento Positivo</span><i data-lucide="smile" class="icon-xs" style="color:#22c55e;"></i></div>
-          <div class="kpi-card__value" style="color:#22c55e;">64.2%</div>
-          <div class="kpi-card__sub">Balance favorable de comentarios y notas</div>
+          <div class="kpi-card__label"><span>Detecciones Totales</span><i data-lucide="zap" class="icon-xs" style="color:var(--accent-warm);"></i></div>
+          <div class="kpi-card__value" id="kpi-total-detecciones" style="color:var(--accent-warm);">—</div>
+          <div class="kpi-card__sub">Keywords encontradas en transcripciones</div>
         </div>
-
         <div class="kpi-card">
-          <div class="kpi-card__label"><span>Narrativas Detectadas</span><i data-lucide="message-square" class="icon-xs"></i></div>
-          <div class="kpi-card__value">18</div>
-          <div class="kpi-card__sub">Ejes temáticos principales en monitoreo</div>
+          <div class="kpi-card__label"><span>Emisoras Monitoreadas</span><i data-lucide="radio" class="icon-xs" style="color:var(--accent-purple);"></i></div>
+          <div class="kpi-card__value" id="kpi-emisoras" style="color:var(--accent-purple);">—</div>
+          <div class="kpi-card__sub">Fuentes de audio indexadas</div>
         </div>
-
         <div class="kpi-card">
-          <div class="kpi-card__label"><span>Alertas de Desinformación</span><i data-lucide="shield-alert" class="icon-xs" style="color:#f97316;"></i></div>
-          <div class="kpi-card__value" style="color:#f97316;">2 Por Verificar</div>
-          <div class="kpi-card__sub">Rumores/fake news en verificación humana</div>
+          <div class="kpi-card__label"><span>Última Detección</span><i data-lucide="clock" class="icon-xs"></i></div>
+          <div class="kpi-card__value" id="kpi-ultima" style="font-size:1rem; line-height:1.3;">—</div>
+          <div class="kpi-card__sub" id="kpi-ultima-sub">Sin sesión reciente</div>
         </div>
       </section>
 
-      <section class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg);">
-        <h3 class="text-h3" style="margin-bottom:var(--space-sm);">Panel de Narrativas y Fact-Checking</h3>
-        <p style="font-size:0.85rem; color:var(--text-body);">
-          Supervisión continua de medios digitales, radio, TV y prensa escrita regional con estatus de verificación periodística.
-        </p>
-      </section>
+      <!-- Layout principal: 2 columnas -->
+      <div class="medios-workspace animate-fade-in-up">
+
+        <!-- COLUMNA PRINCIPAL -->
+        <div class="medios-main">
+
+          <!-- ═══ NUEVA SESIÓN DE MONITOREO ═══ -->
+          <div class="glass-strong" style="border-radius:var(--radius-lg); overflow:hidden;">
+            <div style="padding:var(--space-md) var(--space-lg); border-bottom:1px solid var(--glass-border); display:flex; align-items:center; justify-content:space-between;">
+              <h3 style="font-family:var(--font-heading); font-size:1rem; font-weight:700; color:var(--text-heading); display:flex; align-items:center; gap:8px;">
+                <i data-lucide="play-circle" style="color:var(--accent-cyan); width:18px; height:18px;"></i>
+                Nueva Sesión de Monitoreo
+              </h3>
+              <span id="status-sesion" class="radar-pulse" style="display:none;">
+                <span class="radar-dot"></span> Escuchando...
+              </span>
+            </div>
+
+            <div style="padding:var(--space-lg); display:flex; flex-direction:column; gap:var(--space-md);">
+
+              <!-- Selección de emisora -->
+              <div>
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:8px;">
+                  <i data-lucide="radio" class="icon-xs"></i> Emisora Preset (Campeche + Nacionales)
+                </label>
+                <div class="emisora-grid" id="emisoras-preset"></div>
+              </div>
+
+              <!-- URL manual -->
+              <div>
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:6px;">
+                  <i data-lucide="link" class="icon-xs"></i> O ingresa URL de stream directo (MP3/AAC)
+                </label>
+                <input id="input-url" type="url" class="field-dark" placeholder="https://stream.ejemplo.com/radio.mp3" autocomplete="off">
+                <input id="input-nombre" type="text" class="field-dark" placeholder="Nombre de la emisora (opcional)" style="margin-top:6px;" autocomplete="off">
+              </div>
+
+              <!-- Keywords -->
+              <div>
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:8px;">
+                  <i data-lucide="tag" class="icon-xs"></i> Palabras Clave a Detectar (Enter para agregar)
+                </label>
+                <div class="keyword-tags" id="kw-tags-activas"></div>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                  <input id="input-keyword" type="text" class="field-dark" placeholder="Ej: candidato, campaña, Campeche..." style="flex:1;" autocomplete="off">
+                  <button id="btn-add-kw" style="padding:8px 14px; background:var(--cyan-tinte-sm); border:1px solid var(--cyan-tinte-md); border-radius:var(--radius-xs); color:var(--accent-cyan); cursor:pointer; font-size:0.8rem; font-weight:600; transition:all 0.2s; white-space:nowrap;">
+                    + Agregar
+                  </button>
+                </div>
+                 <!-- Keywords sugeridas -->
+                 <div style="margin-top:6px; display:flex; gap:6px; align-items:center;">
+                   <span style="font-size:0.65rem; color:var(--text-muted); flex-shrink:0;">Sugeridas:</span>
+                   <div id="kw-sugeridas" class="kw-sugeridas-scroll"></div>
+                 </div>
+               </div>
+
+              <!-- Botones -->
+              <div style="display:flex; gap:10px; align-items:center;">
+                <button id="btn-iniciar" style="
+                  flex:1; padding:12px; border-radius:var(--radius-xs);
+                  background:linear-gradient(135deg, var(--cyan-tinte), var(--sev-preventiva-bg));
+                  border:1px solid var(--cyan-tinte-lg);
+                  color:var(--text-hero); font-size:0.9rem; font-weight:700;
+                  cursor:pointer; transition:all 0.2s;
+                  display:flex; align-items:center; justify-content:center; gap:8px;
+                  font-family:var(--font-heading);
+                ">
+                  <i data-lucide="play" style="width:16px; height:16px;"></i>
+                  Iniciar Monitoreo
+                </button>
+                <button id="btn-detener" disabled style="
+                  padding:12px 20px; border-radius:var(--radius-xs);
+                  background:var(--sev-critica-bg); border:1px solid var(--sev-critica-bg);
+                  color:var(--sev-critica); font-size:0.85rem; font-weight:600;
+                  cursor:pointer; transition:all 0.2s;
+                  display:flex; align-items:center; gap:6px;
+                  opacity:0.4;
+                ">
+                  <i data-lucide="square" style="width:14px; height:14px;"></i>
+                  Detener
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ TRANSCRIPCIÓN EN VIVO ═══ -->
+          <div class="glass-strong" style="border-radius:var(--radius-lg); overflow:hidden;">
+            <div style="padding:var(--space-md) var(--space-lg); border-bottom:1px solid var(--glass-border); display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div class="waveform waveform--stopped" id="waveform-indicator">
+                  <div class="waveform-bar"></div>
+                  <div class="waveform-bar"></div>
+                  <div class="waveform-bar"></div>
+                  <div class="waveform-bar"></div>
+                  <div class="waveform-bar"></div>
+                </div>
+                <div>
+                  <div style="font-size:0.85rem; font-weight:700; color:var(--text-heading);">Transcripción en Tiempo Real</div>
+                  <div id="emisora-activa-nombre" style="font-size:0.72rem; color:var(--text-muted);">Sin sesión activa</div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span id="chunks-counter" style="font-size:0.72rem; color:var(--text-muted); font-family:monospace;">0 chunks</span>
+                <button id="btn-clear-transcript" style="font-size:0.7rem; padding:3px 8px; background:var(--velo-05); border:1px solid var(--velo-10); border-radius:4px; color:var(--text-muted); cursor:pointer;">
+                  Limpiar
+                </button>
+              </div>
+            </div>
+            <div class="transcript-box" id="transcript-box">
+              <div style="color:var(--text-muted); font-style:italic; text-align:center; padding:var(--space-lg);">
+                La transcripción aparecerá aquí cuando inicies una sesión de monitoreo...
+              </div>
+            </div>
+            <div id="transcript-placeholder" style="display:none; padding:10px var(--space-md); border-top:1px solid var(--velo-05); font-size:0.72rem; color:var(--text-muted); font-family:monospace;">
+              [CE-Medios] Procesando chunk de audio · Whisper AI activo...
+            </div>
+          </div>
+
+          <!-- ═══ HISTORIAL DE TESTIGOS ═══ -->
+          <div class="glass-strong" style="border-radius:var(--radius-lg); overflow:hidden;">
+            <div style="padding:var(--space-md) var(--space-lg); border-bottom:1px solid var(--glass-border); display:flex; align-items:center; justify-content:space-between;">
+              <h3 style="font-family:var(--font-heading); font-size:0.95rem; font-weight:700; color:var(--text-heading); display:flex; align-items:center; gap:8px;">
+                <i data-lucide="database" style="color:var(--accent-cyan); width:16px; height:16px;"></i>
+                Testigos Almacenados
+              </h3>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <input id="filtro-keyword" type="text" class="field-dark" placeholder="Filtrar por keyword..." style="width:180px; padding:5px 10px; font-size:0.75rem;">
+                <button id="btn-reload-testigos" style="font-size:0.72rem; padding:5px 10px; background:var(--cyan-tinte-sm); border:1px solid var(--cyan-tinte); border-radius:4px; color:var(--accent-cyan); cursor:pointer; display:flex; align-items:center; gap:5px;">
+                  <i data-lucide="refresh-cw" style="width:12px; height:12px;"></i> Recargar
+                </button>
+              </div>
+            </div>
+            <div id="testigos-lista" style="max-height:450px; overflow-y:auto; padding:var(--space-md); display:flex; flex-direction:column; gap:8px;">
+              <div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding:var(--space-md);">Cargando historial...</div>
+            </div>
+          </div>
+
+        </div><!-- /medios-main -->
+
+        <!-- COLUMNA RAIL -->
+        <div class="medios-rail">
+
+          <!-- Sesiones activas en el backend -->
+          <div class="glass-strong" style="border-radius:var(--radius-lg); overflow:hidden;">
+            <div style="padding:var(--space-md); border-bottom:1px solid var(--glass-border); display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="radar-dot" id="sessions-dot" style="width:6px;height:6px;"></span>
+                <strong style="font-size:0.78rem; color:var(--text-heading); text-transform:uppercase; letter-spacing:0.04em; font-family:var(--font-heading);">Sesiones Activas</strong>
+                <span id="sessions-total-badge" style="margin-left:auto; font-size:0.68rem; background:var(--cyan-tinte-sm); color:var(--accent-cyan); padding:1px 6px; border-radius:4px; font-weight:700;">0</span>
+              </div>
+              <input id="filtro-sesiones" type="text" class="field-dark" placeholder="Buscar sesión o emisora..." style="padding:4px 8px; font-size:0.72rem;">
+            </div>
+            <div style="padding:var(--space-md); display:flex; flex-direction:column; gap:8px;">
+              <div id="sessions-lista" class="sessions-scroll-container">
+                <div style="font-size:0.78rem; color:var(--text-muted); text-align:center;">Sin sesiones activas</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alertas de keywords en tiempo real -->
+          <div class="glass-strong" style="border-radius:var(--radius-lg); overflow:hidden;">
+            <div style="padding:var(--space-md); border-bottom:1px solid var(--glass-border); display:flex; align-items:center; gap:8px;">
+              <i data-lucide="zap" style="color:var(--accent-warm); width:14px; height:14px;"></i>
+              <strong style="font-size:0.78rem; color:var(--text-heading); text-transform:uppercase; letter-spacing:0.04em; font-family:var(--font-heading);">Alertas de Keywords</strong>
+              <span id="alertas-cnt" style="margin-left:auto; font-size:0.68rem; background:var(--proc-estimacion-bg); color:var(--accent-warm); padding:2px 7px; border-radius:4px; font-weight:700;">0</span>
+            </div>
+            <div id="alertas-lista" style="padding:var(--space-md); display:flex; flex-direction:column; gap:6px; max-height:320px; overflow-y:auto; min-height:80px;">
+              <div style="font-size:0.78rem; color:var(--text-muted); text-align:center; padding:10px;">
+                Las alertas aparecerán aquí cuando se detecte una keyword durante el monitoreo
+              </div>
+            </div>
+          </div>
+
+          <!-- Estadísticas de keywords históricas -->
+          <div class="glass-strong" style="border-radius:var(--radius-lg); overflow:hidden;">
+            <div style="padding:var(--space-md); border-bottom:1px solid var(--glass-border); display:flex; align-items:center; gap:8px;">
+              <i data-lucide="bar-chart-2" style="color:var(--accent-cyan); width:14px; height:14px;"></i>
+              <strong style="font-size:0.78rem; color:var(--text-heading); text-transform:uppercase; letter-spacing:0.04em; font-family:var(--font-heading);">Top Keywords Históricas</strong>
+            </div>
+            <div id="keywords-hist-lista" style="padding:var(--space-md); display:flex; flex-direction:column; gap:6px;"></div>
+          </div>
+
+          <!-- Consola agente CE-Medios -->
+          <div class="glass-strong" style="padding:var(--space-md); border-radius:var(--radius-lg);">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              <span style="display:inline-block;width:6px;height:6px;background:var(--accent-cyan);border-radius:50%;box-shadow:0 0 5px var(--accent-cyan);" class="animate-pulse"></span>
+              <strong style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-heading); font-family:var(--font-heading);">CE-Medios — Monitor Vivo</strong>
+              <i data-lucide="cpu" class="icon-xs" style="color:var(--accent-cyan); margin-left:auto;"></i>
+            </div>
+            <div id="live-agents-feed" style="font-size:0.68rem; font-family:monospace; display:flex; flex-direction:column; gap:4px;"></div>
+          </div>
+
+        </div><!-- /medios-rail -->
+
+      </div><!-- /medios-workspace -->
 
     </div>
   </main>
 
-  <script src="js/auth.js"></script>
-  <script src="js/app.js"></script>
-  <script>lucide.createIcons();</script>
+  <script src="js/auth.js?v=3"></script>
+  <script src="js/app.js?v=3"></script>
+  <script>
+  /* ================================================================
+     MONITORSOL — Frontend Logic
+     API Base: http://localhost:8001/monitor
+     WebSocket: ws://localhost:8001/ws/{sesion_id}
+     ================================================================ */
+  'use strict';
+
+  const API = 'http://localhost:8001/monitor';
+  const WS_BASE = 'ws://localhost:8001/ws';
+
+  // Estado local
+  let sesionEnFoco = null;             // ID de la sesión que se muestra en la pantalla principal
+  const activeSessionsMap = {};        // Info general de todas las sesiones activas locales
+  const transcriptHistory = {};        // Historial de líneas de transcripción por sesión
+  const wsPool = {};                   // WebSockets activos por sesión
+  const demoTimers = {};               // Timers activos para sesiones en modo demo
+  
+  let chunksCount = 0;
+  let alertasCount = 0;
+  let keywordsActivas = ['candidato', 'campeche', 'partido', 'campaña', 'elecciones'];
+
+  // ── Emisoras preset con datos reales de Campeche + nacionales ──
+  const EMISORAS_PRESET = [
+    { nombre: 'MVS Noticias 102.5 FM',   url: 'https://20603.live.streamtheworld.com/XHMVSFM_SC',     color: 'var(--accent-cyan)', cat: 'nacional' },
+    { nombre: 'Radio Disney 92.1 FM',    url: 'https://18323.live.streamtheworld.com/XHFOFMAAC_SC',    color: 'var(--accent-purple)', cat: 'nacional' },
+    { nombre: 'W Radio 96.9 FM',         url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/XEWSFMAAC_SC', color: 'var(--accent-warm)', cat: 'nacional' },
+    { nombre: 'Radio Fórmula',           url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/XERFMAAC_SC',   color: 'var(--accent-blue)', cat: 'nacional' },
+    { nombre: 'La Mejor 97.7 FM',        url: 'https://18213.live.streamtheworld.com/XERCFM_SC',       color: 'var(--status-success)', cat: 'nacional' },
+    { nombre: 'Imagen Radio 90.5 FM',    url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/XERFMAAC_SC',   color: 'var(--sev-critica)', cat: 'nacional' },
+  ];
+
+  const KW_SUGERIDAS = ['candidato', 'campeche', 'partido', 'campaña', 'elecciones', 'votos', 'gobernador', 'diputado', 'pemex', 'carmen', 'calakmul'];
+
+  // ── Init ──────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', async () => {
+    CE.initAgents('medios');
+    lucide.createIcons();
+    renderEmisoras();
+    renderKwTags();
+    renderKwSugeridas();
+    bindEvents();
+    await checkBackend();
+    await cargarTestigos();
+    await cargarSesionesActivas();
+    setInterval(cargarSesionesActivas, 6000);
+  });
+
+  // ── Verificar backend ─────────────────────────────────────────────
+  async function checkBackend() {
+    const badge = document.getElementById('badge-backend');
+    try {
+      const r = await fetch('http://localhost:8001/health', { signal: AbortSignal.timeout(3000) });
+      if (r.ok) {
+        badge.className = 'badge badge--success';
+        badge.innerHTML = '<i data-lucide="server" class="icon-xs"></i> Backend activo · MonitorSol 1.0';
+        lucide.createIcons();
+        return true;
+      }
+    } catch (e) {}
+    badge.className = 'badge';
+    badge.style.background = 'var(--sev-critica-bg)';
+    badge.style.color = 'var(--sev-critica)';
+    badge.innerHTML = '<i data-lucide="server-off" class="icon-xs"></i> Backend offline — modo demo';
+    lucide.createIcons();
+    return false;
+  }
+
+  // ── Render emisoras preset ────────────────────────────────────────
+  function renderEmisoras() {
+    const grid = document.getElementById('emisoras-preset');
+    grid.innerHTML = EMISORAS_PRESET.map((e, i) => `
+      <button class="emisora-btn" data-idx="${i}" onclick="selectEmisora(${i})">
+        <span class="emisora-dot" style="background:${e.color};"></span>
+        <div>
+          <div style="font-size:0.78rem; font-weight:600; color:var(--text-heading); line-height:1.2;">${e.nombre}</div>
+          <div style="font-size:0.65rem; color:var(--text-muted);">${e.cat}</div>
+        </div>
+      </button>
+    `).join('');
+  }
+
+  function selectEmisora(idx) {
+    document.querySelectorAll('.emisora-btn').forEach((b, i) => {
+      b.classList.toggle('emisora-btn--selected', i === idx);
+    });
+    document.getElementById('input-url').value = EMISORAS_PRESET[idx].url;
+    document.getElementById('input-nombre').value = EMISORAS_PRESET[idx].nombre;
+  }
+
+  // ── Keywords ──────────────────────────────────────────────────────
+  function renderKwTags() {
+    const el = document.getElementById('kw-tags-activas');
+    el.innerHTML = keywordsActivas.map(kw => `
+      <span class="kw-tag kw-tag--active">
+        <i data-lucide="tag" style="width:10px;height:10px;"></i>
+        ${kw}
+        <span onclick="removeKw('${kw}')" style="cursor:pointer; margin-left:4px; opacity:0.8; font-weight:bold;">×</span>
+      </span>
+    `).join('');
+    lucide.createIcons();
+  }
+
+  function renderKwSugeridas() {
+    const el = document.getElementById('kw-sugeridas');
+    el.innerHTML = KW_SUGERIDAS.filter(k => !keywordsActivas.includes(k)).map(kw => `
+      <span class="kw-tag" onclick="addKw('${kw}')" style="cursor:pointer; font-size:0.65rem; padding:2px 8px;">${kw}</span>
+    `).join('');
+  }
+
+  function addKw(kw) {
+    kw = kw.trim().toLowerCase();
+    if (kw && !keywordsActivas.includes(kw)) {
+      keywordsActivas.push(kw);
+      renderKwTags();
+      renderKwSugeridas();
+    }
+    document.getElementById('input-keyword').value = '';
+  }
+
+  function removeKw(kw) {
+    keywordsActivas = keywordsActivas.filter(k => k !== kw);
+    renderKwTags();
+    renderKwSugeridas();
+  }
+
+  // ── Bind events ───────────────────────────────────────────────────
+  function bindEvents() {
+    document.getElementById('btn-add-kw').addEventListener('click', () => {
+      addKw(document.getElementById('input-keyword').value);
+    });
+    document.getElementById('input-keyword').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addKw(e.target.value);
+    });
+
+    document.getElementById('btn-iniciar').addEventListener('click', iniciarSesion);
+    document.getElementById('btn-detener').addEventListener('click', detenerSesion);
+    document.getElementById('btn-clear-transcript').addEventListener('click', () => {
+      if (!sesionEnFoco) return;
+      transcriptHistory[sesionEnFoco] = [];
+      document.getElementById('transcript-box').innerHTML =
+        '<div style="color:var(--text-muted); font-style:italic; text-align:center; padding:20px;">Transcripción limpiada</div>';
+      document.getElementById('chunks-counter').textContent = '0 chunks';
+    });
+    document.getElementById('btn-reload-testigos').addEventListener('click', cargarTestigos);
+    document.getElementById('filtro-keyword').addEventListener('input', e => {
+      cargarTestigos(e.target.value);
+    });
+    
+    // Filtro de sesiones activas en tiempo real
+    document.getElementById('filtro-sesiones').addEventListener('input', () => {
+      renderActiveSessionsList();
+    });
+  }
+
+  // ── Iniciar sesión de monitoreo ───────────────────────────────────
+  async function iniciarSesion() {
+    const url = document.getElementById('input-url').value.trim();
+    const nombre = document.getElementById('input-nombre').value.trim() || 'Emisora sin nombre';
+
+    if (!url) {
+      mostrarToastKw('URL requerida', 'Selecciona una emisora o ingresa una URL de stream.', 'alert-triangle', 'var(--sev-critica)');
+      return;
+    }
+    if (keywordsActivas.length === 0) {
+      mostrarToastKw('Sin keywords', 'Agrega al menos una palabra clave para detectar.', 'tag', 'var(--sev-media)');
+      return;
+    }
+
+    let sesionId = null;
+    let isDemo = false;
+
+    try {
+      const r = await fetch(`${API}/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emisora_url: url, emisora_nombre: nombre, keywords: keywordsActivas }),
+      });
+      if (!r.ok) {
+        const err = await r.json();
+        throw new Error(err.detail || 'Error al iniciar');
+      }
+      const data = await r.json();
+      sesionId = data.sesion_id;
+      mostrarToastKw('Sesión iniciada', `Monitoreando: ${nombre}`, 'radio', 'var(--accent-cyan)');
+    } catch (e) {
+      // Modo demo si el backend no está disponible
+      sesionId = 'demo-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+      isDemo = true;
+      mostrarToastKw('Modo Demo', `Iniciando monitoreo de: ${nombre}`, 'cpu', 'var(--accent-purple)');
+    }
+
+    // Registrar sesión localmente
+    activeSessionsMap[sesionId] = {
+      sesion_id: sesionId,
+      emisora_nombre: nombre,
+      emisora_url: url,
+      keywords: [...keywordsActivas],
+      total_chunks: 0,
+      total_detecciones: 0,
+      status: 'live',
+      isDemo: isDemo
+    };
+
+    transcriptHistory[sesionId] = [];
+
+    // Enfocar inmediatamente la nueva sesión
+    focusSession(sesionId);
+
+    // Arrancar stream / WS
+    if (!isDemo) {
+      conectarWebSocket(sesionId);
+    } else {
+      iniciarDemoTranscripcion(sesionId, nombre);
+    }
+
+    // Actualizar sidebar inmediatamente
+    await cargarSesionesActivas();
+  }
+
+  async function detenerSesion() {
+    if (!sesionEnFoco) return;
+    const s = activeSessionsMap[sesionEnFoco];
+    if (!s) return;
+
+    s.status = 'stopped';
+
+    if (!s.isDemo) {
+      if (wsPool[sesionEnFoco]) {
+        wsPool[sesionEnFoco].close();
+        delete wsPool[sesionEnFoco];
+      }
+      try {
+        await fetch(`${API}/stop/${sesionEnFoco}`, { method: 'POST' });
+      } catch (e) {}
+    } else {
+      if (demoTimers[sesionEnFoco]) {
+        clearInterval(demoTimers[sesionEnFoco]);
+        delete demoTimers[sesionEnFoco];
+      }
+    }
+
+    mostrarToastKw('Sesión detenida', `Monitoreo finalizado para: ${s.emisora_nombre}`, 'square', 'var(--sev-critica)');
+    
+    // Forzar actualización de UI para la sesión en foco
+    setSesionActiva(false, s.emisora_nombre);
+    
+    await cargarSesionesActivas();
+    await cargarTestigos();
+  }
+
+  // Cambia el foco de la pantalla principal a una sesión específica
+  function focusSession(sesionId) {
+    sesionEnFoco = sesionId;
+    const s = activeSessionsMap[sesionId];
+    if (!s) return;
+
+    // Resaltar visualmente en la sidebar
+    document.querySelectorAll('.session-card').forEach(card => {
+      card.classList.remove('session-card--active');
+    });
+    const activeCard = document.querySelector(`[data-session-id="${sesionId}"]`);
+    if (activeCard) activeCard.classList.add('session-card--active');
+
+    // Cambiar estado de controles principales
+    setSesionActiva(s.status === 'live', s.emisora_nombre);
+
+    // Cargar transcripción histórica de esta sesión
+    const box = document.getElementById('transcript-box');
+    box.innerHTML = '';
+    const history = transcriptHistory[sesionId] || [];
+    document.getElementById('chunks-counter').textContent = `${history.length} chunks`;
+
+    if (history.length === 0) {
+      box.innerHTML = `<div style="color:var(--text-muted); font-style:italic; text-align:center; padding:var(--space-lg);">
+        Conexión establecida. Esperando flujo de audio para: ${s.emisora_nombre}...
+      </div>`;
+    } else {
+      history.forEach(line => {
+        const div = document.createElement('div');
+        div.className = line.className;
+        div.innerHTML = line.html;
+        box.appendChild(div);
+      });
+      box.scrollTop = box.scrollHeight;
+    }
+  }
+
+  function setSesionActiva(activa, nombre = '') {
+    const wv = document.getElementById('waveform-indicator');
+    const status = document.getElementById('status-sesion');
+    const btnDetener = document.getElementById('btn-detener');
+
+    if (activa) {
+      wv.classList.remove('waveform--stopped');
+      status.style.display = 'flex';
+      document.getElementById('emisora-activa-nombre').textContent = nombre;
+      btnDetener.disabled = false;
+      btnDetener.style.opacity = '1';
+      document.getElementById('transcript-placeholder').style.display = 'block';
+    } else {
+      wv.classList.add('waveform--stopped');
+      status.style.display = 'none';
+      document.getElementById('emisora-activa-nombre').textContent = `${nombre} (Detenida)`;
+      btnDetener.disabled = true;
+      btnDetener.style.opacity = '0.4';
+      document.getElementById('transcript-placeholder').style.display = 'none';
+    }
+
+    const dot = document.getElementById('sessions-dot');
+    if (dot) dot.className = activa ? 'radar-dot' : 'radar-dot radar-dot--stopped';
+  }
+
+  // ── WebSocket ─────────────────────────────────────────────────────
+  function conectarWebSocket(sesionId) {
+    try {
+      const ws = new WebSocket(`${WS_BASE}/${sesionId}`);
+      wsPool[sesionId] = ws;
+
+      ws.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        const s = activeSessionsMap[sesionId];
+        if (!s) return;
+
+        if (data.tipo === 'alerta') {
+          s.total_detecciones++;
+          recibirAlerta(sesionId, data);
+        } else if (data.tipo === 'transcripcion') {
+          s.total_chunks++;
+          appendTranscripcion(sesionId, data.texto, null);
+        }
+      };
+      ws.onerror = () => {
+        // fail silently
+      };
+      ws.onclose = () => {
+        if (wsPool[sesionId]) delete wsPool[sesionId];
+      };
+    } catch (e) {}
+  }
+
+  // ── Transcripción ─────────────────────────────────────────────────
+  function appendTranscripcion(sesionId, texto, kwDetectada) {
+    const ts = new Date().toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    let className = 'transcript-line';
+    let html = '';
+
+    if (kwDetectada) {
+      const regex = new RegExp(`(${kwDetectada})`, 'gi');
+      const highlightedText = texto.replace(regex, '<span class="kw-highlight">$1</span>');
+      className = 'transcript-line transcript-line--keyword';
+      html = `<span style="color:var(--text-muted); font-size:0.65rem;">[${ts}]</span> ${highlightedText}`;
+    } else {
+      html = `<span style="color:var(--text-muted); font-size:0.65rem;">[${ts}]</span> ${texto}`;
+    }
+
+    // Almacenar en búfer histórico
+    if (!transcriptHistory[sesionId]) transcriptHistory[sesionId] = [];
+    transcriptHistory[sesionId].push({ className, html });
+
+    // Renderizar solo si es la sesión en foco
+    if (sesionEnFoco === sesionId) {
+      const box = document.getElementById('transcript-box');
+      
+      const ph = box.querySelector('[style*="italic"]');
+      if (ph) ph.remove();
+
+      const div = document.createElement('div');
+      div.className = className;
+      div.innerHTML = html;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      
+      const count = transcriptHistory[sesionId].length;
+      document.getElementById('chunks-counter').textContent = `${count} chunks`;
+    }
+  }
+
+  // ── Alertas ───────────────────────────────────────────────────────
+  function recibirAlerta(sesionId, data) {
+    const s = activeSessionsMap[sesionId];
+    const name = s ? s.emisora_nombre : 'Emisora';
+
+    alertasCount++;
+    document.getElementById('alertas-cnt').textContent = alertasCount;
+
+    const ts = new Date().toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    const lista = document.getElementById('alertas-lista');
+
+    const ph = lista.querySelector('[style*="italic"], [style*="aparecerán"]');
+    if (ph) ph.remove();
+
+    const div = document.createElement('div');
+    div.style.cssText = 'background:var(--cyan-tinte-xs); border:1px solid var(--cyan-tinte); border-radius:6px; padding:8px 10px; animation:fadeInLine 0.3s ease;';
+    div.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+        <span style="font-size:0.68rem; font-weight:700; text-transform:uppercase; color:var(--accent-cyan);">${data.keyword || data.keyword_detectada || '?'}</span>
+        <span style="font-size:0.65rem; color:var(--text-muted); font-family:monospace;">${ts}</span>
+      </div>
+      <div style="font-size:0.75rem; color:var(--text-body); line-height:1.4;">${data.transcripcion || data.texto || ''}</div>
+      <div style="font-size:0.65rem; color:var(--text-muted); margin-top:4px;">${name}</div>
+    `;
+    lista.insertBefore(div, lista.firstChild);
+
+    appendTranscripcion(sesionId, data.transcripcion || data.texto || '', data.keyword || data.keyword_detectada);
+
+    // Toast
+    mostrarToastKw(
+      `Keyword: "${data.keyword || data.keyword_detectada}"`,
+      `[${name}] ${data.transcripcion || data.texto || ''}`.substring(0, 95),
+      'zap', 'var(--accent-warm)'
+    );
+  }
+
+  // ── Testigos (historial) ──────────────────────────────────────────
+  async function cargarTestigos(filtro = '') {
+    const lista = document.getElementById('testigos-lista');
+    lista.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding:var(--space-md);">Cargando...</div>';
+
+    let testigos = [];
+    try {
+      const r = await fetch(`${API}/testigos`, { signal: AbortSignal.timeout(3000) });
+      if (r.ok) testigos = await r.json();
+    } catch (e) {
+      testigos = getDemoTestigos();
+    }
+
+    // Filtrar
+    if (filtro) testigos = testigos.filter(t =>
+      t.keyword_detectada?.toLowerCase().includes(filtro.toLowerCase()) ||
+      t.transcripcion?.toLowerCase().includes(filtro.toLowerCase()) ||
+      t.emisora_nombre?.toLowerCase().includes(filtro.toLowerCase())
+    );
+
+    // Actualizar KPIs
+    actualizarKPIs(testigos);
+
+    if (testigos.length === 0) {
+      lista.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding:var(--space-md);">Sin resultados</div>';
+      return;
+    }
+
+    lista.innerHTML = testigos.slice(0, 60).map(t => {
+      const ts = new Date(t.timestamp || t.creado_en).toLocaleString('es-MX', {
+        month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'
+      });
+      const regex = new RegExp(`(${t.keyword_detectada})`, 'gi');
+      const transcHtml = (t.transcripcion || '').replace(regex, '<strong style="color:var(--accent-cyan)">$1</strong>');
+      return `
+        <div class="testigo-row">
+          <div>
+            <span class="testigo-keyword">${t.keyword_detectada}</span>
+            <div style="font-size:0.65rem; color:var(--text-muted); margin-top:4px; font-family:monospace;">${ts}</div>
+          </div>
+          <div>
+            <div style="font-size:0.78rem; color:var(--text-body); line-height:1.4;">${transcHtml}</div>
+            <div style="font-size:0.68rem; color:var(--text-muted); margin-top:3px;">
+              <i data-lucide="radio" style="width:10px;height:10px; vertical-align:middle;"></i>
+              ${t.emisora_nombre || t.emisora_url || '—'}
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.65rem; color:var(--text-muted); font-family:monospace;">#${t.id || ''}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    // Keywords estadísticas
+    renderKeywordsHist(testigos);
+    lucide.createIcons();
+  }
+
+  function actualizarKPIs(testigos) {
+    // Sesiones únicas
+    const sesiones = new Set(testigos.map(t => t.sesion_id)).size;
+    document.getElementById('kpi-total-sesiones').textContent = sesiones;
+    document.getElementById('kpi-total-detecciones').textContent = testigos.length;
+
+    // Emisoras únicas
+    const emisoras = new Set(testigos.map(t => t.emisora_nombre)).size;
+    document.getElementById('kpi-emisoras').textContent = emisoras;
+
+    // Última detección
+    if (testigos.length > 0) {
+      const ultimo = testigos[0];
+      const ts = new Date(ultimo.timestamp || ultimo.creado_en);
+      document.getElementById('kpi-ultima').textContent = ultimo.keyword_detectada;
+      document.getElementById('kpi-ultima-sub').textContent = ts.toLocaleString('es-MX', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+    }
+  }
+
+  function renderKeywordsHist(testigos) {
+    const countMap = {};
+    testigos.forEach(t => {
+      const kw = t.keyword_detectada;
+      countMap[kw] = (countMap[kw] || 0) + 1;
+    });
+    const sorted = Object.entries(countMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
+    const maxVal = sorted[0]?.[1] || 1;
+    const lista = document.getElementById('keywords-hist-lista');
+    lista.innerHTML = sorted.map(([kw, cnt]) => {
+      const pct = (cnt / maxVal * 100).toFixed(0);
+      return `
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:0.72rem; color:var(--text-body); min-width:80px; font-family:monospace;">${kw}</span>
+          <div style="flex:1; height:4px; background:var(--velo-08); border-radius:2px; overflow:hidden;">
+            <div style="width:${pct}%; height:100%; background:var(--accent-cyan); border-radius:2px;"></div>
+          </div>
+          <span style="font-size:0.7rem; color:var(--text-muted); min-width:28px; text-align:right;">${cnt}</span>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Sesiones activas ──────────────────────────────────────────────
+  let globalSesionesActivas = [];
+
+  async function cargarSesionesActivas() {
+    try {
+      const r = await fetch(`${API}/sessions`, { signal: AbortSignal.timeout(3000) });
+      if (r.ok) {
+        const data = await r.json();
+        globalSesionesActivas = data.sesiones || [];
+      } else {
+        throw new Error('Offline fallback');
+      }
+    } catch (e) {
+      // Mock de sesiones activas (15 a 100 para demostrar la robustez del diseño)
+      globalSesionesActivas = getMockActiveSessions();
+    }
+    renderActiveSessionsList();
+  }
+
+  function renderActiveSessionsList() {
+    const query = document.getElementById('filtro-sesiones').value.toLowerCase().trim();
+    let filtradas = globalSesionesActivas;
+
+    if (query) {
+      filtradas = globalSesionesActivas.filter(s => 
+        (s.emisora_nombre || '').toLowerCase().includes(query) ||
+        (s.sesion_id || '').toLowerCase().includes(query)
+      );
+    }
+
+    const lista = document.getElementById('sessions-lista');
+    const badge = document.getElementById('badge-sesiones');
+    const totalBadge = document.getElementById('sessions-total-badge');
+    
+    badge.textContent = `${globalSesionesActivas.length} Sesiones activas`;
+    totalBadge.textContent = globalSesionesActivas.length;
+
+    if (filtradas.length === 0) {
+      lista.innerHTML = '<div style="font-size:0.75rem; color:var(--text-muted); text-align:center; padding:12px;">Sin coincidencias</div>';
+      return;
+    }
+
+    lista.innerHTML = filtradas.map(s => {
+      const isFocused = sesionEnFoco === s.sesion_id;
+      return `
+        <div class="session-card ${s.status === 'stopped' ? 'session-card--stopped' : ''} ${isFocused ? 'session-card--active' : ''}" 
+             data-session-id="${s.sesion_id}" 
+             onclick="focusSession('${s.sesion_id}')" 
+             style="cursor: pointer;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+              <div style="font-size:0.78rem; font-weight:700; color:var(--text-heading); line-height:1.2;">${s.emisora_nombre || 'Emisora'}</div>
+              <div style="font-size:0.62rem; color:var(--text-muted); font-family:monospace; margin-top:2px;">ID: ${s.sesion_id.substring(0,8)}...</div>
+            </div>
+            <span class="radar-pulse">
+              <span class="radar-dot ${s.status === 'stopped' ? 'radar-dot--stopped' : ''}"></span> 
+              ${s.status === 'stopped' ? 'STOP' : 'LIVE'}
+            </span>
+          </div>
+          
+          <div style="display:flex; gap:6px; margin:4px 0;">
+            <div class="stat-pill">
+              <div style="font-size:0.6rem; color:var(--text-muted); line-height:1;">Chunks</div>
+              <div style="font-size:0.8rem; font-weight:700; color:var(--text-heading); margin-top:2px;">${s.total_chunks || 0}</div>
+            </div>
+            <div class="stat-pill">
+              <div style="font-size:0.6rem; color:var(--text-muted); line-height:1;">Detecciones</div>
+              <div style="font-size:0.8rem; font-weight:700; color:var(--accent-cyan); margin-top:2px;">${s.total_detecciones || 0}</div>
+            </div>
+          </div>
+          
+          <div style="display:flex; flex-wrap:wrap; gap:3px; max-height:36px; overflow:hidden;">
+            ${(s.keywords || []).slice(0, 4).map(kw => `<span style="font-size:0.58rem; background:var(--cyan-tinte-xs); border:1px solid var(--cyan-tinte-sm); padding:1px 4px; border-radius:3px; color:var(--accent-cyan);">${kw}</span>`).join('')}
+            ${(s.keywords || []).length > 4 ? `<span style="font-size:0.58rem; background:var(--velo-05); padding:1px 4px; border-radius:3px; color:var(--text-muted);">+${s.keywords.length - 4}</span>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+    lucide.createIcons();
+  }
+
+  // Genera un volumen alto de sesiones activas (ej: 18 estaciones) para testear scrollbar/búsqueda
+  function getMockActiveSessions() {
+    const baseList = [
+      { id: '1', nombre: 'MVS Noticias 102.5 FM', chunks: 142, det: 23, kws: ['candidato', 'mexico', 'pemex', 'campeche', 'partido'] },
+      { id: '2', nombre: 'Radio Disney 92.1 FM', chunks: 89, det: 5, kws: ['disney', 'hoy', 'tarde', 'noche'] },
+      { id: '3', nombre: 'W Radio 96.9 FM', chunks: 210, det: 34, kws: ['partido', 'votos', 'elecciones', 'campeche'] },
+      { id: '4', nombre: 'Radio Fórmula Campeche', chunks: 120, det: 18, kws: ['gobernador', 'diputado', 'campaña'] },
+      { id: '5', nombre: 'La Mejor 97.7 FM', chunks: 64, det: 1, kws: ['hola', 'todo', 'tarde'] },
+      { id: '6', nombre: 'Imagen Radio 90.5 FM', chunks: 175, det: 12, kws: ['mexico', 'empresa', 'finanzas'] },
+      { id: '7', nombre: 'Radio Delfín 88.9 FM (Carmen)', chunks: 55, det: 8, kws: ['carmen', 'pemex', 'pesca', 'puerto'] },
+      { id: '8', nombre: 'XHCC FM 90.9', chunks: 32, det: 0, kws: ['musica', 'campeche', 'cultura'] },
+      { id: '9', nombre: 'La Ke Buena 99.3 FM', chunks: 92, det: 4, kws: ['partido', 'fiesta', 'hoy'] },
+      { id: '10', nombre: 'Exa FM 101.3', chunks: 104, det: 2, kws: ['concierto', 'joven', 'tarde'] },
+      { id: '11', nombre: 'Radio Champotón XECPT', chunks: 48, det: 7, kws: ['champotón', 'casilla', 'votos'] },
+      { id: '12', nombre: 'La Voz de los Tres Ríos', chunks: 15, det: 0, kws: ['comunidad', 'rural', 'candelaria'] },
+      { id: '13', nombre: 'Radio Calkiní XECAL', chunks: 28, det: 3, kws: ['calkiní', 'artesanos', 'campaña'] },
+      { id: '14', nombre: 'Fórmula Melódica', chunks: 110, det: 0, kws: ['recuerdo', 'noche', 'amor'] },
+      { id: '15', nombre: 'Radio Escárcega XEEPT', chunks: 73, det: 9, kws: ['escárcega', 'tren', 'logistica'] },
+    ];
+    
+    // Incluir TODAS las sesiones activas creadas localmente por el usuario
+    Object.values(activeSessionsMap).forEach(s => {
+      // Evitar duplicar en la base de mocks
+      const exists = baseList.some(item => item.id === s.sesion_id);
+      if (!exists) {
+        baseList.unshift({
+          id: s.sesion_id,
+          nombre: s.emisora_nombre,
+          chunks: s.total_chunks,
+          det: s.total_detecciones,
+          kws: s.keywords,
+          status: s.status
+        });
+      }
+    });
+
+    return baseList.map(s => ({
+      sesion_id: s.id.includes('-') || s.id.length > 5 ? s.id : `mock-session-id-${s.id}-${Date.now().toString().substring(8)}`,
+      emisora_nombre: s.nombre,
+      total_chunks: s.chunks,
+      total_detecciones: s.det,
+      keywords: s.kws,
+      status: s.status || 'live'
+    }));
+  }
+
+  // ── Toast de keyword ──────────────────────────────────────────────
+  function mostrarToastKw(titulo, texto, icono, color) {
+    const t = document.createElement('div');
+    t.className = 'kw-toast';
+    t.innerHTML = `
+      <i data-lucide="${icono}" style="color:${color}; width:18px; height:18px; flex-shrink:0; margin-top:2px;"></i>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:0.82rem; font-weight:700; color:var(--text-heading);">${titulo}</div>
+        <div style="font-size:0.75rem; color:var(--text-body); line-height:1.3; margin-top:2px;">${texto}</div>
+      </div>
+      <button onclick="this.parentElement.remove()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; flex-shrink:0; padding:2px;">
+        <i data-lucide="x" style="width:14px;height:14px;"></i>
+      </button>
+    `;
+    document.body.appendChild(t);
+    lucide.createIcons();
+    setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(20px)'; t.style.transition='all 0.3s'; setTimeout(()=>t.remove(), 300); }, 6000);
+  }
+
+  // ── Demo mode (backend offline) ────────────────────────────────────
+  function getDemoTestigos() {
+    return [
+      { id:437, sesion_id:'df9b228a', emisora_nombre:'MVS Noticias 102.5 FM', keyword_detectada:'mexico', transcripcion:'Y tú ya elegiste tu próximo reto, este 9 de agosto corre la carrera del sindicato mexico.', timestamp:'2026-07-28T13:13:24.630738' },
+      { id:436, sesion_id:'df9b228a', emisora_nombre:'MVS Noticias 102.5 FM', keyword_detectada:'partido', transcripcion:'El partido de gobierno anunció nuevas medidas para los ciudadanos de Campeche.', timestamp:'2026-07-28T13:12:59.720407' },
+      { id:435, sesion_id:'1628daa2', emisora_nombre:'Radio Disney 92.1 FM',  keyword_detectada:'disney', transcripcion:'Bienvenidos al verano de Radio Disney, la mejor música para todos.', timestamp:'2026-06-30T09:45:00.000000' },
+      { id:434, sesion_id:'1628daa2', emisora_nombre:'Radio Disney 92.1 FM',  keyword_detectada:'hoy',    transcripcion:'Hoy tenemos un show especial con todos los éxitos del momento.', timestamp:'2026-06-30T09:40:00.000000' },
+      { id:433, sesion_id:'9197a60c', emisora_nombre:'MVS Noticias 102.5 FM', keyword_detectada:'pemex',  transcripcion:'Pemex reporta cifras récord de producción en la Sonda de Campeche.', timestamp:'2026-07-23T19:20:00.000000' },
+      { id:432, sesion_id:'9197a60c', emisora_nombre:'MVS Noticias 102.5 FM', keyword_detectada:'mexico', transcripcion:'El gobierno de México presentó el plan económico para el próximo año.', timestamp:'2026-07-23T19:15:00.000000' },
+    ];
+  }
+
+  const DEMO_FRASES = [
+    'Bienvenidos a MVS Noticias, son las ocho de la mañana.',
+    'El candidato presentó su propuesta de gobierno ante medios.',
+    'En Campeche, autoridades continúan trabajos de mantenimiento vial.',
+    'El partido convocó a sus militantes para una reunión este sábado.',
+    'La campaña continúa con eventos en los trece municipios del estado.',
+    'Avanza el proceso electoral con jornadas de difusión en zonas rurales.',
+    'Elecciones 2027 — los candidatos refuerzan sus propuestas de gobierno.',
+    'Noticias de último momento desde la capital del estado.',
+    'El gobernador firmó convenios de colaboración con el sector educativo.',
+    'Participaron ciudadanos de todos los municipios en el foro de consulta.',
+  ];
+
+  function iniciarDemoTranscripcion(sesionId, nombre) {
+    let i = 0;
+    appendTranscripcion(sesionId, `[DEMO] Iniciando monitoreo de: ${nombre}`, null);
+    
+    const timer = setInterval(() => {
+      const s = activeSessionsMap[sesionId];
+      if (!s || s.status === 'stopped') {
+        clearInterval(timer);
+        return;
+      }
+
+      s.total_chunks++;
+      const frase = DEMO_FRASES[i % DEMO_FRASES.length];
+      const kwMatch = s.keywords.find(kw => frase.toLowerCase().includes(kw));
+      
+      appendTranscripcion(sesionId, frase, kwMatch || null);
+      if (kwMatch) {
+        s.total_detecciones++;
+        recibirAlerta(sesionId, { keyword_detectada: kwMatch, transcripcion: frase, emisora_nombre: nombre });
+      }
+      i++;
+    }, 6000);
+
+    demoTimers[sesionId] = timer;
+  }
+
+  function cargarDemoData() {
+    cargarTestigos();
+  }
+
+  </script>
 </body>
 </html>
+
+

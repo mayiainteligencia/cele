@@ -24,26 +24,7 @@
 </head>
 <body data-page="fuentes">
 
-  <!-- BARRA SUPERIOR -->
-  <header class="filter-bar filter-bar--notch" id="filter-bar">
-    <a href="index.html" class="topbar-side" style="gap:10px;">
-      <span class="ce-brand-badge" style="font-size:1.1rem; padding: 2px 8px; border-radius:6px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3);">CE</span>
-      <span style="font-weight:700; color:var(--text-heading); font-size:0.95rem;">Fuentes & Trazabilidad</span>
-    </a>
 
-    <div class="topbar-notch">
-      <nav class="subnav-bar">
-        <a class="subnav-btn" href="index.html"><i data-lucide="home" class="icon-xs"></i> <span>Inicio</span></a>
-        <a class="subnav-btn" href="mando.html"><i data-lucide="bar-chart-3" class="icon-xs"></i> <span>Centro de Mando</span></a>
-        <a class="subnav-btn" href="cartografia.html"><i data-lucide="map" class="icon-xs"></i> <span>Cartografía</span></a>
-        <a class="subnav-btn" href="municipios.html"><i data-lucide="building-2" class="icon-xs"></i> <span>13 Municipios</span></a>
-        <a class="subnav-btn" href="infraestructura.html"><i data-lucide="school" class="icon-xs"></i> <span>Infraestructura</span></a>
-        <a class="subnav-btn subnav-btn--active" href="fuentes.html"><i data-lucide="database" class="icon-xs"></i> <span>Fuentes & Trazabilidad</span></a>
-      </nav>
-    </div>
-
-    <div id="auth-slot"></div>
-  </header>
 
   <!-- NAVEGACIÓN LATERAL -->
   <nav class="sidebar" id="sidebar" aria-label="Navegación principal"></nav>
@@ -59,8 +40,8 @@
         </div>
 
         <div class="mando-header__pills">
-          <span class="badge badge--success">100% Insumos Auténticos</span>
-          <span class="badge badge--neutral">Sin Simulación de Polígonos</span>
+          <span class="badge badge--success">Ninguna geometría simulada</span>
+          <span class="badge badge--warn">5 capas pendientes del INE</span>
         </div>
       </section>
 
@@ -72,7 +53,7 @@
 
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:var(--space-md);">
           
-          <div style="background:rgba(15,23,42,0.5); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
+          <div style="background:var(--panel-fondo); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
             <h4 style="color:var(--text-heading); font-size:1rem; margin-bottom:8px;">1. Marco Geoestadístico INEGI 2024</h4>
             <ul style="font-size:0.8rem; color:var(--text-body); display:flex; flex-direction:column; gap:4px; list-style:disc; padding-left:18px;">
               <li><strong>Fuente:</strong> Instituto Nacional de Estadística y Geografía (INEGI)</li>
@@ -83,11 +64,11 @@
             </ul>
           </div>
 
-          <div style="background:rgba(15,23,42,0.5); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
+          <div style="background:var(--panel-fondo); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
             <h4 style="color:var(--text-heading); font-size:1rem; margin-bottom:8px;">2. Catálogo CCT — SEP Campeche</h4>
             <ul style="font-size:0.8rem; color:var(--text-body); display:flex; flex-direction:column; gap:4px; list-style:disc; padding-left:18px;">
               <li><strong>Fuente:</strong> Secretaría de Educación Pública — Catálogo de Centros de Trabajo (CCT)</li>
-              <li><strong>Corte:</strong> 2024</li>
+              <li><strong>Corte:</strong> <em>no declarada por la fuente</em> — el catálogo CCT no publica fecha de corte, y no se le asigna una</li>
               <li><strong>Cobertura:</strong> 2,274 planteles educativos en 1,482 sitios físicos únicos</li>
               <li><strong>Atributos:</strong> CCT, Nivel, Sostenimiento, Turno, Alumnado total, Aulas existentes y en uso</li>
               <li><strong>Archivo:</strong> <code>escuelas_campeche.geojson</code> (2.11 MB)</li>
@@ -97,11 +78,101 @@
         </div>
       </section>
 
+      <!-- Absorbido de electoral.html: el estatus de la cartografía del INE
+           vivía en una página suelta y huérfana; su lugar natural es el
+           registro de fuentes. -->
+      <section class="panel">
+        <h3 class="text-h3 panel__titulo">
+          <i data-lucide="clock"></i> Cartografía electoral INE / IEEC — pendiente de acceso
+        </h3>
+        <div class="rejilla-tarjetas" id="fuentes-pendientes"></div>
+        <p class="panel__nota">
+          Ninguna de estas capas se dibuja con geometría inventada. Están
+          registradas en el catálogo del mapa, aparecen con el checkbox
+          inhabilitado y declaran su origen en el tooltip. En cuanto llegue el
+          archivo, se sueltan en <code>frontend/data/geo/</code> y se activan.
+        </p>
+      </section>
+
+      <!-- Datos de demostración -->
+      <section class="panel">
+        <h3 class="text-h3 panel__titulo">
+          <i data-lucide="flask-conical"></i> Datos de demostración
+        </h3>
+        <div class="aviso-simulado">
+          <i data-lucide="alert-triangle"></i>
+          <span><strong>El módulo territorial usa cifras sintéticas.</strong>
+          Población, lista nominal, secciones, casillas, NSE, resultados históricos
+          y proyección 2027 salen de <code>data/mock/territorio.json</code>, generado
+          por <code>build_mock.py</code> con semilla fija. No provienen del INEGI,
+          del INE ni del IEEC. Lo real de ese archivo es sólo el esqueleto: los 13
+          municipios con sus claves y los agregados del catálogo CCT.</span>
+        </div>
+        <div class="rejilla-tarjetas" style="margin-top:var(--space-md)" id="fuentes-simulado"></div>
+      </section>
+
     </div>
+  
+      <!-- Consola de Agentes CE en Vivo -->
+      <section class="glass-strong" style="padding:var(--space-md); border-radius:var(--radius-lg);">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+          <span style="display:inline-block;width:7px;height:7px;background:var(--accent-cyan);border-radius:50%;box-shadow:0 0 6px var(--accent-cyan);" class="animate-pulse"></span>
+          <strong style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-heading); font-family:var(--font-heading);">Agentes CE — Monitor en Vivo</strong>
+          <i data-lucide="cpu" class="icon-xs" style="color:var(--accent-cyan); margin-left:auto;"></i>
+        </div>
+        <div id="live-agents-feed" style="font-size:0.72rem; font-family:monospace; display:flex; flex-direction:column; gap:5px;"></div>
+      </section>
+
   </main>
 
+  <script src="js/procedencia.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
-  <script>lucide.createIcons();</script>
+  <script>
+    const PENDIENTES = [
+      ['Secciones electorales', 'Cartografía Electoral INE',
+       'Polígonos de sección. El corte cambia con cada redistritación.'],
+      ['Distritos federales', 'Cartografía Electoral INE',
+       'Demarcación federal vigente para el proceso 2027.'],
+      ['Distritos locales', 'IEEC Campeche / INE',
+       'Probablemente los provea el instituto local; acceso en gestión.'],
+      ['Casillas históricas', 'Encartes INE de procesos anteriores',
+       'No es cartografía: son los encartes publicados por proceso.'],
+      ['Casillas aprobadas 2027', 'Acuerdos del Consejo General del INE',
+       'No existen todavía. Se publican después de aprobar el encarte.'],
+    ];
+
+    const SIMULADOS = [
+      ['Población y lista nominal', 'Pendiente de INEGI (Censo) y de INE (padrón)'],
+      ['Secciones y casillas por tipo', 'Pendiente de INE'],
+      ['Nivel socioeconómico', 'Estimación propia sobre proxy de ruralidad'],
+      ['Resultados históricos', 'Pendiente de INE / IEEC'],
+      ['Proyección 2027', 'Modelo de demostración con intervalos'],
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('fuentes-pendientes').innerHTML = PENDIENTES.map(([t, f, d]) => `
+        <article class="tarjeta">
+          <header class="tarjeta__cabeza">
+            <strong>${t}</strong>
+            <span class="badge badge--warn">Pendiente</span>
+          </header>
+          <p class="tarjeta__texto">${d}</p>
+          ${Procedencia.pie({ fuente: f, fechaCorte: null })}
+        </article>`).join('');
+
+      document.getElementById('fuentes-simulado').innerHTML = SIMULADOS.map(([t, f]) => `
+        <article class="tarjeta">
+          <header class="tarjeta__cabeza">
+            <strong>${t}</strong>
+            ${Procedencia.badge('simulado')}
+          </header>
+          ${Procedencia.pie({ fuente: f, fechaCorte: null, confianza: 'baja' })}
+        </article>`).join('');
+
+      Procedencia.iconos();
+      lucide.createIcons();
+    });
+  </script>
 </body>
 </html>

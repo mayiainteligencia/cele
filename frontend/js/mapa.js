@@ -317,6 +317,12 @@
       zoom: cfg.zoom,
       zoomControl: false,
       attributionControl: false,
+      // Campeche es casi cuadrado y los contenedores son anchos y bajos.
+      // Con zoomSnap entero, fitBounds tiene que bajar un nivel completo y
+      // el estado queda flotando en medio del Golfo. El cuarto de nivel
+      // deja el encuadre pegado al polígono.
+      zoomSnap: 0.25,
+      zoomDelta: 0.5,
     });
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map);

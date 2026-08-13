@@ -47,26 +47,7 @@
 </head>
 <body data-page="municipios">
 
-  <!-- BARRA SUPERIOR -->
-  <header class="filter-bar filter-bar--notch" id="filter-bar">
-    <a href="index.html" class="topbar-side" style="gap:10px;">
-      <span class="ce-brand-badge" style="font-size:1.1rem; padding: 2px 8px; border-radius:6px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3);">CE</span>
-      <span style="font-weight:700; color:var(--text-heading); font-size:0.95rem;">13 Municipios</span>
-    </a>
 
-    <div class="topbar-notch">
-      <nav class="subnav-bar">
-        <a class="subnav-btn" href="index.html"><i data-lucide="home" class="icon-xs"></i> <span>Inicio</span></a>
-        <a class="subnav-btn" href="mando.html"><i data-lucide="bar-chart-3" class="icon-xs"></i> <span>Centro de Mando</span></a>
-        <a class="subnav-btn" href="cartografia.html"><i data-lucide="map" class="icon-xs"></i> <span>Cartografía</span></a>
-        <a class="subnav-btn subnav-btn--active" href="municipios.html"><i data-lucide="building-2" class="icon-xs"></i> <span>13 Municipios</span></a>
-        <a class="subnav-btn" href="infraestructura.html"><i data-lucide="school" class="icon-xs"></i> <span>Infraestructura</span></a>
-        <a class="subnav-btn" href="fuentes.html"><i data-lucide="database" class="icon-xs"></i> <span>Fuentes</span></a>
-      </nav>
-    </div>
-
-    <div id="auth-slot"></div>
-  </header>
 
   <!-- NAVEGACIÓN LATERAL -->
   <nav class="sidebar" id="sidebar" aria-label="Navegación principal"></nav>
@@ -108,15 +89,15 @@
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-card__label"><span>Cobertura Cartográfica</span><i data-lucide="check-circle-2" class="icon-xs" style="color:#22c55e;"></i></div>
-          <div class="kpi-card__value" style="color:#22c55e;">100%</div>
+          <div class="kpi-card__label"><span>Cobertura Cartográfica</span><i data-lucide="check-circle-2" class="icon-xs" style="color:var(--status-success);"></i></div>
+          <div class="kpi-card__value" style="color:var(--status-success);">100%</div>
           <div class="kpi-card__sub">Sin municipios colapsados</div>
         </div>
       </section>
 
       <!-- Bar de Búsqueda y Filtrado -->
       <div style="display:flex; justify-content:space-between; align-items:center; background:var(--glass-bg); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
-        <div style="display:flex; align-items:center; gap:10px; width:100%; max-width:400px; background:rgba(15,23,42,0.6); padding:8px 14px; border-radius:var(--radius-full); border:1px solid var(--glass-border);">
+        <div style="display:flex; align-items:center; gap:10px; width:100%; max-width:400px; background:var(--panel-fondo); padding:8px 14px; border-radius:var(--radius-full); border:1px solid var(--glass-border);">
           <i data-lucide="search" class="icon-xs" style="color:var(--text-muted);"></i>
           <input type="text" id="input-buscar-mun" placeholder="Buscar municipio o clave INEGI..." style="background:transparent; border:none; color:var(--text-body); font-size:0.85rem; width:100%;">
         </div>
@@ -127,6 +108,17 @@
       <section class="mun-grid" id="grid-municipios-detalle"></section>
 
     </div>
+  
+      <!-- Consola de Agentes CE en Vivo -->
+      <section class="glass-strong" style="padding:var(--space-md); border-radius:var(--radius-lg);">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+          <span style="display:inline-block;width:7px;height:7px;background:var(--accent-cyan);border-radius:50%;box-shadow:0 0 6px var(--accent-cyan);" class="animate-pulse"></span>
+          <strong style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-heading); font-family:var(--font-heading);">Agentes CE — Monitor en Vivo</strong>
+          <i data-lucide="cpu" class="icon-xs" style="color:var(--accent-cyan); margin-left:auto;"></i>
+        </div>
+        <div id="live-agents-feed" style="font-size:0.72rem; font-family:monospace; display:flex; flex-direction:column; gap:5px;"></div>
+      </section>
+
   </main>
 
   <script src="js/auth.js"></script>
@@ -182,7 +174,7 @@
                 <h3 style="font-family:var(--font-heading); font-weight:800; color:var(--text-heading); font-size:1.2rem;">${p.nombre}</h3>
                 <p style="font-size:0.82rem; color:var(--text-muted);">Cabecera: <strong style="color:var(--text-body);">${cabeceras[cve] || p.nombre}</strong></p>
                 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px; background:rgba(15,23,42,0.4); padding:10px; border-radius:var(--radius-xs);">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px; background:var(--panel-fondo-tenue); padding:10px; border-radius:var(--radius-xs);">
                   <div>
                     <span style="font-size:0.7rem; color:var(--text-muted); display:block;">Inmuebles CCT</span>
                     <strong style="color:var(--text-heading); font-size:1rem;">${nEscuelas}</strong>

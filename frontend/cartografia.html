@@ -29,33 +29,7 @@
 </head>
 <body data-page="cartografia">
 
-  <!-- BARRA SUPERIOR -->
-  <header class="filter-bar filter-bar--notch" id="filter-bar">
-    <a href="index.html" class="topbar-side" style="gap:10px;">
-      <span class="ce-brand-badge" style="font-size:1.1rem; padding: 2px 8px; border-radius:6px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3);">CE</span>
-      <span style="font-weight:700; color:var(--text-heading); font-size:0.95rem;">Cartografía & Capas</span>
-    </a>
 
-    <div class="topbar-notch">
-      <nav class="subnav-bar">
-        <a class="subnav-btn" href="index.html"><i data-lucide="home" class="icon-xs"></i> <span>Inicio</span></a>
-        <a class="subnav-btn" href="mando.html"><i data-lucide="bar-chart-3" class="icon-xs"></i> <span>Centro de Mando</span></a>
-        <a class="subnav-btn subnav-btn--active" href="cartografia.html"><i data-lucide="map" class="icon-xs"></i> <span>Cartografía & Capas</span></a>
-        <a class="subnav-btn" href="municipios.html"><i data-lucide="building-2" class="icon-xs"></i> <span>13 Municipios</span></a>
-        <a class="subnav-btn" href="infraestructura.html"><i data-lucide="school" class="icon-xs"></i> <span>Infraestructura</span></a>
-        <a class="subnav-btn" href="fuentes.html"><i data-lucide="database" class="icon-xs"></i> <span>Fuentes</span></a>
-      </nav>
-    </div>
-
-    <div style="display:flex; align-items:center; gap:8px;">
-      <button class="filter-pill" id="btn-colorear-escuelas" style="font-size:0.78rem;">
-        <i data-lucide="school" class="icon-xs"></i> <span>Colorear Escuelas</span>
-      </button>
-      <button class="filter-pill" id="btn-colorear-alumnado" style="font-size:0.78rem;">
-        <i data-lucide="users" class="icon-xs"></i> <span>Colorear Alumnado</span>
-      </button>
-    </div>
-  </header>
 
   <!-- NAVEGACIÓN LATERAL -->
   <nav class="sidebar" id="sidebar" aria-label="Navegación principal"></nav>
@@ -76,96 +50,158 @@
         </div>
       </section>
 
+      <!-- Coloreado municipal: los botones que antes se enganchaban
+           desde JS a IDs que no existían en el HTML. -->
+      <section class="carto-controles">
+        <span class="text-label">Colorear municipios por</span>
+        <div class="subnav-bar" role="group" aria-label="Variable de coloreado">
+          <button class="subnav-btn subnav-btn--active" data-colorear="">
+            <i data-lucide="circle-slash"></i><span>Sin coloreado</span>
+          </button>
+          <button class="subnav-btn" data-colorear="escuelas_por_municipio">
+            <i data-lucide="school"></i><span>Escuelas CCT</span>
+          </button>
+          <button class="subnav-btn" data-colorear="alumnado">
+            <i data-lucide="users-round"></i><span>Alumnado</span>
+          </button>
+        </div>
+        <span id="carto-proc"></span>
+      </section>
+
       <!-- Visor de Mapa Principal -->
       <section class="mando-map-card" id="mapa-cartografia" style="height: min(650px, 68vh);"></section>
 
       <!-- Inventario de Capas y Metadatos Cartográficos -->
-      <section class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg); margin-top:var(--space-md);">
-        <h3 class="text-h3" style="margin-bottom:var(--space-md); display:flex; align-items:center; gap:8px;">
-          <i data-lucide="layers" class="icon-sm" style="color:var(--accent-cyan);"></i> Inventario de Capas Vectoriales y Origen
+      <section class="panel">
+        <h3 class="text-h3 panel__titulo">
+          <i data-lucide="layers" class="icon-sm"></i> Inventario de capas y procedencia
         </h3>
-
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:var(--space-md);">
-          <div style="background:rgba(15,23,42,0.5); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <strong style="color:var(--text-heading); font-size:0.9rem;">Límite Estatal</strong>
-              <span class="badge badge--success" style="font-size:0.7rem;">INEGI 2024</span>
-            </div>
-            <p style="font-size:0.8rem; color:var(--text-body);">Polígono perimetral oficial del estado de Campeche (Entidad 04).</p>
-          </div>
-
-          <div style="background:rgba(15,23,42,0.5); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <strong style="color:var(--text-heading); font-size:0.9rem;">13 Municipios</strong>
-              <span class="badge badge--success" style="font-size:0.7rem;">INEGI 2024</span>
-            </div>
-            <p style="font-size:0.8rem; color:var(--text-body);">Delimitación municipal completa con Dzitbalché y Seybaplaya.</p>
-          </div>
-
-          <div style="background:rgba(15,23,42,0.5); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <strong style="color:var(--text-heading); font-size:0.9rem;">AGEB Urbanas y Rurales</strong>
-              <span class="badge badge--success" style="font-size:0.7rem;">INEGI 2024</span>
-            </div>
-            <p style="font-size:0.8rem; color:var(--text-body);">Áreas Geoestadísticas Básicas con granularidad demográfica.</p>
-          </div>
-
-          <div style="background:rgba(15,23,42,0.5); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <strong style="color:var(--text-heading); font-size:0.9rem;">Escuelas CCT (Casillas Potenciales)</strong>
-              <span class="badge badge--success" style="font-size:0.7rem;">SEP CCT 2024</span>
-            </div>
-            <p style="font-size:0.8rem; color:var(--text-body);">2,274 inmuebles educativos geolocalizados en Campeche.</p>
-          </div>
-        </div>
+        <div class="rejilla-tarjetas" id="inventario-capas"></div>
+        <div id="inventario-leyenda"></div>
       </section>
 
     </div>
+  
+      <!-- Consola de Agentes CE en Vivo -->
+      <section class="glass-strong" style="padding:var(--space-md); border-radius:var(--radius-lg);">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+          <span style="display:inline-block;width:7px;height:7px;background:var(--accent-cyan);border-radius:50%;box-shadow:0 0 6px var(--accent-cyan);" class="animate-pulse"></span>
+          <strong style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-heading); font-family:var(--font-heading);">Agentes CE — Monitor en Vivo</strong>
+          <i data-lucide="cpu" class="icon-xs" style="color:var(--accent-cyan); margin-left:auto;"></i>
+        </div>
+        <div id="live-agents-feed" style="font-size:0.72rem; font-family:monospace; display:flex; flex-direction:column; gap:5px;"></div>
+      </section>
+
   </main>
 
   <script src="js/mapa.js"></script>
+  <script src="js/procedencia.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      fetch('data/geo/escuelas_campeche.geojson')
-        .then(r => r.json())
-        .then(json => {
-          const escuelas = {};
-          const alumnado = {};
-          json.features.forEach(f => {
-            const k = f.properties.cve_mun;
-            if (!k) return;
-            escuelas[k] = (escuelas[k] || 0) + 1;
-            alumnado[k] = (alumnado[k] || 0) + (f.properties.alumnos_total || 0);
-          });
+  /* Inventario de capas: una sola tabla manda, y cada entrada declara su
+     procedencia. Las capas del INEGI son DATO (vienen tal cual de la fuente);
+     los coloreados son CÁLCULO (agregación sobre el catálogo CCT). */
+  const CAPAS_INVENTARIO = [
+    { titulo: 'Límite estatal', proc: 'dato',
+      fuente: 'INEGI — Marco Geoestadístico 2024', corte: '2024-08',
+      detalle: 'Polígono perimetral de Campeche (entidad 04), 8 polígonos con territorio insular.' },
+    { titulo: '13 municipios', proc: 'dato',
+      fuente: 'INEGI — Marco Geoestadístico 2024', corte: '2024-08',
+      detalle: 'Delimitación completa, con Dzitbalché y Seybaplaya creados en 2021.' },
+    { titulo: 'Localidades urbanas y rurales', proc: 'dato',
+      fuente: 'INEGI — Marco Geoestadístico 2024', corte: '2024-08',
+      detalle: '511 polígonos amanzanados: 33 urbanos y 478 rurales.' },
+    { titulo: 'AGEB urbanas y rurales', proc: 'dato',
+      fuente: 'INEGI — Marco Geoestadístico 2024', corte: '2024-08',
+      detalle: '473 AGEB urbanas y 250 rurales.' },
+    { titulo: 'Escuelas CCT', proc: 'dato',
+      fuente: 'SEP — Catálogo de Centros de Trabajo', corte: null,
+      detalle: '2,274 registros en 1,482 sitios físicos. Todos con estatus de ubicación potencial: ninguno está aprobado como casilla.' },
+    { titulo: 'Secciones y distritos electorales', proc: null, pendiente: true,
+      fuente: 'Cartografía Electoral INE / IEEC', corte: null,
+      detalle: 'Sin insumo. El acceso al portal del INE está en gestión; la capa ya está registrada en el mapa y aparece inhabilitada.' },
+  ];
 
-          CerebroMapa.registrarVariable('escuelas_por_municipio', {
-            etiqueta: 'Escuelas CCT por Municipio',
-            valores: escuelas,
-            formato: v => v.toLocaleString('es-MX') + ' escuelas',
-            fuente: 'SEP — Catálogo de Centros de Trabajo',
-            fechaCorte: '2024',
-          });
+  function pintarInventario() {
+    document.getElementById('inventario-capas').innerHTML = CAPAS_INVENTARIO.map((c) => `
+      <article class="tarjeta">
+        <header class="tarjeta__cabeza">
+          <strong>${c.titulo}</strong>
+          ${c.pendiente
+            ? '<span class="badge badge--warn">Pendiente de insumo</span>'
+            : Procedencia.badge(c.proc)}
+        </header>
+        <p class="tarjeta__texto">${c.detalle}</p>
+        ${Procedencia.pie({ fuente: c.fuente, fechaCorte: c.corte })}
+      </article>`).join('');
 
-          CerebroMapa.registrarVariable('alumnado', {
-            etiqueta: 'Alumnado Registrado',
-            valores: alumnado,
-            formato: v => v.toLocaleString('es-MX') + ' alumnos',
-            fuente: 'SEP — Catálogo de Centros de Trabajo',
-            fechaCorte: '2024',
-          });
+    document.getElementById('inventario-leyenda').innerHTML = Procedencia.leyenda();
+    Procedencia.iconos();
+  }
 
-          const mapa = CerebroMapa.crear('#mapa-cartografia', {
-            capas: ['limite', 'municipios', 'localidades', 'escuelas'],
-            panelCapas: true,
-          });
+  document.addEventListener('DOMContentLoaded', () => {
+    pintarInventario();
 
-          document.getElementById('btn-colorear-escuelas')?.addEventListener('click', () => mapa.setChoropleth('escuelas_por_municipio'));
-          document.getElementById('btn-colorear-alumnado')?.addEventListener('click', () => mapa.setChoropleth('alumnado'));
+    fetch('data/geo/escuelas_campeche.geojson')
+      .then((r) => r.json())
+      .then((json) => {
+        const escuelas = {};
+        const alumnado = {};
+        json.features.forEach((f) => {
+          const k = f.properties.cve_mun;
+          if (!k) return;
+          escuelas[k] = (escuelas[k] || 0) + 1;
+          alumnado[k] = (alumnado[k] || 0) + (f.properties.alumnos_total || 0);
         });
-      lucide.createIcons();
-    });
+
+        /* El catálogo CCT NO declara fecha de corte: se pasa el nulo que
+           trae el archivo en vez de inventar un "2024". La ficha del mapa
+           imprime "no declarada por la fuente". */
+        const comun = {
+          fuente: json.metadata.fuente,
+          fechaCorte: json.metadata.fecha_corte,
+          procedencia: 'Cálculo sobre el catálogo CCT',
+        };
+
+        CerebroMapa.registrarVariable('escuelas_por_municipio', Object.assign({
+          etiqueta: 'Escuelas CCT por municipio',
+          valores: escuelas,
+          formato: (v) => v.toLocaleString('es-MX') + ' escuelas',
+        }, comun));
+
+        CerebroMapa.registrarVariable('alumnado', Object.assign({
+          etiqueta: 'Alumnado registrado',
+          valores: alumnado,
+          formato: (v) => v.toLocaleString('es-MX') + ' alumnos',
+        }, comun));
+
+        const mapa = CerebroMapa.crear('#mapa-cartografia', {
+          capas: ['limite', 'municipios', 'localidades', 'escuelas'],
+          panelCapas: true,
+        });
+
+        const proc = document.getElementById('carto-proc');
+        document.querySelectorAll('[data-colorear]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-colorear]').forEach((b) =>
+              b.classList.toggle('subnav-btn--active', b === btn));
+            const id = btn.dataset.colorear;
+            mapa.setChoropleth(id || null);
+            // El coloreado es una agregación, no un dato de fuente.
+            proc.innerHTML = id
+              ? Procedencia.badge('calculo', {
+                  detalle: 'agregación por municipio',
+                  fuente: json.metadata.fuente,
+                })
+              : '';
+            Procedencia.iconos();
+          });
+        });
+      });
+
+    lucide.createIcons();
+  });
   </script>
 </body>
 </html>
