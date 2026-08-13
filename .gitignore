@@ -22,3 +22,15 @@ frontend/data/geo/.cache_mg04.zip
 
 # venv con pyshp + pyproj, solo para build_inegi.py
 .venv/
+
+# ── MonitorSol ──
+# El venv pesa 388 MB (torch, whisper). Se reconstruye con:
+#   python3.12 -m venv backend/monitorsol/venv
+#   backend/monitorsol/venv/bin/pip install -r backend/monitorsol/requirements.txt
+backend/monitorsol/venv/
+backend/monitorsol/**/__pycache__/
+backend/monitorsol/audio_tmp/
+
+# Los venv de datalab y los node_modules del backend viejo tampoco van.
+backend/datalab/venv/
+backend/node_modules/

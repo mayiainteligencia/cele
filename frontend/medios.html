@@ -602,6 +602,10 @@
   const transcriptHistory = {};        // Historial de líneas de transcripción por sesión
   const wsPool = {};                   // WebSockets activos por sesión
   const demoTimers = {};               // Timers activos para sesiones en modo demo
+
+  /* Sólo se fabrica transcripción si el usuario lo pidió explícitamente en
+     esta pestaña. Nunca por defecto, nunca por un fallo de red. */
+  let demoAutorizado = false;
   
   let chunksCount = 0;
   let alertasCount = 0;
@@ -809,10 +813,17 @@
       sesionId = data.sesion_id;
       mostrarToastKw('Sesión iniciada', `Monitoreando: ${nombre}`, 'radio', 'var(--accent-cyan)');
     } catch (e) {
-      // Modo demo si el backend no está disponible
+      /* Opción A: nada se fabrica sin que alguien lo pida.
+         Antes, un fallo del backend caía solo en modo demo y la página
+         empezaba a inventar transcripción con apariencia de real. Ahora
+         se detiene y ofrece la demostración como una decisión explícita. */
+      if (!demoAutorizado) {
+        ofrecerDemostracion(url, nombre);
+        return;
+      }
       sesionId = 'demo-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
       isDemo = true;
-      mostrarToastKw('Modo Demo', `Iniciando monitoreo de: ${nombre}`, 'cpu', 'var(--accent-purple)');
+      mostrarToastKw('Demostración', `Sin servidor: material simulado de ${nombre}`, 'flask-conical', 'var(--sev-media)');
     }
 
     // Registrar sesión localmente
@@ -934,6 +945,34 @@
 
     const dot = document.getElementById('sessions-dot');
     if (dot) dot.className = activa ? 'radar-dot' : 'radar-dot radar-dot--stopped';
+  }
+
+  /* Ofrece la demostración cuando no hay servidor. Es una decisión del
+     usuario, no un plan B silencioso del código. */
+  function ofrecerDemostracion(url, nombre) {
+    const caja = document.getElementById('aviso-backend');
+    if (!caja) return;
+    caja.innerHTML = `
+      <div class="aviso-simulado">
+        <i data-lucide="server-off"></i>
+        <span>
+          <strong>No se pudo iniciar la sesión: el servidor no responde.</strong>
+          No hay transcripción real disponible. Puedes ver una demostración con
+          material simulado, que aparecerá marcado línea por línea como tal y
+          no proviene de ninguna emisora.
+          <span style="display:block; margin-top:8px;">
+            <button class="btn-primary" id="btn-demo-si" style="font-size:0.8rem; padding:6px 14px;">
+              Ver demostración sin servidor
+            </button>
+          </span>
+        </span>
+      </div>`;
+    document.getElementById('btn-demo-si').addEventListener('click', () => {
+      demoAutorizado = true;
+      caja.querySelector('#btn-demo-si').disabled = true;
+      iniciarMonitoreo();
+    });
+    if (window.lucide) lucide.createIcons();
   }
 
   // ── WebSocket ─────────────────────────────────────────────────────
