@@ -392,10 +392,12 @@ function resumenDisponibilidad() {
    ════════════════════════════════════════════ */
 
 const TOAST_ICONO = {
-  contrato: 'file-check',
-  reunion:  'calendar-check',
-  oferta:   'inbox',
-  ronda:    'repeat',
+  alerta: 'shield-alert',
+  medios: 'radio',
+  finanzas: 'dollar-sign',
+  operativo: 'map-pin',
+  decision: 'compass',
+  sello: 'check-circle-2',
 };
 
 function toast({ tipo = 'oferta', titulo, texto, duracion = 7000 } = {}) {

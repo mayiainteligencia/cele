@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initScrollAnimations();
   initExecutiveMap();
   initSubnav();
+  initBackgroundMonitoring();
 });
 
 function initExecutiveMap() {
@@ -141,4 +142,80 @@ function initScrollAnimations() {
   );
 
   fadeElements.forEach((el) => observer.observe(el));
+}
+
+/* ════════════════════════════════════════════
+   BACKGROUND MONITORING AGENTS SIMULATOR
+   ════════════════════════════════════════════ */
+
+const LOGS_AGENTES = [
+  { prefix: '[CE-Sentinel-1]', text: 'Escaneando participación electoral en Calkiní...', color: 'var(--accent-cyan)' },
+  { prefix: '[CE-Forense]', text: 'Analizando actas de Champotón...', color: 'var(--accent-blue)' },
+  { prefix: '[CE-Finanzas]', text: 'Auditoría presupuestal al 100%...', color: 'var(--accent-warm)' },
+  { prefix: '[CE-Sentinel-2]', text: 'Verificando firmas de Seybaplaya...', color: 'var(--accent-cyan)' },
+  { prefix: '[CE-Medios]', text: 'Monitoreando Share of Voice en prensa local...', color: '#a78bfa' },
+  { prefix: '[CE-Forense-2]', text: 'Escaneo de anomalías en Sección 0142 completado.', color: 'var(--accent-blue)' },
+  { prefix: '[CE-Finanzas]', text: 'Validando comprobantes de gastos de campaña...', color: 'var(--accent-warm)' },
+  { prefix: '[CE-Sentinel-1]', text: 'Analizando cobertura de representantes de casilla...', color: 'var(--accent-cyan)' },
+];
+
+const NOTIFICACIONES_AGENTES = [
+  { tipo: 'alerta', titulo: 'Alerta Forense [CE-Forense-3]', texto: 'Participación inusual del 87% detectada en Champotón (Sección 0142). Solicitando verificación de actas.' },
+  { tipo: 'medios', titulo: 'Monitoreo de Medios [CE-Medios-7]', texto: 'Detección de pico de sentimiento positivo (+4.2%) tras mitin del candidato en Seybaplaya.' },
+  { tipo: 'finanzas', titulo: 'Copiloto Financiero [CE-Finanzas-2]', texto: 'Logística de Calkiní conciliada. Comprobantes fiscales cargados correctamente.' },
+  { tipo: 'decision', titulo: 'Sala de Decisiones [CE-Sentinel-1]', texto: 'Recomendación de reubicación de representante en Dzitbalché por mayor volumen electoral.' },
+  { tipo: 'alerta', titulo: 'Alerta Forense [CE-Forense-2]', texto: 'Porcentaje atípico de votos nulos (6.2%) detectado en Palizada (Sección 0084).' }
+];
+
+function initBackgroundMonitoring() {
+  const feedEl = document.getElementById('live-agents-feed');
+  
+  if (feedEl) {
+    let logIndex = 0;
+    // Llenar inicialmente
+    feedEl.innerHTML = '';
+    for(let i=0; i<3; i++) {
+      const log = LOGS_AGENTES[i];
+      const div = document.createElement('div');
+      div.innerHTML = `<span style="color:${log.color};">${log.prefix}</span> ${log.text}`;
+      feedEl.appendChild(div);
+    }
+    logIndex = 3;
+
+    setInterval(() => {
+      const log = LOGS_AGENTES[logIndex];
+      const div = document.createElement('div');
+      div.style.opacity = '0';
+      div.style.transform = 'translateY(10px)';
+      div.style.transition = 'all 0.4s ease';
+      div.innerHTML = `<span style="color:${log.color};">${log.prefix}</span> ${log.text}`;
+      
+      feedEl.appendChild(div);
+      if (feedEl.children.length > 4) {
+        feedEl.removeChild(feedEl.firstChild);
+      }
+      
+      setTimeout(() => {
+        div.style.opacity = '1';
+        div.style.transform = 'translateY(0)';
+      }, 50);
+
+      logIndex = (logIndex + 1) % LOGS_AGENTES.length;
+    }, 4500);
+  }
+
+  // Lanzar alertas del copiloto a través de Toasts cada 14 segundos
+  let toastIndex = 0;
+  setInterval(() => {
+    if (typeof toast === 'function') {
+      const alert = NOTIFICACIONES_AGENTES[toastIndex];
+      toast({
+        tipo: alert.tipo,
+        titulo: alert.titulo,
+        texto: alert.texto,
+        duracion: 8000
+      });
+      toastIndex = (toastIndex + 1) % NOTIFICACIONES_AGENTES.length;
+    }
+  }, 14000);
 }

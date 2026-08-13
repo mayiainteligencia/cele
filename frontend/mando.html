@@ -167,8 +167,18 @@
             <span class="badge" style="font-size:0.72rem;">04mun</span>
           </div>
 
-          <div class="municipios-lista" id="lista-municipios">
+          <div class="municipios-lista" id="lista-municipios" style="flex:1;">
             <!-- Se llena dinámicamente desde app.js -->
+          </div>
+
+          <div style="margin-top:10px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="display:inline-block; width:6px; height:6px; background:var(--accent-cyan); border-radius:50%;" class="animate-pulse"></span>
+              <span style="font-size:0.7rem; text-transform:uppercase; color:var(--text-heading); font-weight:600; letter-spacing:0.05em; font-family:var(--font-heading);">Monitoreo de Agentes</span>
+            </div>
+            <div id="live-agents-feed" style="font-size:0.7rem; font-family:monospace; color:var(--text-muted); display:flex; flex-direction:column; gap:4px;">
+              <!-- Se comparte la consola en vivo con app.js -->
+            </div>
           </div>
         </div>
 
