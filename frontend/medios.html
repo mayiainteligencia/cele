@@ -867,7 +867,13 @@
         delete wsPool[sesionEnFoco];
       }
       try {
-        await fetch(`${API}/stop/${sesionEnFoco}`, { method: 'POST' });
+        /* El backend expone DELETE, no POST. Con POST devolvía 405 y la
+           sesión seguía viva en el servidor consumiendo el stream mientras
+           la UI la daba por detenida. */
+        const r = await fetch(`${API}/stop/${sesionEnFoco}`, { method: 'DELETE' });
+        if (!r.ok && r.status !== 404) {
+          console.warn('MonitorSol: el servidor respondió', r.status, 'al detener la sesión.');
+        }
       } catch (e) {}
     } else {
       if (demoTimers[sesionEnFoco]) {
@@ -970,7 +976,7 @@
     document.getElementById('btn-demo-si').addEventListener('click', () => {
       demoAutorizado = true;
       caja.querySelector('#btn-demo-si').disabled = true;
-      iniciarMonitoreo();
+      iniciarSesion();
     });
     if (window.lucide) lucide.createIcons();
   }
@@ -982,16 +988,27 @@
       wsPool[sesionId] = ws;
 
       ws.onmessage = (e) => {
-        const data = JSON.parse(e.data);
+        let data;
+        try { data = JSON.parse(e.data); } catch (err) { return; }
         const s = activeSessionsMap[sesionId];
         if (!s) return;
 
-        if (data.tipo === 'alerta') {
+        /* El backend no manda un campo `tipo`: su mensaje se identifica por
+           traer `keyword` y `transcripcion`. Antes se comparaba contra
+           data.tipo, que siempre era undefined, y TODA alerta se descartaba
+           en silencio aunque el servidor estuviera funcionando.
+
+           Por diseño el socket sólo emite cuando hay coincidencia de palabra
+           clave; no hay transcripción continua y no debe haberla. */
+        const esAlerta = data.keyword !== undefined && data.transcripcion !== undefined;
+
+        if (esAlerta) {
           s.total_detecciones++;
           recibirAlerta(sesionId, data);
         } else if (data.tipo === 'transcripcion') {
+          // Rama defensiva por si algún día el backend emite texto suelto.
           s.total_chunks++;
-          appendTranscripcion(sesionId, data.texto, null);
+          appendTranscripcion(sesionId, data.texto, null, false, data.timestamp);
         }
       };
       ws.onerror = () => {
@@ -1003,9 +1020,18 @@
     } catch (e) {}
   }
 
+  /* El backend manda `timestamp` ISO. Se usa esa hora, no la de recepción:
+     entre que el chunk se transcribe y el mensaje llega puede haber segundos,
+     y la hora que importa es la del aire. */
+  function horaDe(iso) {
+    const d = iso ? new Date(iso) : new Date();
+    return (isNaN(d) ? new Date() : d).toLocaleTimeString('es-MX',
+      { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
   // ── Transcripción ─────────────────────────────────────────────────
-  function appendTranscripcion(sesionId, texto, kwDetectada, esSimulada) {
-    const ts = new Date().toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  function appendTranscripcion(sesionId, texto, kwDetectada, esSimulada, iso) {
+    const ts = horaDe(iso);
     const s0 = activeSessionsMap[sesionId] || {};
     const simulada = esSimulada !== undefined ? esSimulada : !!s0.isDemo;
 
@@ -1072,7 +1098,9 @@
     alertasCount++;
     document.getElementById('alertas-cnt').textContent = alertasCount;
 
-    const ts = new Date().toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    /* La hora es la del mensaje del servidor, no la de recepción del
+       navegador: la transcripción ocurrió cuando el backend la produjo. */
+    const ts = horaDe(data.timestamp);
     const lista = document.getElementById('alertas-lista');
 
     const ph = lista.querySelector('[style*="italic"], [style*="aparecerán"]');
@@ -1082,7 +1110,7 @@
     div.style.cssText = 'background:var(--cyan-tinte-xs); border:1px solid var(--cyan-tinte); border-radius:6px; padding:8px 10px; animation:fadeInLine 0.3s ease;';
     div.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-        <span style="font-size:0.68rem; font-weight:700; text-transform:uppercase; color:var(--accent-cyan);">${data.keyword || data.keyword_detectada || '?'}</span>
+        <span style="font-size:0.68rem; font-weight:700; text-transform:uppercase; color:var(--accent-cyan);">${data.keyword || '?'}</span>
         <span style="font-size:0.65rem; color:var(--text-muted); font-family:monospace;">${ts}</span>
       </div>
       <div style="font-size:0.75rem; color:var(--text-body); line-height:1.4;">${data.transcripcion || data.texto || ''}</div>
@@ -1090,12 +1118,12 @@
     `;
     lista.insertBefore(div, lista.firstChild);
 
-    appendTranscripcion(sesionId, data.transcripcion || data.texto || '', data.keyword || data.keyword_detectada);
+    appendTranscripcion(sesionId, data.transcripcion || '', data.keyword, false, data.timestamp);
 
     // Toast
     mostrarToastKw(
-      `Keyword: "${data.keyword || data.keyword_detectada}"`,
-      `[${name}] ${data.transcripcion || data.texto || ''}`.substring(0, 95),
+      `Keyword: "${data.keyword}"`,
+      `[${name}] ${data.transcripcion || ''}`.substring(0, 95),
       'zap', 'var(--accent-warm)'
     );
   }
@@ -1207,7 +1235,27 @@
       const r = await fetch(`${API}/sessions`, { signal: AbortSignal.timeout(3000) });
       if (r.ok) {
         const data = await r.json();
-        globalSesionesActivas = data.sesiones || [];
+        /* El backend no incluye `status`: si una sesión aparece en
+           /monitor/sessions es porque está activa, y al detenerla desaparece
+           de la lista. Se deriva aquí para que el resto de la UI, que sí lo
+           lee, siga funcionando sin inventarse un campo del servidor. */
+        globalSesionesActivas = (data.sesiones || []).map((x) =>
+          Object.assign({ status: 'live' }, x));
+        globalSesionesActivas.forEach((x) => {
+          const local = activeSessionsMap[x.sesion_id];
+          if (local) {
+            local.status = 'live';
+            local.total_chunks = x.total_chunks;
+            local.total_detecciones = x.total_detecciones;
+          }
+        });
+        // Lo que ya no está en el servidor, está detenido.
+        const vivas = new Set(globalSesionesActivas.map((x) => x.sesion_id));
+        Object.values(activeSessionsMap).forEach((local) => {
+          if (!local.isDemo && local.status === 'live' && !vivas.has(local.sesion_id)) {
+            local.status = 'stopped';
+          }
+        });
       } else {
         throw new Error('Offline fallback');
       }
@@ -1387,7 +1435,7 @@
       appendTranscripcion(sesionId, frase, kwMatch || null, true);
       if (kwMatch) {
         s.total_detecciones++;
-        recibirAlerta(sesionId, { keyword_detectada: kwMatch, transcripcion: frase, emisora_nombre: nombre });
+        recibirAlerta(sesionId, { keyword: kwMatch, transcripcion: frase, emisora_nombre: nombre });
       }
       i++;
     }, 6000);
