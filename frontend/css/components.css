@@ -1054,3 +1054,110 @@
   margin-right: 5px;
   vertical-align: baseline;
 }
+
+/* ════════════════════════════════════════════
+   TRANSCRIPCIÓN — MonitorSol
+   ════════════════════════════════════════════
+   Única vista con fuente viva. Cada línea declara
+   si salió de una emisora real o de la demostración.
+   ════════════════════════════════════════════ */
+
+.transcript-line__meta {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+}
+
+.transcript-line__proc {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* Línea sin servidor detrás: se atenúa y se marca en el canto, además
+   del badge. Que no dependa de un solo canal para leerse distinta. */
+.transcript-line--simulada {
+  opacity: 0.75;
+  border-left: 2px dashed var(--sev-media);
+  padding-left: 8px;
+}
+
+/* ════════════════════════════════════════════
+   BARRA DE FILTROS GLOBALES
+   ════════════════════════════════════════════
+   Persistente entre módulos. Se inserta bajo el
+   segundo nivel de navegación.
+   ════════════════════════════════════════════ */
+
+.filtros-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.filtros-barra__campos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  flex: 1 1 auto;
+}
+
+.filtros-barra__acciones {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex: 0 0 auto;
+}
+
+.filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.filtro__etiqueta {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.filtro__select {
+  appearance: none;
+  padding: 6px 26px 6px 10px;
+  max-width: 200px;
+  border-radius: var(--radius-xs);
+  background: var(--superficie);
+  border: 1px solid var(--pill-border);
+  color: var(--text-heading);
+  font-size: 0.78rem;
+  cursor: pointer;
+  /* Chevron dibujado con gradientes: sin SVG externo. */
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-size: 5px 5px, 5px 5px;
+  background-position: calc(100% - 14px) 52%, calc(100% - 9px) 52%;
+  background-repeat: no-repeat;
+  transition: border-color var(--transition-fast);
+}
+
+.filtro__select:hover { border-color: var(--glass-border-hover); }
+.filtro__select:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 1px; }
+.filtro__select option { background: var(--bg-mid); color: var(--text-heading); }
+
+@media (max-width: 640px) {
+  .filtros-barra { flex-direction: column; align-items: stretch; }
+  .filtro__select { max-width: none; width: 100%; }
+  .filtro { flex: 1 1 140px; }
+}

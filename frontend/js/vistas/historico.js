@@ -15,7 +15,14 @@
   const P = window.Procedencia;
 
   document.addEventListener('DOMContentLoaded', () => {
-    T.cargar().then(pintar).catch(() => {});
+    T.cargar().then((d) => {
+      const vista = Object.assign({}, d);
+      vista.municipios = T.conectarFiltros(d, (mun) => {
+        vista.municipios = mun;
+        pintar(vista);
+      });
+      pintar(vista);
+    }).catch(() => {});
   });
 
   function pintar(d) {

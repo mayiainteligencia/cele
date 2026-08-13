@@ -356,6 +356,9 @@
         </div>
       </section>
 
+      <!-- Estado del servidor: esta es la única página que necesita uno vivo. -->
+      <div id="aviso-backend"></div>
+
       <!-- KPIs -->
       <section class="kpi-grid" style="margin-bottom:var(--space-md);">
         <div class="kpi-card">
@@ -579,6 +582,7 @@
     </div>
   </main>
 
+  <script src="js/procedencia.js"></script>
   <script src="js/auth.js?v=3"></script>
   <script src="js/app.js?v=3"></script>
   <script>
@@ -630,22 +634,60 @@
   });
 
   // ── Verificar backend ─────────────────────────────────────────────
-  async function checkBackend() {
+  // Tres estados visibles en vez de dos. La página nunca queda en blanco
+  // ni suelta un error crudo: si el servidor no está, lo dice y explica qué
+  // implica. La lógica de conexión es la misma de antes.
+  const ESTADOS = {
+    verificando: ['badge badge--neutral', 'loader',    'Conectando con el monitor…'],
+    activo:      ['badge badge--success', 'server',    'Servidor activo · MonitorSol 1.0'],
+    caido:       ['badge badge--danger',  'server-off', 'Servidor no disponible'],
+  };
+
+  function pintarEstado(estado) {
     const badge = document.getElementById('badge-backend');
+    if (!badge) return;
+    const [clase, icono, texto] = ESTADOS[estado];
+    badge.className = clase;
+    badge.innerHTML = `<i data-lucide="${icono}" class="icon-xs"></i> ${texto}`;
+
+    /* Sin servidor, los KPI y el historial que se ven vienen del modo
+       demostración, no de la base. Se marcan igual que las líneas de
+       transcripción: si no salió de una fuente, lo dice. */
+    document.querySelectorAll('.kpi-card__label').forEach((el) => {
+      const previo = el.querySelector('.proc');
+      if (estado === 'caido' && !previo) {
+        el.insertAdjacentHTML('beforeend', Procedencia.badge('simulado', { compacto: true }));
+      } else if (estado !== 'caido' && previo) {
+        previo.remove();
+      }
+    });
+
+    const aviso = document.getElementById('aviso-backend');
+    if (aviso) {
+      aviso.innerHTML = estado === 'caido' ? `
+        <div class="aviso-simulado">
+          <i data-lucide="server-off"></i>
+          <span><strong>El monitor de radio no está disponible.</strong>
+          Esta es la única sección del sistema que necesita un servidor vivo
+          (backend en el puerto 8001, modelo Whisper cargado y WebSocket abierto).
+          Sin él no hay transcripción real: lo que se muestre a continuación es
+          material de demostración y va marcado como tal en cada línea.
+          Revisa <code>frontend/MONITORSOL.md</code> para el arranque.</span>
+        </div>` : '';
+    }
+    if (window.lucide) lucide.createIcons();
+  }
+
+  async function checkBackend() {
+    pintarEstado('verificando');
     try {
       const r = await fetch('http://localhost:8001/health', { signal: AbortSignal.timeout(3000) });
-      if (r.ok) {
-        badge.className = 'badge badge--success';
-        badge.innerHTML = '<i data-lucide="server" class="icon-xs"></i> Backend activo · MonitorSol 1.0';
-        lucide.createIcons();
-        return true;
-      }
-    } catch (e) {}
-    badge.className = 'badge';
-    badge.style.background = 'var(--sev-critica-bg)';
-    badge.style.color = 'var(--sev-critica)';
-    badge.innerHTML = '<i data-lucide="server-off" class="icon-xs"></i> Backend offline — modo demo';
-    lucide.createIcons();
+      if (r.ok) { pintarEstado('activo'); return true; }
+    } catch (e) {
+      // Silencio a propósito: un fallo de red aquí es un estado esperado
+      // de la UI, no una excepción que deba ensuciar la consola.
+    }
+    pintarEstado('caido');
     return false;
   }
 
@@ -923,19 +965,42 @@
   }
 
   // ── Transcripción ─────────────────────────────────────────────────
-  function appendTranscripcion(sesionId, texto, kwDetectada) {
+  function appendTranscripcion(sesionId, texto, kwDetectada, esSimulada) {
     const ts = new Date().toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    const s0 = activeSessionsMap[sesionId] || {};
+    const simulada = esSimulada !== undefined ? esSimulada : !!s0.isDemo;
+
+    /* Procedencia por línea. Ésta es la única página con fuente real detrás,
+       así que la distinción importa más, no menos:
+         - transcripción del stream  -> Dato, con emisora y hora
+         - coincidencia de keyword   -> Cálculo sobre esa transcripción
+         - línea sin servidor        -> Simulado
+       Un análisis de sentimiento o de narrativa sobre esto sería Inferencia
+       y tendría que etiquetarse aparte al agregarse. */
+    const proc = simulada
+      ? Procedencia.badge('simulado', { compacto: true })
+      : Procedencia.badge('dato', {
+          compacto: true,
+          fuente: s0.emisora_nombre || 'emisora en vivo',
+          fechaCorte: ts,
+        });
+
+    const marcaKw = kwDetectada
+      ? Procedencia.badge('calculo', { compacto: true, detalle: 'coincidencia' })
+      : '';
+
     let className = 'transcript-line';
-    let html = '';
+    let cuerpo = texto;
 
     if (kwDetectada) {
       const regex = new RegExp(`(${kwDetectada})`, 'gi');
-      const highlightedText = texto.replace(regex, '<span class="kw-highlight">$1</span>');
+      cuerpo = texto.replace(regex, '<span class="kw-highlight">$1</span>');
       className = 'transcript-line transcript-line--keyword';
-      html = `<span style="color:var(--text-muted); font-size:0.65rem;">[${ts}]</span> ${highlightedText}`;
-    } else {
-      html = `<span style="color:var(--text-muted); font-size:0.65rem;">[${ts}]</span> ${texto}`;
     }
+    if (simulada) className += ' transcript-line--simulada';
+
+    const html = `<span class="transcript-line__meta">[${ts}]</span> ${cuerpo}` +
+                 `<span class="transcript-line__proc">${proc}${marcaKw}</span>`;
 
     // Almacenar en búfer histórico
     if (!transcriptHistory[sesionId]) transcriptHistory[sesionId] = [];
@@ -956,6 +1021,7 @@
       
       const count = transcriptHistory[sesionId].length;
       document.getElementById('chunks-counter').textContent = `${count} chunks`;
+      Procedencia.iconos();
     }
   }
 
@@ -1266,7 +1332,7 @@
 
   function iniciarDemoTranscripcion(sesionId, nombre) {
     let i = 0;
-    appendTranscripcion(sesionId, `[DEMO] Iniciando monitoreo de: ${nombre}`, null);
+    appendTranscripcion(sesionId, `Iniciando monitoreo simulado de: ${nombre}`, null, true);
     
     const timer = setInterval(() => {
       const s = activeSessionsMap[sesionId];
@@ -1279,7 +1345,7 @@
       const frase = DEMO_FRASES[i % DEMO_FRASES.length];
       const kwMatch = s.keywords.find(kw => frase.toLowerCase().includes(kw));
       
-      appendTranscripcion(sesionId, frase, kwMatch || null);
+      appendTranscripcion(sesionId, frase, kwMatch || null, true);
       if (kwMatch) {
         s.total_detecciones++;
         recibirAlerta(sesionId, { keyword_detectada: kwMatch, transcripcion: frase, emisora_nombre: nombre });

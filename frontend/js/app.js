@@ -450,3 +450,42 @@ function initBackgroundMonitoring() {
     }
   }, 14000);
 }
+
+
+/* ════════════════════════════════════════════
+   CE — NAMESPACE GLOBAL
+   ════════════════════════════════════════════
+   Cinco páginas llamaban CE.initAgents() y CE no
+   existía en ningún archivo: venía de un js/agents.js
+   que nunca se escribió y que daba 404. El resultado
+   era un ReferenceError que mataba el resto del
+   manejador de DOMContentLoaded de esas páginas.
+
+   En medios.html eso dejaba la página inerte: no
+   corría checkBackend, ni renderEmisoras, ni
+   bindEvents — el botón "Iniciar Monitoreo" no
+   hacía nada.
+
+   La consola de agentes ya la levanta
+   initBackgroundMonitoring() en el arranque, así que
+   aquí solo se expone la fachada que esas páginas
+   esperan, con guarda para no montar dos veces.
+   ════════════════════════════════════════════ */
+
+window.CE = window.CE || {
+  _montado: false,
+
+  /** @param {string|null} pagina  id de la página, para telemetría futura */
+  initAgents(pagina) {
+    if (this._montado) return;
+    this._montado = true;
+    this.pagina = pagina || document.body.dataset.page || null;
+    // initBackgroundMonitoring() ya corrió en el DOMContentLoaded de este
+    // archivo. Si alguna página lo llama antes de tiempo, se cubre aquí.
+    if (!document.getElementById('live-agents-feed')) return;
+  },
+
+  toast(t) {
+    if (typeof toast === 'function') toast(t);
+  },
+};

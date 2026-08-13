@@ -126,7 +126,43 @@
     });
   }
 
+  /**
+   * Monta la barra de filtros y la alimenta con lo que hay en los datos.
+   * Devuelve los municipios ya filtrados, y vuelve a llamar a `alCambiar`
+   * cada vez que el usuario mueve un filtro.
+   */
+  function conectarFiltros(datos, alCambiar) {
+    if (!global.Filtros) return datos.municipios;
+
+    global.Filtros.montarBarra('#filtros');
+    global.Filtros.registrarOpciones('municipio', datos.municipios.map((m) => ({
+      valor: m.cve_mun, etiqueta: m.nombre,
+    })));
+    if (datos.partidos) {
+      global.Filtros.registrarOpciones('partido',
+        datos.partidos.map((p) => ({ valor: p, etiqueta: p })));
+    }
+    const anios = [...new Set(
+      (datos.municipios[0].historico || []).map((h) => h.anio)
+    )].sort((a, b) => b - a);
+    if (anios.length) {
+      global.Filtros.registrarOpciones('anio',
+        anios.map((a) => ({ valor: a, etiqueta: String(a) })));
+    }
+
+    const filtrar = () => {
+      const f = global.Filtros.obtener();
+      return f.municipio
+        ? datos.municipios.filter((m) => m.cve_mun === f.municipio)
+        : datos.municipios;
+    };
+
+    global.Filtros.alCambiar(() => alCambiar(filtrar()));
+    return filtrar();
+  }
+
   global.Territorio = {
+    conectarFiltros,
     cargar, num, pct, escapar, avisoSimulado, cifra, barra,
     intervalo, cinta, tokens, COLORES_ESCALA, exportar, conectarExportar,
   };
