@@ -203,11 +203,49 @@
 
         Electoral.registrarVariables(elec);
 
+        /* La casilla de 2024 trae la clave del plantel donde se instaló, así
+           que su ficha puede cerrar el circuito: qué escuela es, cuánta gente
+           estudia ahí y cuántas aulas tiene. Es el cruce que vuelve útil el
+           punto — un domicilio en texto no dice si el inmueble aguanta seis
+           urnas; el número de aulas sí. */
+        const porCct = {};
+        json.features.forEach((f) => {
+          const p = f.properties;
+          if (!p.cct) return;
+          if (!porCct[p.cct]) porCct[p.cct] = Object.assign({ turnos: 0 }, p);
+          porCct[p.cct].turnos += 1;
+        });
+
+        const esc = (v) => (v === null || v === undefined || v === ''
+          ? '—'
+          : String(v).replace(/[&<>"]/g, (c) =>
+              ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])));
+
+        function filasEscuela(e) {
+          const filas = [
+            ['Nivel', e.nivel],
+            ['Servicio', e.servicio],
+            ['Sostenimiento', e.sostenimiento],
+            ['Alumnado', (e.alumnos_total || 0).toLocaleString('es-MX')],
+            ['Docentes', (e.docentes_total || 0).toLocaleString('es-MX')],
+            ['Aulas en uso', `${e.aulas_en_uso} de ${e.aulas_existentes}`],
+          ];
+          return '<tr><th colspan="2" class="mapa-ficha__sub">El plantel (catálogo CCT)</th></tr>' +
+            filas.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('');
+        }
+
+        const fichaSeccion = Electoral.fichaSeccion(elec);
+
         const mapa = CerebroMapa.crear('#mapa-cartografia', {
           capas: ['limite', 'municipios', 'localidades', 'casillas_2024'],
           panelCapas: true,
-          // El punto de la casilla abre con el resultado de su sección.
-          fichaExtra: Electoral.fichaSeccion(elec),
+          // El punto de la casilla abre con el plantel y con el resultado de
+          // su sección; el polígono, con lo suyo. Cada geometría responde por
+          // lo que es.
+          fichaExtra: (props, capaId) => {
+            const escuela = props.cct ? porCct[props.cct] : null;
+            return (escuela ? filasEscuela(escuela) : '') + fichaSeccion(props, capaId);
+          },
         });
 
         // Los coloreados de 2024 salen de cómputos oficiales; los del CCT, de

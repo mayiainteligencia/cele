@@ -23,6 +23,20 @@
   background: var(--mapa-bg);
 }
 
+/* El reset global de design-system.css pone `img, video, svg { max-width:100%;
+   height:auto }`. Leaflet trae su propia contra —`max-width:none !important`—
+   pero sólo para `.leaflet-overlay-pane svg`, no para paneles propios.
+
+   En el panel de puntos eso dejaba el <svg> del renderer en 0×0: los círculos
+   se seguían viendo, porque el contenido de un SVG desborda su caja, pero el
+   elemento no tenía superficie y ningún clic llegaba a ellos. El municipio de
+   abajo respondía en su lugar. Los atributos width/height que Leaflet escribe
+   ya traen la medida correcta; sólo hay que dejar de recortarlos. */
+.mapa .leaflet-pane > svg {
+  max-width: none !important;
+  max-height: none !important;
+}
+
 /* Barra de progreso mientras baja un GeoJSON pesado.
    Refuerza la narrativa de trabajo en curso sin bloquear el mapa. */
 .mapa--cargando::after {
@@ -196,6 +210,65 @@
 /* ════════════════════════════════════════════
    LEYENDA
    ════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════
+   FICHA — panel fijo, no globo anclado
+   ════════════════════════════════════════════
+   Va arriba a la derecha: el control de capas
+   ocupa la izquierda arriba, la leyenda abajo a
+   la izquierda y el zoom abajo a la derecha.
+   ════════════════════════════════════════════ */
+
+.mapa-ficha-panel {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  z-index: 600;
+  width: 300px;
+  max-width: calc(100% - var(--space-lg));
+  /* Tope de altura, no la del mapa: una ficha de borde a borde tapa el
+     territorio que se está consultando y se come el control de zoom. Si el
+     contenido crece, hace scroll dentro de sí misma. */
+  max-height: min(420px, calc(100% - var(--space-2xl) - 48px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-sm) var(--space-sm) var(--space-xs);
+  border-radius: var(--radius-sm);
+  background: var(--superficie-honda);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.42);
+  animation: mapa-ficha-entrar 0.18s ease-out both;
+}
+
+@keyframes mapa-ficha-entrar {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.mapa-ficha-panel__cerrar {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mapa-ficha-panel__cerrar:hover { color: var(--text-heading); }
+
+/* El título ya no compite con el botón de cierre. */
+.mapa-ficha-panel .mapa-ficha__titulo { padding-right: var(--space-md); }
+
+@media (prefers-reduced-motion: reduce) {
+  .mapa-ficha-panel { animation: none; }
+}
+
 
 .mapa-leyenda {
   position: absolute;

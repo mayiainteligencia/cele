@@ -424,15 +424,34 @@
           : () => punto.radio || 3.5;
         const pane = panePuntos(id);
 
+        // `pane` va DENTRO de pointToLayer, no en las opciones de L.geoJSON:
+        // cuando se define pointToLayer, Leaflet no le hereda sus opciones al
+        // marcador que uno construye (geometryToLayer sólo las pasa con
+        // `markersInheritOptions`). Ponerlo arriba dejaba el panel vacío y los
+        // puntos caían en el overlayPane mezclados con los polígonos: el
+        // municipio se pintaba encima y se comía el clic del punto.
+        //
+        // Y van en SVG, no en canvas. Un canvas es un rectángulo opaco a los
+        // eventos: atrapa también los clics que caen entre punto y punto, y
+        // entonces el polígono de abajo ya no puede responder. En SVG sólo el
+        // círculo dibujado captura —Leaflet deja el <svg> con
+        // pointer-events:none— así que el clic en el vacío atraviesa hasta el
+        // municipio, que es justo lo que se espera del mapa.
+        //
+        // El techo: 2,274 escuelas son 2,274 nodos en el DOM. Si algún día
+        // arrastra, lo que toca es agrupar (clustering) por zoom, no volver al
+        // canvas: eso devolvería el problema del clic.
+
         return L.geoJSON(json, {
-          renderer: L.canvas({ padding: 0.4, pane }),
-          pane,
           pointToLayer: (f, latlng) =>
             L.circleMarker(latlng, {
+              pane,
               radius: radio(f.properties),
               fillColor: color,
               color: token('--mapa-punto-borde'),
-              weight: 0.75,
+              // El borde también es área de clic: con 0.75 px el punto de una
+              // sola casilla era casi imposible de atinar.
+              weight: 1.5,
               fillOpacity: 0.85,
             }),
           onEachFeature: (f, lyr) => enlazar(f, lyr, capa),
@@ -450,32 +469,78 @@
       });
     }
 
+    /* ── Ficha ──
+       No es un popup anclado. Un popup se abre pegado al punto y Leaflet
+       recorre el mapa para que quepa: el punto que acabas de clicar se va de
+       su sitio y pierdes la referencia de dónde estabas. La ficha vive fija
+       en una esquina del mapa, así que al abrirla el mapa no se mueve ni un
+       pixel. Lo que marca de qué punto habla es el anillo de selección. */
+
+    const panelFicha = document.createElement('aside');
+    panelFicha.className = 'mapa-ficha-panel';
+    panelFicha.hidden = true;
+    panelFicha.setAttribute('aria-live', 'polite');
+    el.appendChild(panelFicha);
+    L.DomEvent.disableClickPropagation(panelFicha);
+    L.DomEvent.disableScrollPropagation(panelFicha);
+
+    function cerrarFicha() {
+      panelFicha.hidden = true;
+      panelFicha.innerHTML = '';
+      resaltar(null);
+    }
+
+    function mostrarFicha(html) {
+      panelFicha.innerHTML =
+        `<button type="button" class="mapa-ficha-panel__cerrar" aria-label="Cerrar ficha">&times;</button>` +
+        html;
+      panelFicha.hidden = false;
+      panelFicha.scrollTop = 0;
+      panelFicha.querySelector('.mapa-ficha-panel__cerrar')
+        .addEventListener('click', cerrarFicha);
+    }
+
+    map.on('click', cerrarFicha);
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && !panelFicha.hidden) cerrarFicha();
+    });
+
     function enlazar(feature, layer, capa) {
-      // fichaExtra deja que el módulo cuelgue filas propias del popup sin que
-      // el mapa tenga que saber de resultados electorales.
-      layer.bindPopup(() => ficha(
-        feature.properties,
-        capa,
-        cfg.fichaExtra ? cfg.fichaExtra(feature.properties, capa.id) : ''
-      ), {
-        className: 'mapa-popup',
-        maxWidth: 320,
-        autoPanPadding: [24, 24],
-      });
-      layer.on('click', () => {
+      // fichaExtra deja que el módulo cuelgue filas propias sin que el mapa
+      // tenga que saber de resultados electorales.
+      layer.on('click', (ev) => {
+        L.DomEvent.stop(ev);   // que el clic del mapa no cierre lo que abrimos
         resaltar(layer);
+        mostrarFicha(ficha(
+          feature.properties,
+          capa,
+          cfg.fichaExtra ? cfg.fichaExtra(feature.properties, capa.id) : ''
+        ));
         if (cfg.alSeleccionar) cfg.alSeleccionar(feature.properties, capa.id);
       });
     }
 
     function resaltar(layer) {
       if (seleccionado && seleccionado.setStyle) {
-        seleccionado.setStyle({ color: token('--mapa-punto-borde'), weight: 0.75 });
+        seleccionado.setStyle(seleccionado._ceEstilo || {});
       }
-      if (layer.setStyle) {
-        layer.setStyle({ color: token('--mapa-seleccion'), weight: 2 });
-        if (layer.bringToFront) layer.bringToFront();
-      }
+      seleccionado = null;
+      if (!layer || !layer.setStyle) return;
+
+      // Se guarda el estilo previo en vez de reponer uno fijo: el punto de
+      // casillas y el polígono de municipios no comparten grosor ni color.
+      layer._ceEstilo = layer._ceEstilo || {
+        color: layer.options.color,
+        weight: layer.options.weight,
+        radius: layer.options.radius,
+      };
+      // El punto seleccionado también crece: con 5 px de radio, un cambio de
+      // color solo no se encuentra en un mapa con 415 puntos iguales.
+      layer.setStyle(Object.assign(
+        { color: token('--mapa-seleccion'), weight: 3 },
+        layer._ceEstilo.radius ? { radius: layer._ceEstilo.radius + 4 } : {}
+      ));
+      if (layer.bringToFront) layer.bringToFront();
       seleccionado = layer;
     }
 
@@ -586,23 +651,20 @@
             const valor = v.valores[cve] ?? v.valores[cve?.slice(-3)];
             const sinDato = sinValor(valor);
 
-            layer.bindPopup(
-              ficha(
-                {
-                  nombre_municipio: props.nombre || props.NOMGEO,
-                  cve_mun: cve,
-                  fuente: v.fuente || props.fuente,
-                  fecha_corte: v.fechaCorte || props.fecha_corte,
-                },
-                { claveGeo: 'cve_mun', nombre: 'nombre_municipio', ficha: [] },
-                `<tr><th>${escapar(v.etiqueta)}</th><td><strong>${
-                  sinDato ? 'información insuficiente' : escapar(v.formato(valor))
-                }</strong></td></tr>` +
-                (v.procedencia
-                  ? `<tr><th>Naturaleza</th><td>${escapar(v.procedencia)}</td></tr>`
-                  : '')
-              ),
-              { className: 'mapa-popup', maxWidth: 320 }
+            const fichaHtml = ficha(
+              {
+                nombre_municipio: props.nombre || props.NOMGEO,
+                cve_mun: cve,
+                fuente: v.fuente || props.fuente,
+                fecha_corte: v.fechaCorte || props.fecha_corte,
+              },
+              { claveGeo: 'cve_mun', nombre: 'nombre_municipio', ficha: [] },
+              `<tr><th>${escapar(v.etiqueta)}</th><td><strong>${
+                sinDato ? 'información insuficiente' : escapar(v.formato(valor))
+              }</strong></td></tr>` +
+              (v.procedencia
+                ? `<tr><th>Naturaleza</th><td>${escapar(v.procedencia)}</td></tr>`
+                : '')
             );
 
             layer.on({
@@ -616,7 +678,9 @@
               mouseout: (e) => {
                 if (capaChoropleth) capaChoropleth.resetStyle(e.target);
               },
-              click: () => {
+              click: (e) => {
+                L.DomEvent.stop(e);
+                mostrarFicha(fichaHtml);
                 if (cfg.alSeleccionar) cfg.alSeleccionar(props, 'choropleth');
               },
             });
