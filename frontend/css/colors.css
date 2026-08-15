@@ -159,7 +159,8 @@
   --mapa-bg:            #060a12;
   --mapa-limite:        #5b9dff;
   --mapa-limite-fill:   rgba(91, 157, 255, 0.05);
-  --mapa-punto:         #22d3ee;
+  --mapa-punto:         #22d3ee;   /* Escuela: ubicación potencial */
+  --mapa-casilla:       #f5a524;   /* Casilla instalada en 2024 */
   --mapa-punto-borde:   rgba(6, 10, 18, 0.85);
   --mapa-seleccion:     #f5c518;
   --mapa-pendiente:     #4a5568;   /* Capa sin insumo */
@@ -193,6 +194,32 @@
   --serie-5:            #34d399;
   --serie-6:            #f472b6;
   --serie-7:            #8b97ab;
+
+  /* ════════════════════════════════════════════
+     PARTIDOS Y COALICIONES — colores institucionales
+
+     Son los que la gente reconoce: pintar a Morena de
+     azul porque tocaba --serie-1 hace ilegible el mapa.
+     Ajustados en luminosidad para el fondo oscuro; el
+     tono institucional se conserva.
+
+     Coalición ≠ partido. En 2024 el voto se emitió por
+     bloques, y el mapa se lee por bloque: aquí sólo hay
+     los que compitieron en Campeche.
+     ════════════════════════════════════════════ */
+  --partido-pan:        #2b6cd4;
+  --partido-pri:        #1f9d55;
+  --partido-prd:        #ffcf33;
+  --partido-pt:         #e0393e;
+  --partido-pvem:       #7ac943;
+  --partido-mc:         #ff8a3d;
+  --partido-morena:     #a8332e;
+  --partido-pes:        #7b52ab;
+  --partido-otro:       #8b97ab;   /* Locales sin color reconocible */
+
+  /* Bloques de coalición 2024. */
+  --bloque-pri-prd:     #1f9d55;
+  --bloque-shh:         #a8332e;   /* PT-PVEM-Morena */
 
   --grafica-grid:       rgba(190, 214, 255, 0.07);
   --grafica-eje:        rgba(190, 214, 255, 0.20);

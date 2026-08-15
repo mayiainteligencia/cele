@@ -105,12 +105,55 @@ body[data-page="inicio"] .filter-bar { position: fixed; z-index: var(--z-filter-
   max-width: 12ch;
 }
 
+/* ── Tinta del hero ──
+   El fondo es un video: debajo del título pasa el espacio (casi negro) y
+   también el borde iluminado del planeta. Un color fijo se pierde en uno de
+   los dos. CE.contrasteHero() mide la luminancia del fotograma detrás de cada
+   bloque —título, descripción, contador y etapas van por separado, porque
+   caen en franjas distintas de la imagen— y le pone `sobre-claro` al que le
+   tocó fondo claro. Aquí sólo viven los dos juegos de tinta.
+
+   El velo de respaldo se queda en ambos: si el video no carga o el muestreo
+   falla, el texto sigue siendo legible. */
+.main--home {
+  --hero-tinta: var(--text-hero);
+  /* Secundario en --text-body y no en --text-muted: el gris apagado está
+     calibrado para leerse sobre un panel opaco, no sobre el planeta. */
+  --hero-tinta-2: var(--text-body);
+  --hero-cuerpo: var(--text-body);
+  --hero-velo: var(--panel-fondo-alto);
+}
+
+.main--home .sobre-claro {
+  /* color-ok: tintas de contraste sobre fotograma claro; no son de paleta
+     porque la paleta entera está calibrada para fondo oscuro. */
+  --hero-tinta: #08101f;
+  --hero-tinta-2: #33465f;
+  --hero-cuerpo: #142033;
+  --hero-velo: rgba(244, 248, 255, 0.72);
+}
+
+.hero__titulo {
+  max-width: 16ch;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--hero-tinta) 0%, var(--hero-tinta-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* El drop-shadow sí respeta el recorte del gradiente; text-shadow no. */
+  filter: drop-shadow(0 2px 18px var(--hero-velo));
+  transition: filter 0.4s ease;
+}
+
 .hero__description {
   margin-top: var(--space-xl);
   align-self: flex-start;
   max-width: 34ch;
-  color: var(--text-hero);
-  text-shadow: 0 1px 16px var(--panel-fondo);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--hero-cuerpo);
+  text-shadow: 0 1px 16px var(--hero-velo);
+  transition: color 0.4s ease, text-shadow 0.4s ease;
 }
 
 
@@ -169,6 +212,324 @@ body[data-page="inicio"] .dc-logo {
 
 body[data-page="inicio"] .dc-logo:hover {
   transform: scale(1.06);
+}
+
+
+/* ════════════════════════════════════════════
+   CUENTA REGRESIVA A LA JORNADA
+   ════════════════════════════════════════════
+   Va en el hero, centrada bajo el título: es lo
+   único de la página que vale para todos los
+   módulos. Tipografía tabular para que el
+   segundero no baile de ancho.
+   ════════════════════════════════════════════ */
+
+.cuenta {
+  position: relative;
+  margin-top: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  text-align: center;
+  /* El hero apaga los eventos; el contador no necesita recuperarlos. */
+}
+
+/* Vela de fondo, no caja: el contador cae justo encima del planeta, donde el
+   fotograma tiene brillo medio. Ahí ni la tinta clara ni la oscura ganan por
+   sí solas, así que se apaga un poco la imagen bajo el texto. Difuminada a
+   los bordes para que no se vea un rectángulo. */
+.cuenta::before {
+  content: '';
+  position: absolute;
+  inset: -18px -32px;
+  z-index: -1;
+  border-radius: var(--radius-xl);
+  background: radial-gradient(ellipse at center,
+    var(--panel-fondo-alto) 0%, var(--panel-fondo-tenue) 55%, transparent 78%);
+}
+
+/* Sobre fotograma claro la vela tiene que aclarar, no oscurecer. */
+.cuenta.sobre-claro::before {
+  /* color-ok: velo de legibilidad sobre imagen clara, no color de paleta. */
+  background: radial-gradient(ellipse at center,
+    rgba(244, 248, 255, 0.66) 0%, rgba(244, 248, 255, 0.32) 55%, transparent 78%);
+}
+
+.cuenta__rotulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--hero-tinta-2);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  text-shadow: 0 1px 12px var(--hero-velo);
+}
+
+.cuenta__reloj {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+
+.cuenta__bloque {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 62px;
+}
+
+.cuenta__valor {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4.6vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--hero-tinta);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 24px var(--hero-velo);
+  transition: color 0.4s ease, text-shadow 0.4s ease;
+}
+
+/* Los segundos, un punto más discretos: son el ruido del reloj,
+   no la cifra que alguien anota. Sobre fondo claro el cian se cae,
+   así que ahí toma la tinta general. */
+.cuenta__valor--seg { color: var(--accent-cyan); }
+.sobre-claro .cuenta__valor--seg { color: var(--accent-blue); }
+
+.cuenta__unidad {
+  margin-top: 4px;
+  color: var(--hero-tinta-2);
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-shadow: 0 1px 10px var(--hero-velo);
+}
+
+.cuenta__sep {
+  color: var(--hero-tinta-2);
+  font-size: clamp(1.4rem, 3vw, 2.4rem);
+  font-weight: 300;
+  line-height: 1.1;
+  opacity: 0.5;
+}
+
+.cuenta__nota,
+.cuenta__jornada {
+  color: var(--hero-tinta-2);
+  font-size: 0.66rem;
+  text-shadow: 0 1px 12px var(--hero-velo);
+}
+
+.cuenta__jornada {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+
+/* ════════════════════════════════════════════
+   LAS CINCO ETAPAS
+   ════════════════════════════════════════════
+   Índice de la plataforma, dentro del hero. En
+   pantalla sólo viven cinco fichas; el detalle
+   se abre al pedirlo y se cierra al terminar,
+   así el home nunca se satura.
+   ════════════════════════════════════════════ */
+
+/* Caja de referencia del detalle: se abre pegado a las fichas, no al hero. */
+.etapas-caja {
+  position: relative;
+  margin-top: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.etapas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-sm);
+  /* El hero apaga los eventos para no tapar el mapa de fondo; las fichas
+     sí tienen que responder. */
+  pointer-events: auto;
+}
+
+.etapa {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  width: 66px;
+  height: 66px;
+  padding: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: 50%;
+  background: var(--panel-fondo-alto);
+  backdrop-filter: blur(18px);
+  color: var(--text-body);
+  font-family: var(--font-heading);
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
+}
+
+.etapa:hover {
+  border-color: var(--accent-cyan);
+  color: var(--text-heading);
+  transform: translateY(-2px);
+}
+
+.etapa--activa {
+  border-color: var(--accent-cyan);
+  color: var(--text-heading);
+  box-shadow: 0 0 0 3px var(--velo-08);
+}
+
+.etapa__num {
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--accent-cyan);
+}
+
+.etapa__icono { display: grid; place-items: center; }
+.etapa__icono i { width: 16px; height: 16px; }
+
+.etapa__corto {
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+
+/* ── Detalle de la etapa ──
+   Absoluto y centrado: se abre encima del hero en vez de empujar el
+   contador y las tarjetas hacia abajo. */
+
+.etapa-detalle {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + var(--space-sm));
+  transform: translateX(-50%);
+  z-index: var(--z-cards);
+  width: min(440px, calc(100vw - var(--space-2xl)));
+  padding: var(--space-md);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--panel-fondo-alto);
+  backdrop-filter: blur(24px);
+  text-align: left;
+  pointer-events: auto;
+  animation: etapa-abrir 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes etapa-abrir {
+  from { opacity: 0; transform: translate(-50%, -6px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.etapa-detalle__cerrar {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border-light);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.etapa-detalle__cerrar:hover {
+  color: var(--text-heading);
+  border-color: var(--accent-cyan);
+}
+
+.etapa-detalle__cerrar i { width: 13px; height: 13px; }
+
+.etapa-detalle__titulo {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  padding-right: var(--space-lg);
+  font-family: var(--font-heading);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.etapa-detalle__num {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--accent-cyan);
+}
+
+.etapa-detalle__resumen {
+  margin-top: 4px;
+  color: var(--text-body);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.etapa-detalle__enlaces {
+  margin-top: var(--space-sm);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.etapa-detalle__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-full);
+  color: var(--text-body);
+  font-size: 0.66rem;
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.etapa-detalle__pill:hover {
+  border-color: var(--accent-cyan);
+  color: var(--text-heading);
+}
+
+.etapa-detalle__pill i { width: 12px; height: 12px; }
+
+.etapa-detalle__pie {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--velo-08);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.etapa-detalle__insumo {
+  flex: 1;
+  min-width: 16ch;
+  color: var(--text-muted);
+  font-size: 0.64rem;
+  line-height: 1.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .etapa:hover { transform: none; }
+  .etapa-detalle { animation: none; }
 }
 
 
@@ -947,3 +1308,17 @@ body[data-page="inicio"] .agent-bubble {
 /* Franja de color que identifica el origen de un panel de un vistazo. */
 .panel--inegi { border-left: 3px solid var(--serie-3); }
 .panel--ine   { border-left: 3px solid var(--sev-media); }
+
+/* La proyección se marca en el borde igual que las fuentes: quien baja por la
+   página tiene que ver de un golpe dónde deja de leer pasado registrado. */
+.panel--proyeccion { border-left: 3px solid var(--proc-estimacion); }
+
+.lista-supuestos {
+  margin: var(--space-xs) 0 0;
+  padding-left: var(--space-md);
+  color: var(--text-body);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.lista-supuestos li { margin-bottom: 3px; }

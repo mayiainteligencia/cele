@@ -7,17 +7,25 @@
 
      Territorio.cargar().then(d => ...)
 
-   Lo REAL del archivo son los 13 municipios, sus
-   claves y los agregados del catálogo CCT. Todo
-   lo demás es de demostración y se pinta con el
-   badge rayado de "Simulado". Ninguna vista debe
-   mostrar una cifra simulada sin ese badge.
+   Carga el contexto estatal: las cifras que se
+   capturan a mano de la publicación de cada
+   institución (Censo del INEGI, padrón del INE)
+   más la estimación de NSE y la proyección 2027.
+
+   Lo de 2024 —casillas, secciones, resultados,
+   lista nominal por municipio— NO está aquí: sale
+   de Electoral.cargar(), que lee lo que produce el
+   pipeline desde el insumo original.
+
+   Cada bloque del archivo trae su `procedencia`.
+   Una estimación se pinta como estimación, con su
+   intervalo; nunca como dato de fuente.
    ============================================ */
 
 (function (global) {
   'use strict';
 
-  const RUTA = 'data/mock/territorio.json';
+  const RUTA = 'data/contexto_campeche.json';
   let promesa = null;
 
   function cargar() {

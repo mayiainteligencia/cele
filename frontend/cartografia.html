@@ -45,8 +45,8 @@
         </div>
 
         <div class="mando-header__pills">
-          <span class="badge badge--success" style="padding:6px 12px;">5 Capas Disponibles</span>
-          <span class="badge badge--neutral" style="padding:6px 12px;">3 Capas INE Pendientes</span>
+          <span class="badge badge--success" style="padding:6px 12px;">8 capas disponibles</span>
+          <span class="badge badge--neutral" style="padding:6px 12px;">4 pendientes de insumo INE</span>
         </div>
       </section>
 
@@ -64,12 +64,28 @@
           <button class="subnav-btn" data-colorear="alumnado">
             <i data-lucide="users-round"></i><span>Alumnado</span>
           </button>
+          <button class="subnav-btn" data-colorear="ganador_2024">
+            <i data-lucide="flag"></i><span>Ganador 2024</span>
+          </button>
+          <button class="subnav-btn" data-colorear="participacion_2024">
+            <i data-lucide="user-check"></i><span>Participación 2024</span>
+          </button>
+          <button class="subnav-btn" data-colorear="margen_2024">
+            <i data-lucide="git-compare"></i><span>Margen 2024</span>
+          </button>
+          <button class="subnav-btn" data-colorear="nulos_2024">
+            <i data-lucide="file-x"></i><span>Voto nulo 2024</span>
+          </button>
         </div>
         <span id="carto-proc"></span>
       </section>
 
       <!-- Visor de Mapa Principal -->
-      <section class="mando-map-card" id="mapa-cartografia" style="height: min(650px, 68vh);"></section>
+      <!-- flex:none a propósito: .mando-map-card trae flex:1, que en una
+           columna sin altura propia colapsa la caja a su min-height y dejaba
+           el mapa en 320 px por más que la altura dijera 650. -->
+      <section class="mando-map-card" id="mapa-cartografia"
+               style="flex:none; height: min(680px, 72vh);"></section>
 
       <!-- Inventario de Capas y Metadatos Cartográficos -->
       <section class="panel">
@@ -95,6 +111,7 @@
   </main>
 
   <script src="js/mapa.js"></script>
+  <script src="js/electoral.js"></script>
   <script src="js/procedencia.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
@@ -118,9 +135,15 @@
     { titulo: 'Escuelas CCT', proc: 'dato',
       fuente: 'SEP — Catálogo de Centros de Trabajo', corte: null,
       detalle: '2,274 registros en 1,482 sitios físicos. Todos con estatus de ubicación potencial: ninguno está aprobado como casilla.' },
-    { titulo: 'Secciones y distritos electorales', proc: null, pendiente: true,
+    { titulo: 'Casillas instaladas 2024', proc: 'dato',
+      fuente: 'INE — Encarte del Proceso Electoral Federal 2023-2024', corte: '2024-06',
+      detalle: '1,230 casillas en 585 sitios de 544 secciones. 415 sitios llevan coordenada; el resto no cruzó contra el catálogo CCT y se queda sin dibujar antes que inventarle un punto.' },
+    { titulo: 'Resultados por sección 2024', proc: 'dato',
+      fuente: 'IEEC — Cómputos distritales, diputaciones locales MR', corte: '2024-06',
+      detalle: '542 secciones de los 21 distritos locales, con votación por partido y coalición, lista nominal, nulos y participación. Alimenta cuatro coloreados municipales.' },
+    { titulo: 'Secciones y distritos electorales (polígonos)', proc: null, pendiente: true,
       fuente: 'Cartografía Electoral INE / IEEC', corte: null,
-      detalle: 'Sin insumo. El acceso al portal del INE está en gestión; la capa ya está registrada en el mapa y aparece inhabilitada.' },
+      detalle: 'Hay resultados por sección, pero no la geometría de la sección. Mientras no llegue, el resultado seccional se ve en el punto de su casilla y agregado a municipio, nunca como superficie pintada.' },
   ];
 
   function pintarInventario() {
@@ -143,9 +166,11 @@
   document.addEventListener('DOMContentLoaded', () => {
     pintarInventario();
 
-    fetch('data/geo/escuelas_campeche.geojson')
-      .then((r) => r.json())
-      .then((json) => {
+    Promise.all([
+      fetch('data/geo/escuelas_campeche.geojson').then((r) => r.json()),
+      Electoral.cargar(),
+    ])
+      .then(([json, elec]) => {
         const escuelas = {};
         const alumnado = {};
         json.features.forEach((f) => {
@@ -176,10 +201,21 @@
           formato: (v) => v.toLocaleString('es-MX') + ' alumnos',
         }, comun));
 
+        Electoral.registrarVariables(elec);
+
         const mapa = CerebroMapa.crear('#mapa-cartografia', {
-          capas: ['limite', 'municipios', 'localidades', 'escuelas'],
+          capas: ['limite', 'municipios', 'localidades', 'casillas_2024'],
           panelCapas: true,
+          // El punto de la casilla abre con el resultado de su sección.
+          fichaExtra: Electoral.fichaSeccion(elec),
         });
+
+        // Los coloreados de 2024 salen de cómputos oficiales; los del CCT, de
+        // una agregación del catálogo. La procedencia se declara por variable.
+        const FUENTE_VARIABLE = {
+          escuelas_por_municipio: json.metadata.fuente,
+          alumnado: json.metadata.fuente,
+        };
 
         const proc = document.getElementById('carto-proc');
         document.querySelectorAll('[data-colorear]').forEach((btn) => {
@@ -188,11 +224,11 @@
               b.classList.toggle('subnav-btn--active', b === btn));
             const id = btn.dataset.colorear;
             mapa.setChoropleth(id || null);
-            // El coloreado es una agregación, no un dato de fuente.
             proc.innerHTML = id
               ? Procedencia.badge('calculo', {
                   detalle: 'agregación por municipio',
-                  fuente: json.metadata.fuente,
+                  fuente: FUENTE_VARIABLE[id] || elec.meta.fuente,
+                  fechaCorte: FUENTE_VARIABLE[id] ? null : elec.meta.fecha_corte,
                 })
               : '';
             Procedencia.iconos();

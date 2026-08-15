@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Cerebro Electoral (CE) — Plataforma de Inteligencia Geoespacial y Cartografía Electoral de Campeche (Entidad 04).">
-  <title>Cerebro Electoral (CE) — Inteligencia Geoespacial Electoral</title>
+  <meta name="description" content="Cerebro Electoral (CE) — Plataforma de inteligencia electoral de Campeche (Entidad 04).">
+  <title>Cerebro Electoral (CE) — Inteligencia electoral</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -85,12 +85,58 @@
     <!-- Sección Hero Principal -->
     <section class="hero" id="hero-section">
       <div class="hero__content">
-        <h1 class="text-hero animate-fade-in-up" style="max-width: 16ch; font-weight:800; background: linear-gradient(135deg, var(--text-hero) 0%, var(--text-muted) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+        <h1 class="text-hero hero__titulo animate-fade-in-up">
           Cerebro Electoral
         </h1>
-        <p class="hero__description text-body animate-fade-in-up delay-1" style="font-size:1.1rem; color: var(--text-body); font-weight:500;">
-          Inteligencia geoespacial, análisis demográfico y cartografía de 13 municipios de Campeche.
+        <p class="hero__description text-body animate-fade-in-up delay-1">
+          Inteligencia electoral para Campeche. Territorio, historia de voto,
+          análisis y decisión, sobre datos con fuente y fecha de corte.
         </p>
+
+        <!-- ── Cuenta regresiva a la jornada ──
+             Aquí y no en una tarjeta lateral: es el único dato que no
+             depende de qué módulo abras, y encuadra todo lo demás. -->
+        <section class="cuenta animate-fade-in-up delay-2" id="cuenta-jornada"
+                 aria-label="Tiempo restante para la jornada electoral">
+          <p class="cuenta__rotulo">
+            <i data-lucide="calendar-clock" class="icon-xs"></i>
+            Jornada electoral &middot;
+            <time datetime="2027-06-06">domingo 6 de junio de 2027</time>
+          </p>
+          <div class="cuenta__reloj" role="timer" aria-live="off">
+            <div class="cuenta__bloque">
+              <span class="cuenta__valor" data-cuenta="dias">—</span>
+              <span class="cuenta__unidad">días</span>
+            </div>
+            <span class="cuenta__sep" aria-hidden="true">:</span>
+            <div class="cuenta__bloque">
+              <span class="cuenta__valor" data-cuenta="horas">—</span>
+              <span class="cuenta__unidad">horas</span>
+            </div>
+            <span class="cuenta__sep" aria-hidden="true">:</span>
+            <div class="cuenta__bloque">
+              <span class="cuenta__valor" data-cuenta="minutos">—</span>
+              <span class="cuenta__unidad">min</span>
+            </div>
+            <span class="cuenta__sep" aria-hidden="true">:</span>
+            <div class="cuenta__bloque">
+              <span class="cuenta__valor cuenta__valor--seg" data-cuenta="segundos">—</span>
+              <span class="cuenta__unidad">seg</span>
+            </div>
+          </div>
+          <p class="cuenta__nota">
+            Primer domingo de junio, art. 24 LGIPE. Hora del centro (UTC−6).
+          </p>
+        </section>
+
+        <!-- ── Las cinco etapas ──
+             El riel lateral son iconos sin texto: sirve para volver, no
+             para entender. Esto es el índice: cinco fichas, y el detalle
+             sólo aparece cuando se pide. Nada se despliega solo. -->
+        <div class="etapas-caja">
+          <nav class="etapas" id="etapas" aria-label="Etapas de la plataforma"></nav>
+          <div class="etapa-detalle" id="etapa-detalle" hidden></div>
+        </div>
       </div>
     </section>
 
@@ -130,7 +176,7 @@
       </div>
 
       <p class="service-card__description text-body truncate-2">
-        Plataforma oficial de supervisión territorial. 13 municipios delimitados con precisión poligonal, 2,274 casillas potenciales (CCT SEP) y trazabilidad completa.
+        13 municipios delimitados con precisión poligonal, 1,482 sitios potenciales de casilla (CCT SEP) y el resultado de 2024 sección por sección.
       </p>
 
       <!-- Grid de 4 Especificaciones Clave -->
@@ -141,19 +187,19 @@
           <span class="spec__label">Municipios</span>
         </div>
         <div class="spec">
-          <i data-lucide="school" style="color:var(--accent-blue);"></i>
-          <span class="spec__value">2,274</span>
-          <span class="spec__label">Inmuebles CCT</span>
-        </div>
-        <div class="spec">
-          <i data-lucide="map-pin" style="color:var(--accent-gold);"></i>
+          <i data-lucide="map-pin" style="color:var(--accent-blue);"></i>
           <span class="spec__value">1,482</span>
           <span class="spec__label">Sitios Únicos</span>
         </div>
         <div class="spec">
-          <i data-lucide="clock" style="color:var(--text-muted);"></i>
-          <span class="spec__value">5</span>
-          <span class="spec__label">Pendientes INE</span>
+          <i data-lucide="vote" style="color:var(--accent-gold);"></i>
+          <span class="spec__value">1,230</span>
+          <span class="spec__label">Casillas 2024</span>
+        </div>
+        <div class="spec">
+          <i data-lucide="grid-2x2" style="color:var(--text-muted);"></i>
+          <span class="spec__value">542</span>
+          <span class="spec__label">Secciones con Resultado</span>
         </div>
       </div>
 
@@ -185,8 +231,176 @@
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
   <script>
+  /* ── Las cinco etapas ──
+     `estado` describe el insumo, no el módulo: 'dato' cuando lo que se ve
+     sale de una fuente publicada, 'parcial' cuando parte del módulo corre
+     sobre datos de demostración, 'pendiente' cuando el insumo oficial no
+     existe todavía. Que el usuario lo sepa antes de entrar. */
+  const ETAPAS = [
+    {
+      icono: 'map',
+      titulo: 'Dónde se vota',
+      corto: 'Territorio',
+      resumen: 'El territorio antes que nada: los 13 municipios, sus localidades ' +
+               'y los 1,482 sitios donde físicamente cabe una casilla.',
+      estado: 'dato',
+      insumo: 'INEGI Marco Geoestadístico 2024 · Catálogo CCT de la SEP · Encarte INE 2024',
+      enlaces: [
+        { href: 'cartografia.html', label: 'Mapa maestro multicapa', icono: 'layers' },
+        { href: 'municipios.html', label: 'Los 13 municipios', icono: 'building-2' },
+        { href: 'infraestructura.html', label: 'Infraestructura CCT', icono: 'school' },
+        { href: 'casillas.html', label: 'Casillas por tipo', icono: 'vote' },
+      ],
+    },
+    {
+      icono: 'history',
+      titulo: 'Cómo votó Campeche',
+      corto: 'Historia',
+      resumen: 'El resultado de 2024 sección por sección: participación, margen, ' +
+               'voto nulo y quién ganó cada municipio. Pasado registrado, no proyección.',
+      estado: 'dato',
+      insumo: 'IEEC — cómputos distritales de diputaciones locales MR 2024 (542 secciones)',
+      enlaces: [
+        { href: 'cartografia.html', label: 'Ganador y participación en el mapa', icono: 'flag' },
+        { href: 'historico.html', label: 'Histórico y proyección', icono: 'trending-up' },
+        { href: 'demografia.html', label: 'Lista nominal y demografía', icono: 'users-round' },
+        { href: 'nse.html', label: 'Perfil socioeconómico', icono: 'layers-3' },
+      ],
+    },
+    {
+      icono: 'microscope',
+      titulo: 'Quién compite y qué se dice',
+      corto: 'Análisis',
+      resumen: 'Candidaturas, medios, encuestas y el grafo de actores. Aquí es ' +
+               'donde el análisis empieza a interpretar, y cada salida lo declara.',
+      estado: 'parcial',
+      insumo: 'Monitoreo de medios en vivo · el resto corre sobre datos de demostración',
+      enlaces: [
+        { href: 'candidaturas.html', label: 'Candidaturas', icono: 'users' },
+        { href: 'medios.html', label: 'Monitor de medios', icono: 'radio' },
+        { href: 'encuestas.html', label: 'Encuestas', icono: 'bar-chart-3' },
+        { href: 'riesgos.html', label: 'Grafo y riesgos', icono: 'network' },
+      ],
+    },
+    {
+      icono: 'clipboard-check',
+      titulo: 'Qué hay que operar',
+      corto: 'Operación',
+      resumen: 'Presupuesto, estructura territorial y el guion de la jornada: ' +
+               'la parte que se ejecuta, no la que se contempla.',
+      estado: 'parcial',
+      insumo: 'Planeación propia. El calendario oficial del proceso 2027 aún no se publica.',
+      enlaces: [
+        { href: 'finanzas.html', label: 'Finanzas de campaña', icono: 'dollar-sign' },
+        { href: 'dia-d.html', label: 'Día D', icono: 'check-circle-2' },
+        { href: 'forensia.html', label: 'Forensia electoral', icono: 'shield-alert' },
+      ],
+    },
+    {
+      icono: 'gavel',
+      titulo: 'Quién decide y con qué respaldo',
+      corto: 'Decisión',
+      resumen: 'La sala de decisiones, las alertas y la trazabilidad completa: ' +
+               'de qué archivo salió cada cifra que viste en las cuatro etapas anteriores.',
+      estado: 'dato',
+      insumo: 'Registro interno de fuentes, cortes y procedencia',
+      enlaces: [
+        { href: 'decisiones.html', label: 'Sala de decisiones', icono: 'gavel' },
+        { href: 'alertas.html', label: 'Alertas', icono: 'bell' },
+        { href: 'fuentes.html', label: 'Fuentes y trazabilidad', icono: 'database' },
+        { href: 'matriz.html', label: 'Matriz maestra', icono: 'file-spreadsheet' },
+      ],
+    },
+  ];
+
+  const SELLO = {
+    dato:      { clase: 'badge--success', texto: 'Datos de fuente' },
+    parcial:   { clase: 'badge--warn',    texto: 'Parcialmente simulado' },
+    pendiente: { clase: 'badge--neutral', texto: 'Pendiente de insumo' },
+  };
+
+  /* En pantalla sólo viven cinco fichas. El detalle —qué hay dentro, con qué
+     dato se sostiene, a dónde se entra— aparece al pedirlo y se va al cerrar,
+     así que el home nunca carga con más de lo que se puede leer de un vistazo. */
+  function pintarEtapas() {
+    const barra = document.getElementById('etapas');
+    const panel = document.getElementById('etapa-detalle');
+    let abierta = -1;
+
+    barra.innerHTML = ETAPAS.map((e, i) => `
+      <button type="button" class="etapa" data-etapa="${i}"
+              aria-expanded="false" aria-controls="etapa-detalle">
+        <span class="etapa__num">${String(i + 1).padStart(2, '0')}</span>
+        <span class="etapa__icono"><i data-lucide="${e.icono}"></i></span>
+        <span class="etapa__corto">${e.corto}</span>
+      </button>`).join('');
+
+    function cerrar() {
+      abierta = -1;
+      panel.hidden = true;
+      panel.innerHTML = '';
+      barra.querySelectorAll('.etapa').forEach((b) => {
+        b.classList.remove('etapa--activa');
+        b.setAttribute('aria-expanded', 'false');
+      });
+    }
+
+    function abrir(i) {
+      const e = ETAPAS[i];
+      abierta = i;
+
+      barra.querySelectorAll('.etapa').forEach((b) => {
+        const activa = Number(b.dataset.etapa) === i;
+        b.classList.toggle('etapa--activa', activa);
+        b.setAttribute('aria-expanded', String(activa));
+      });
+
+      panel.innerHTML = `
+        <button type="button" class="etapa-detalle__cerrar" aria-label="Cerrar">
+          <i data-lucide="x"></i>
+        </button>
+        <h2 class="etapa-detalle__titulo">
+          <span class="etapa-detalle__num">${String(i + 1).padStart(2, '0')}</span>
+          ${e.titulo}
+        </h2>
+        <p class="etapa-detalle__resumen">${e.resumen}</p>
+        <div class="etapa-detalle__enlaces">
+          ${e.enlaces.map((l) => `
+            <a href="${l.href}" class="etapa-detalle__pill">
+              <i data-lucide="${l.icono}"></i><span>${l.label}</span>
+            </a>`).join('')}
+        </div>
+        <footer class="etapa-detalle__pie">
+          <span class="badge ${SELLO[e.estado].clase}">${SELLO[e.estado].texto}</span>
+          <span class="etapa-detalle__insumo">${e.insumo}</span>
+        </footer>`;
+      panel.hidden = false;
+      panel.querySelector('.etapa-detalle__cerrar').addEventListener('click', cerrar);
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    barra.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('.etapa');
+      if (!btn) return;
+      const i = Number(btn.dataset.etapa);
+      if (i === abierta) cerrar(); else abrir(i);
+    });
+
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && abierta >= 0) cerrar();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    pintarEtapas();
+    CE.cuentaRegresiva('#cuenta-jornada');
+    // Cada bloque se mide por separado: el título está sobre el planeta y el
+    // contador sobre el espacio negro. Un promedio del hero entero les daría
+    // a los dos el color equivocado.
+    CE.contrasteHero(['.hero__titulo', '.hero__description', '.cuenta', '.etapas']);
+    CE.initAgents(null);
     lucide.createIcons();
-    document.addEventListener('DOMContentLoaded', () => CE.initAgents(null));
+  });
   </script>
 </body>
 </html>

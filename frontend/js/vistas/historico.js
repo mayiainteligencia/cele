@@ -1,288 +1,285 @@
 /* Vista: Histórico electoral y proyección 2027.
 
-   Regla dura de la spec: la proyección NUNCA se presenta como certeza.
-   Todo porcentaje proyectado sale de Territorio.intervalo(), que imprime
-   el central junto con su rango. No hay una sola ruta en este archivo que
-   pinte un central solo.
+   Dos cosas distintas, separadas a propósito:
 
-   El histórico va separado visualmente de la proyección: uno es pasado
-   registrado, la otra es modelo. */
+   El histórico es pasado registrado. 2024 sale de los cómputos del IEEC que
+   procesa el pipeline; 2021 se captura del cómputo estatal de gubernatura.
+
+   La proyección es un modelo. Regla dura de la spec: NUNCA se presenta como
+   certeza. Todo porcentaje proyectado sale de Territorio.intervalo(), que
+   imprime el central junto con su rango. No hay una sola ruta en este
+   archivo que pinte un central solo. */
 
 (function () {
   'use strict';
 
   const T = window.Territorio;
   const P = window.Procedencia;
+  const E = window.Electoral;
 
   document.addEventListener('DOMContentLoaded', () => {
-    T.cargar().then((d) => {
-      const vista = Object.assign({}, d);
-      vista.municipios = T.conectarFiltros(d, (mun) => {
+    Promise.all([T.cargar(), E.cargar()]).then(([ctx, elec]) => {
+      const todos = Object.values(elec.municipios)
+        .sort((a, b) => a.cve_mun.localeCompare(b.cve_mun));
+      const datos = {
+        municipios: todos,
+        historico: ctx.historico,
+        proyeccion: ctx.proyeccion_2027,
+        meta: elec.meta,
+      };
+      const vista = Object.assign({}, datos);
+      vista.municipios = T.conectarFiltros(datos, (mun) => {
         vista.municipios = mun;
         pintar(vista);
       });
       pintar(vista);
-    }).catch(() => {});
+    }).catch((err) => {
+      console.error('historico:', err);
+      document.getElementById('contenido').innerHTML =
+        '<p class="text-small">No se pudieron cargar los resultados históricos.</p>';
+    });
   });
+
+  const color = (bloque) => `var(${window.Electoral.color(bloque)})`;
 
   function pintar(d) {
     const mun = d.municipios;
-    const anios = mun[0].historico.map((h) => h.anio);
-    let anioSel = anios[anios.length - 1];
-    let escenarioSel = 'base';
+    const proy = d.proyeccion;
+    const g2021 = d.historico.procesos.find((p) => p.anio === 2021);
 
-    const colorPartido = {};
-    const paleta = T.tokens(['--serie-5', '--serie-1', '--serie-4', '--serie-2',
-                             '--serie-6', '--serie-3', '--serie-7']);
-    d.partidos.forEach((p, i) => { colorPartido[p] = paleta[i]; });
+    // ── Agregado estatal de 2024, desde los cómputos ──
+    const bloques = {};
+    let validos = 0, nulos = 0, total = 0, lista = 0;
+    mun.forEach((m) => {
+      Object.entries(m.bloques).forEach(([b, v]) => {
+        bloques[b] = (bloques[b] || 0) + v;
+      });
+      validos += m.validos; nulos += m.nulos; total += m.total; lista += m.lista_nominal;
+    });
+    const orden = Object.entries(bloques)
+      .filter(([, v]) => v > 0)
+      .sort((a, b) => b[1] - a[1]);
+    const participacion = lista ? total / lista * 100 : 0;
 
-    document.getElementById('aviso').innerHTML = T.avisoSimulado(
-      'Los resultados históricos y la proyección son sintéticos. No corresponden a ' +
-      'ningún proceso electoral real de Campeche.'
-    );
+    document.getElementById('aviso').innerHTML = '';
 
     document.getElementById('cabecera-pills').innerHTML =
-      P.badge('estimacion', { detalle: 'proyección con intervalo' }) + P.badge('simulado');
+      P.badge('dato', { detalle: '2021 y 2024', fuente: 'IEEC', fechaCorte: '2024-06' }) +
+      P.badge('estimacion', { detalle: 'proyección con intervalo', confianza: proy.confianza });
 
     document.getElementById('contenido').innerHTML = `
-      <section class="panel" id="p-historico"></section>
-      <section class="panel" id="p-proyeccion"></section>
-      <section class="panel" id="p-tabla"></section>
-    `;
 
-    function hist(m) { return m.historico.find((h) => h.anio === anioSel); }
+      <!-- ════ PASADO REGISTRADO ════ -->
 
-    /* ── Histórico ── */
-    function pintarHistorico() {
-      const total = mun.length;
-      const porGanador = {};
-      mun.forEach((m) => {
-        const g = hist(m).ganador;
-        porGanador[g] = (porGanador[g] || 0) + 1;
-      });
-      const partMedia = mun.reduce((a, m) => a + hist(m).participacion, 0) / total;
-      const nulosMedia = mun.reduce((a, m) => a + hist(m).nulos, 0) / total;
-
-      document.getElementById('p-historico').innerHTML = `
+      <section class="panel">
         <h3 class="text-h3 panel__titulo">
-          <i data-lucide="history"></i> Histórico electoral
+          <i data-lucide="history"></i> Resultado de 2024
           <span class="badge badge--neutral">Pasado registrado</span>
         </h3>
-
-        <div class="subnav-bar" role="group" aria-label="Año del proceso">
-          ${anios.map((a) => `
-            <button class="subnav-btn${a === anioSel ? ' subnav-btn--active' : ''}" data-anio="${a}">
-              <span>${a}</span>
-            </button>`).join('')}
-        </div>
+        <p class="tarjeta__texto" style="max-width:78ch">
+          Diputaciones locales de mayoría relativa, cómputos distritales del
+          IEEC. ${T.num(mun.length)} ${mun.length === 1 ? 'municipio' : 'municipios'},
+          ${T.num(validos)} votos válidos.
+        </p>
 
         <div class="rejilla-tarjetas" style="margin-top:var(--space-md)">
-          ${T.cifra('Participación media', T.pct(partMedia), 'calculo',
-            { detalle: 'media simple de 13 municipios' })}
-          ${T.cifra('Abstencionismo', T.pct(100 - partMedia), 'calculo',
+          ${T.cifra('Participación', T.pct(participacion), 'calculo',
+            { detalle: 'votación total ÷ lista nominal' })}
+          ${T.cifra('Abstención', T.pct(100 - participacion), 'calculo',
             { detalle: '100 − participación' })}
-          ${T.cifra('Votos nulos', T.pct(nulosMedia), 'calculo',
-            { detalle: 'media de 13 municipios' })}
-          ${T.cifra('Municipios ganados', Object.entries(porGanador)
-            .sort((a, b) => b[1] - a[1])
-            .map(([p, n]) => `${n} ${p}`).slice(0, 1).join(''), 'simulado')}
+          ${T.cifra('Voto nulo', T.pct(nulos / total * 100), 'calculo',
+            { detalle: 'nulos ÷ votación total' })}
+          ${T.cifra('Lista nominal', T.num(lista), 'dato',
+            { fuente: 'Actas de cómputo IEEC', fechaCorte: '2024-06' })}
         </div>
 
         <div style="margin-top:var(--space-md)">
-          ${T.cinta(Object.fromEntries(Object.entries(porGanador)
-            .sort((a, b) => b[1] - a[1])
-            .map(([p, n]) => [p, Math.round(n / total * 1000) / 10])),
-            Object.entries(porGanador).sort((a, b) => b[1] - a[1]).map(([p]) => colorPartido[p]))}
-        </div>
-        <p class="panel__nota">Reparto de las 13 presidencias municipales en ${anioSel}.</p>
-      `;
-
-      document.querySelectorAll('[data-anio]').forEach((b) => {
-        b.addEventListener('click', () => {
-          anioSel = Number(b.dataset.anio);
-          pintarHistorico();
-          pintarTabla();
-        });
-      });
-    }
-
-    /* ── Proyección ── */
-    function pintarProyeccion() {
-      // Agregado estatal: promedio ponderado por lista nominal.
-      const listaTot = mun.reduce((a, m) => a + m.lista_nominal, 0);
-      const agg = {};
-      d.partidos.forEach((p) => {
-        let c = 0, b = 0, al = 0;
-        mun.forEach((m) => {
-          const f = m.proyeccion_2027.partidos.find((x) => x.partido === p);
-          const w = m.lista_nominal / listaTot;
-          c += f.pct_central * w; b += f.ic_bajo * w; al += f.ic_alto * w;
-        });
-        agg[p] = { central: c, bajo: b, alto: al };
-      });
-      const orden = Object.entries(agg).sort((a, b) => b[1].central - a[1].central);
-      const puntero = orden[0];
-      const segundo = orden[1];
-      const margen = puntero[1].central - segundo[1].central;
-      // Si los intervalos se traslapan, no hay ganador distinguible.
-      const empateTecnico = puntero[1].bajo < segundo[1].alto;
-
-      const escenarios = ['base', 'alta_participacion', 'baja_participacion', 'con_alianza'];
-      const et = mun[0].proyeccion_2027.escenarios;
-
-      document.getElementById('p-proyeccion').innerHTML = `
-        <h3 class="text-h3 panel__titulo">
-          <i data-lucide="trending-up"></i> Proyección 2027
-          ${P.badge('estimacion', { confianza: empateTecnico ? 'baja' : 'media' })}
-        </h3>
-
-        <div class="aviso-simulado">
-          <i data-lucide="alert-triangle"></i>
-          <span><strong>Esto no es un pronóstico.</strong> Es una distribución de
-          probabilidad con incertidumbre. El valor central no significa nada sin su
-          intervalo, y por eso nunca se muestra solo.
-          ${empateTecnico
-            ? '<strong> Los intervalos de primero y segundo se traslapan: no hay puntero distinguible.</strong>'
-            : ''}</span>
+          ${T.cinta(Object.fromEntries(orden.slice(0, 5).map(([b, v]) =>
+            [E.etiqueta(b), Math.round(v / validos * 1000) / 10])),
+            orden.slice(0, 5).map(([b]) => color(b)))}
         </div>
 
         <div class="tabla-caja" style="margin-top:var(--space-md)">
           <table class="tabla">
             <thead>
               <tr>
-                <th>Partido</th>
-                <th style="min-width:200px">Porcentaje esperado con intervalo</th>
-                <th class="num">Amplitud</th>
+                <th>Fuerza</th>
+                <th class="num">Votos</th>
+                <th class="num">% de válidos</th>
+                <th>Peso</th>
               </tr>
             </thead>
             <tbody>
-              ${orden.map(([p, v]) => `
+              ${orden.map(([b, v]) => `
                 <tr>
-                  <td><span class="badge" style="color:${colorPartido[p]}">${T.escapar(p)}</span></td>
-                  <td>${T.intervalo(v.central, v.bajo, v.alto)}</td>
-                  <td class="num">±${((v.alto - v.bajo) / 2).toFixed(1)} pp</td>
+                  <td><span class="punto-color" style="background:${color(b)}"></span>
+                      <strong>${T.escapar(E.etiqueta(b))}</strong></td>
+                  <td class="num">${T.num(v)}</td>
+                  <td class="num">${T.pct(v / validos * 100)}</td>
+                  <td>${T.barra(v, orden[0][1], T.pct(v / validos * 100))}</td>
                 </tr>`).join('')}
             </tbody>
           </table>
         </div>
-
-        <h4 class="text-h3 panel__titulo" style="margin-top:var(--space-lg)">
-          <i data-lucide="git-fork"></i> Escenarios
-        </h4>
-        <div class="subnav-bar" role="group" aria-label="Escenario">
-          ${escenarios.map((e) => `
-            <button class="subnav-btn${e === escenarioSel ? ' subnav-btn--active' : ''}" data-esc="${e}">
-              <span>${T.escapar(et[e].etiqueta)}</span>
-            </button>`).join('')}
-        </div>
-        <div class="rejilla-tarjetas" id="esc-detalle" style="margin-top:var(--space-md)"></div>
-
+        <p class="panel__nota">
+          Cada fuerza suma el voto del partido y el de sus coaliciones. Leer sólo
+          la columna del partido subestima su votación: en 2024 el voto por
+          PT-PVEM-Morena en una sola marca fue mayor que el de los tres por
+          separado.
+        </p>
         ${P.pie({
-          fuente: 'Modelo de demostración sobre resultados simulados',
-          fechaCorte: null,
-          metodologia: 'Central por continuidad del último proceso más ruido gaussiano; ' +
-                       'intervalo de amplitud 3.5–7.5 pp; agregado estatal ponderado por lista nominal. ' +
-                       'Probabilidad de victoria por softmax sobre el central.',
-          confianza: empateTecnico ? 'baja' : 'media',
-          cobertura: '13 de 13 municipios',
+          fuente: d.meta.fuente,
+          fechaCorte: d.meta.fecha_corte,
+          metodologia: 'Suma de los resultados seccionales, agrupados por bloque de coalición',
+          confianza: 'alta',
         })}
-      `;
+      </section>
 
-      function pintarEscenario() {
-        // El escenario se promedia entre municipios para el agregado estatal.
-        const part = mun.reduce((a, m) => a + m.proyeccion_2027.escenarios[escenarioSel].participacion, 0) / mun.length;
-        const punteros = {};
-        mun.forEach((m) => {
-          const p = m.proyeccion_2027.escenarios[escenarioSel].puntero;
-          punteros[p] = (punteros[p] || 0) + 1;
-        });
-        const lider = Object.entries(punteros).sort((a, b) => b[1] - a[1])[0];
-        document.getElementById('esc-detalle').innerHTML = `
-          ${T.cifra('Participación supuesta', T.pct(part), 'estimacion')}
-          ${T.cifra('Municipios con puntero', `${lider[1]} de 13`, 'estimacion',
-            { detalle: lider[0] })}
-          ${T.cifra('Margen estatal', T.intervalo(margen, Math.max(0, margen - 4), margen + 4, ' pp'), 'estimacion')}
-          ${T.cifra('Confianza', empateTecnico ? 'Baja' : 'Media', 'inferencia',
-            { detalle: empateTecnico ? 'intervalos traslapados' : 'margen distinguible' })}
-        `;
-        P.iconos();
-        if (window.lucide) window.lucide.createIcons();
-      }
+      <!-- ── 2021 ── -->
+      <section class="panel">
+        <h3 class="text-h3 panel__titulo">
+          <i data-lucide="git-branch"></i> Antes: gubernatura 2021
+          <span class="badge badge--neutral">Pasado registrado</span>
+        </h3>
+        <p class="tarjeta__texto" style="max-width:78ch">${T.escapar(g2021.titular)}</p>
 
-      document.querySelectorAll('[data-esc]').forEach((b) => {
-        b.addEventListener('click', () => {
-          escenarioSel = b.dataset.esc;
-          pintarProyeccion();
-        });
-      });
-      pintarEscenario();
-    }
+        <div style="margin-top:var(--space-md)">
+          ${T.cinta(Object.fromEntries(g2021.resultados.map((r) => [r.etiqueta, r.pct])),
+            g2021.resultados.map((r) => color(r.bloque)))}
+        </div>
 
-    /* ── Tabla municipal: la que pide la spec ── */
-    function pintarTabla() {
-      document.getElementById('p-tabla').innerHTML = `
-        <h3 class="text-h3 panel__titulo"><i data-lucide="table"></i> Detalle por municipio</h3>
-        ${T.exportar('histórico y proyección')}
-        <div class="tabla-caja" style="margin-top:var(--space-sm)">
+        <div class="rejilla-tarjetas" style="margin-top:var(--space-md)">
+          ${g2021.resultados.map((r) => `
+            <article class="tarjeta">
+              <header class="tarjeta__cabeza">
+                <strong style="color:${color(r.bloque)}">${T.escapar(r.etiqueta)}</strong>
+                <span class="badge">${T.pct(r.pct)}</span>
+              </header>
+              <p class="tarjeta__texto">${T.escapar(r.candidatura)}</p>
+            </article>`).join('')}
+        </div>
+
+        <p class="panel__nota">${T.escapar(g2021.nota)} ${T.escapar(d.historico.lectura)}</p>
+        ${P.pie({ fuente: g2021.fuente, fechaCorte: g2021.fecha_corte, confianza: 'alta' })}
+      </section>
+
+
+      <!-- ════ MODELO ════ -->
+
+      <section class="panel panel--proyeccion">
+        <h3 class="text-h3 panel__titulo">
+          <i data-lucide="trending-up"></i> Proyección ${proy.cargo} 2027
+          ${P.badge('estimacion', { confianza: proy.confianza })}
+        </h3>
+
+        <div class="aviso-simulado aviso-simulado--modelo">
+          <i data-lucide="info"></i>
+          <span><strong>Esto es un modelo, no un resultado.</strong>
+          ${T.escapar(proy.advertencia)}</span>
+        </div>
+
+        <div class="tabla-caja" style="margin-top:var(--space-md)">
           <table class="tabla">
             <thead>
               <tr>
-                <th>Municipio</th>
-                <th>Ganador ${anioSel}</th>
-                <th class="num">% ganador</th>
-                <th>Segundo lugar</th>
-                <th class="num">% segundo</th>
-                <th class="num">Margen</th>
-                <th class="num">Participación</th>
-                <th style="min-width:190px">Proyección 2027</th>
-                <th>Confianza</th>
+                <th>Fuerza</th>
+                <th>Rol</th>
+                <th class="num">Intervalo estimado</th>
+                <th class="num">Prob. de victoria</th>
+                <th>Rango</th>
               </tr>
             </thead>
             <tbody>
-              ${mun.map((m) => {
-                const h = hist(m);
-                const pr = m.proyeccion_2027;
-                const top = pr.partidos[0];
-                const insuf = pr.informacion_insuficiente;
+              ${proy.fuerzas.map((f) => {
+                const centro = (f.pct_bajo + f.pct_alto) / 2;
                 return `
                 <tr>
-                  <td><strong>${T.escapar(m.nombre)}</strong>
-                      <span class="text-small"> ${T.escapar(m.cve_mun)}</span></td>
-                  <td><span class="badge" style="color:${colorPartido[h.ganador]}">${T.escapar(h.ganador)}</span></td>
-                  <td class="num">${h.pct_ganador.toFixed(1)}</td>
-                  <td><span class="badge" style="color:${colorPartido[h.segundo]}">${T.escapar(h.segundo)}</span></td>
-                  <td class="num">${h.pct_segundo.toFixed(1)}</td>
-                  <td class="num">${h.margen.toFixed(1)}</td>
-                  <td class="num">${h.participacion.toFixed(1)}</td>
-                  <td>
-                    ${insuf
-                      ? '<span class="badge badge--warn">Información insuficiente</span>'
-                      : `<span class="badge" style="color:${colorPartido[top.partido]}">${T.escapar(top.partido)}</span>
-                         ${T.intervalo(top.pct_central, top.ic_bajo, top.ic_alto)}`}
-                  </td>
-                  <td>${P.badge('estimacion', { compacto: true, confianza: pr.confianza })}</td>
+                  <td><span class="punto-color" style="background:${color(f.bloque)}"></span>
+                      <strong>${T.escapar(f.etiqueta)}</strong></td>
+                  <td class="text-small">${T.escapar(f.rol)}</td>
+                  <td class="num">${T.intervalo(centro, f.pct_bajo, f.pct_alto)}</td>
+                  <td class="num">${T.pct(f.prob_victoria, 0)}</td>
+                  <td>${T.barra(f.prob_victoria, 100, T.pct(f.prob_victoria, 0))}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="rejilla-tarjetas" style="margin-top:var(--space-md)">
+          ${proy.fuerzas.map((f) => `
+            <article class="tarjeta">
+              <header class="tarjeta__cabeza">
+                <strong style="color:${color(f.bloque)}">${T.escapar(f.etiqueta)}</strong>
+                <span class="badge">${T.pct(f.pct_bajo, 0)} – ${T.pct(f.pct_alto, 0)}</span>
+              </header>
+              <p class="tarjeta__texto">${T.escapar(f.analisis)}</p>
+              ${f.figuras.length ? `<p class="text-small">Figuras mencionadas:
+                ${f.figuras.map(T.escapar).join(' · ')}</p>` : ''}
+            </article>`).join('')}
+        </div>
+
+        <p class="panel__nota">
+          <strong>La variable crítica.</strong> ${T.escapar(proy.variable_critica)}
+        </p>
+
+        <h4 class="text-label" style="margin-top:var(--space-md)">Supuestos del modelo</h4>
+        <ul class="lista-supuestos">
+          ${proy.supuestos.map((s) => `<li>${T.escapar(s)}</li>`).join('')}
+        </ul>
+
+        ${P.pie({
+          fuente: proy.fuente,
+          fechaCorte: proy.fecha_corte,
+          metodologia: proy.metodologia,
+          confianza: proy.confianza,
+          cobertura: 'Entidad 04 · jornada del 6 de junio de 2027',
+        })}
+      </section>
+
+      <!-- ── Del pasado al modelo ── -->
+      <section class="panel">
+        <h3 class="text-h3 panel__titulo">
+          <i data-lucide="git-compare"></i> Qué cambia entre lo medido y lo proyectado
+        </h3>
+        <div class="tabla-caja">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Fuerza</th>
+                <th class="num">2021 gubernatura</th>
+                <th class="num">2024 dip. locales</th>
+                <th class="num">2027 proyectado</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${proy.fuerzas.map((f) => {
+                const h = g2021.resultados.find((r) => r.bloque === f.bloque);
+                const v = bloques[f.bloque];
+                return `
+                <tr>
+                  <td><span class="punto-color" style="background:${color(f.bloque)}"></span>
+                      <strong>${T.escapar(f.etiqueta)}</strong></td>
+                  <td class="num">${h ? T.pct(h.pct) : '—'}</td>
+                  <td class="num">${v ? T.pct(v / validos * 100) : '—'}</td>
+                  <td class="num">${T.intervalo((f.pct_bajo + f.pct_alto) / 2, f.pct_bajo, f.pct_alto)}</td>
                 </tr>`;
               }).join('')}
             </tbody>
           </table>
         </div>
         <p class="panel__nota">
-          Las columnas de la izquierda son resultado registrado; la de proyección es
-          modelo. Los municipios marcados como <em>información insuficiente</em> tienen
-          un margen proyectado por debajo de 2.5 puntos: ahí el modelo no distingue
-          ganador y decirlo es más honesto que pintar uno.
+          Las tres columnas no son comparables sin cuidado: 2021 es gubernatura,
+          2024 es diputaciones locales y 2027 es una estimación de gubernatura.
+          Un cargo distinto mueve la participación y el voto diferenciado. La
+          tabla sirve para ver la tendencia, no para restar columnas.
         </p>
-        ${P.leyenda(true)}
-      `;
-      P.iconos();
-      T.conectarExportar();
-      if (window.lucide) window.lucide.createIcons();
-    }
+        ${P.leyenda()}
+      </section>
+    `;
 
-    pintarHistorico();
-    pintarProyeccion();
-    pintarTabla();
     P.iconos();
+    T.conectarExportar();
     if (window.lucide) window.lucide.createIcons();
   }
 })();

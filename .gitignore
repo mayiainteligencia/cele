@@ -34,3 +34,11 @@ backend/monitorsol/audio_tmp/
 # Los venv de datalab y los node_modules del backend viejo tampoco van.
 backend/datalab/venv/
 backend/node_modules/
+
+# ── Secretos ──
+# Nunca versionar. backend/.env se filtró en el commit 0ae4d28 y la clave de
+# Gemini que traía quedó expuesta: hubo que rotarla. Si necesitas compartir la
+# forma del archivo, versiona backend/.env.example con los valores vacíos.
+.env
+*.env
+!*.env.example

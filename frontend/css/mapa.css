@@ -318,6 +318,27 @@
 
 .mapa-ficha__tabla td { color: var(--text-body); }
 
+/* Separador dentro de la ficha: arriba el inmueble, abajo cómo votó su
+   sección. Son dos fuentes distintas y la ficha no debe fundirlas. */
+.mapa-ficha__sub {
+  width: auto;
+  padding-top: var(--space-xs);
+  color: var(--text-heading);
+  font-size: 0.64rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.punto-color {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border-radius: 50%;
+  vertical-align: baseline;
+}
+
 .mapa-ficha__meta {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -444,6 +465,36 @@
   }
 }
 
+/* ════════════════════════════════════════════
+   MOVIMIENTO
+
+   Dos animaciones y nada más. Un mapa que se
+   mueve todo el tiempo no se puede leer.
+   ════════════════════════════════════════════ */
+
+/* Las capas de puntos entran con un fundido: al encender una capa se ve
+   de dónde salieron los puntos en vez de aparecer 2,274 de golpe. */
+.mapa-pane-puntos {
+  animation: mapa-puntos-entrar 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Sólo opacidad: Leaflet posiciona los paneles con `transform` y animarlo
+   aquí pelea con el zoom. */
+@keyframes mapa-puntos-entrar {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* El choropleth se dibuja en SVG, así que el hover puede transicionar en
+   vez de saltar. Los puntos van en canvas y no entran aquí. */
+.mapa .leaflet-overlay-pane path.leaflet-interactive {
+  transition: fill-opacity 0.18s ease, stroke-width 0.18s ease,
+              stroke 0.18s ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .mapa--cargando::after { animation: none; }
+  .mapa--cargando::after,
+  .mapa-pane-puntos { animation: none; }
+
+  .mapa .leaflet-overlay-pane path.leaflet-interactive { transition: none; }
 }

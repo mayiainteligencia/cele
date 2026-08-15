@@ -2,43 +2,80 @@
 
    Regla de la spec: población y características socioeconómicas son del
    INEGI; lista nominal, secciones, casillas y resultados son del INE/IEEC.
-   No se mezclan en la misma cifra. Aquí van en dos bloques separados, con
-   su propia cabecera de origen, y el único número que los cruza está
-   marcado como CÁLCULO. */
+   No se mezclan en la misma cifra. Van en dos bloques separados, con su
+   propia cabecera de origen, y el único número que los cruza está marcado
+   como CÁLCULO.
+
+   Lo que falta se dice en una nota, no se rellena: el desglose de población
+   por municipio no está cargado, así que la tabla municipal no lleva
+   columna de población. */
 
 (function () {
   'use strict';
 
   const T = window.Territorio;
   const P = window.Procedencia;
+  const E = window.Electoral;
 
   document.addEventListener('DOMContentLoaded', () => {
-    T.cargar().then((d) => {
-      const vista = Object.assign({}, d);
-      vista.municipios = T.conectarFiltros(d, (mun) => {
+    Promise.all([
+      T.cargar(),
+      E.cargar(),
+      fetch('data/geo/escuelas_campeche.geojson').then((r) => r.json()),
+    ]).then(([ctx, elec, cct]) => {
+      const escuelas = {};
+      const alumnado = {};
+      cct.features.forEach((f) => {
+        const k = f.properties.cve_mun;
+        if (!k) return;
+        escuelas[k] = (escuelas[k] || 0) + 1;
+        alumnado[k] = (alumnado[k] || 0) + (f.properties.alumnos_total || 0);
+      });
+
+      const todos = Object.values(elec.municipios)
+        .sort((a, b) => a.cve_mun.localeCompare(b.cve_mun))
+        .map((m) => Object.assign({}, m, {
+          escuelas_cct: escuelas[m.cve_mun] || 0,
+          alumnado_cct: alumnado[m.cve_mun] || 0,
+        }));
+
+      const datos = { municipios: todos, ctx: ctx, cct: cct.metadata };
+      const vista = Object.assign({}, datos);
+      vista.municipios = T.conectarFiltros(datos, (mun) => {
         vista.municipios = mun;
         pintar(vista);
       });
       pintar(vista);
-    }).catch(() => {});
+    }).catch((err) => {
+      console.error('demografia:', err);
+      document.getElementById('contenido').innerHTML =
+        '<p class="text-small">No se pudieron cargar los datos demográficos.</p>';
+    });
   });
 
   function pintar(d) {
     const mun = d.municipios;
-    const poblacion = mun.reduce((a, m) => a + m.poblacion, 0);
-    const lista = mun.reduce((a, m) => a + m.lista_nominal, 0);
-    const escuelas = mun.reduce((a, m) => a + m.escuelas_cct, 0);
-    const alumnado = mun.reduce((a, m) => a + m.alumnado_cct, 0);
-    const maxPob = Math.max(...mun.map((m) => m.poblacion));
+    const g = d.ctx.inegi;
+    const ine = d.ctx.ine;
 
-    document.getElementById('aviso').innerHTML = T.avisoSimulado(
-      'La población y la lista nominal son sintéticas: el reparto entre municipios ' +
-      'sigue la proporción del alumnado CCT real y el total se ancla a un orden de ' +
-      'magnitud plausible.'
-    );
+    const suma = (f) => mun.reduce((a, m) => a + f(m), 0);
+    const lista = suma((m) => m.lista_nominal);
+    const escuelas = suma((m) => m.escuelas_cct);
+    const alumnado = suma((m) => m.alumnado_cct);
+    const casillas = suma((m) => (m.casillas_tipo ? m.casillas_tipo.total : 0));
+    const secciones = suma((m) => (m.casillas_tipo ? m.casillas_tipo.secciones_con_casilla : 0));
+    const maxLista = Math.max(...mun.map((m) => m.lista_nominal));
+
+    // Sólo se muestra contra la población estatal si están los 13 municipios:
+    // comparar la lista de un municipio contra la población del estado no
+    // significa nada.
+    const estatal = mun.length === 13;
+
+    document.getElementById('aviso').innerHTML = '';
 
     document.getElementById('cabecera-pills').innerHTML =
-      '<span class="badge badge--info">INEGI y INE separados</span>' + P.badge('simulado');
+      '<span class="badge badge--info">INEGI y INE separados</span>' +
+      P.badge('dato', { fuente: g.fuente, fechaCorte: g.fecha_corte });
 
     document.getElementById('contenido').innerHTML = `
 
@@ -51,23 +88,57 @@
             <span class="badge badge--neutral">Origen: INEGI</span>
           </h3>
           <div class="rejilla-tarjetas">
-            ${T.cifra('Población estatal', T.num(poblacion), 'simulado')}
-            ${T.cifra('Municipios', '13', 'dato',
-              { fuente: 'INEGI Marco Geoestadístico 2024', fechaCorte: '2024-08' })}
-            ${T.cifra('Localidades amanzanadas', '511', 'dato',
-              { fuente: 'INEGI Marco Geoestadístico 2024', fechaCorte: '2024-08' })}
-            ${T.cifra('AGEB', '723', 'dato',
-              { detalle: '473 urbanas · 250 rurales',
-                fuente: 'INEGI Marco Geoestadístico 2024', fechaCorte: '2024-08' })}
+            ${T.cifra('Población estatal', T.num(g.poblacion_total), 'dato',
+              { fuente: g.fuente, fechaCorte: g.fecha_corte })}
+            ${T.cifra('Edad mediana', g.edad_mediana + ' años', 'dato',
+              { fuente: g.fuente, fechaCorte: g.fecha_corte })}
+            ${T.cifra('Densidad', g.densidad_hab_km2 + ' hab/km²', 'dato',
+              { detalle: 'densidad baja', fuente: g.fuente })}
+            ${T.cifra('Habla lengua indígena', T.pct(g.lengua_indigena_pct, 2), 'dato',
+              { detalle: 'población de 3 años o más', fuente: g.fuente })}
           </div>
+
+          <div style="margin-top:var(--space-md)">
+            ${T.cinta({
+              [`Mujeres ${T.pct(g.mujeres / g.poblacion_total * 100)}`]:
+                Math.round(g.mujeres / g.poblacion_total * 1000) / 10,
+              [`Hombres ${T.pct(g.hombres / g.poblacion_total * 100)}`]:
+                Math.round(g.hombres / g.poblacion_total * 1000) / 10,
+            }, T.tokens(['--serie-6', '--serie-1']))}
+          </div>
+
+          <div class="rejilla-tarjetas" style="margin-top:var(--space-md)">
+            <article class="tarjeta">
+              <header class="tarjeta__cabeza">
+                <strong>Más poblado</strong>
+                <span class="badge badge--neutral">${T.pct(g.extremos.mas_poblado.pct_estatal)}</span>
+              </header>
+              <p class="tarjeta__texto">
+                <strong>${T.escapar(g.extremos.mas_poblado.nombre)}</strong> —
+                ${T.num(g.extremos.mas_poblado.poblacion)} habitantes.
+                Casi un tercio del estado en un solo municipio.
+              </p>
+            </article>
+            <article class="tarjeta">
+              <header class="tarjeta__cabeza">
+                <strong>Menos poblado</strong>
+                <span class="badge badge--neutral">${T.pct(g.extremos.menos_poblado.pct_estatal)}</span>
+              </header>
+              <p class="tarjeta__texto">
+                <strong>${T.escapar(g.extremos.menos_poblado.nombre)}</strong> —
+                ${T.num(g.extremos.menos_poblado.poblacion)} habitantes.
+                Entre el mayor y el menor hay una razón de 34 a 1.
+              </p>
+            </article>
+          </div>
+
           <p class="panel__nota">
-            El universo geográfico es real y verificado. La cifra de población es
-            de demostración: el Censo no está cargado todavía.
+            ${T.escapar(g.pendiente)}
           </p>
           ${P.pie({
-            fuente: 'INEGI — Marco Geoestadístico 2024 (geografía) · simulación propia (población)',
-            fechaCorte: '2024-08',
-            cobertura: '13 municipios',
+            fuente: g.fuente,
+            fechaCorte: g.fecha_corte,
+            cobertura: 'Entidad 04 · geografía municipal del Marco Geoestadístico 2024',
           })}
         </section>
 
@@ -75,30 +146,65 @@
         <section class="panel panel--ine">
           <h3 class="text-h3 panel__titulo">
             <i data-lucide="vote"></i> Padrón y lista nominal
-            <span class="badge badge--warn">Origen: INE — pendiente</span>
+            <span class="badge badge--success">Origen: INE / IEEC</span>
           </h3>
           <div class="rejilla-tarjetas">
-            ${T.cifra('Lista nominal', T.num(lista), 'simulado')}
-            ${T.cifra('Secciones electorales', T.num(mun.reduce((a, m) => a + m.secciones, 0)), 'simulado')}
-            ${T.cifra('Casillas', T.num(mun.reduce((a, m) => a + m.casillas.total, 0)), 'simulado')}
-            ${T.cifra('Cobertura de lista', T.pct(lista / poblacion * 100), 'calculo',
-              { detalle: 'lista ÷ población' })}
+            ${T.cifra('Lista nominal', T.num(ine.lista_nominal), 'dato',
+              { fuente: ine.fuente, fechaCorte: ine.fecha_corte })}
+            ${T.cifra('Secciones con casilla', T.num(secciones), 'dato',
+              { fuente: 'INE — Encarte 2024', fechaCorte: '2024-06' })}
+            ${T.cifra('Casillas instaladas 2024', T.num(casillas), 'dato',
+              { fuente: 'INE — Encarte 2024', fechaCorte: '2024-06' })}
+            ${T.cifra('Distritos', ine.distritos_federales + ' fed · ' + ine.distritos_locales + ' loc',
+              'dato', { fuente: ine.fuente })}
           </div>
+
+          <div style="margin-top:var(--space-md)">
+            ${T.cinta({
+              [`Mujeres ${T.pct(ine.mujeres / ine.lista_nominal * 100)}`]:
+                Math.round(ine.mujeres / ine.lista_nominal * 1000) / 10,
+              [`Hombres ${T.pct(ine.hombres / ine.lista_nominal * 100)}`]:
+                Math.round(ine.hombres / ine.lista_nominal * 1000) / 10,
+            }, T.tokens(['--serie-6', '--serie-1']))}
+          </div>
+
           <p class="panel__nota">
-            Ninguna cifra de este bloque proviene del INE todavía. El acceso al
-            portal está en gestión; cuando llegue, estas tarjetas cambian de
-            <em>Simulado</em> a <em>Dato</em> sin tocar el componente.
+            La lista nominal está más feminizada que la población: 51.2 % contra
+            50.8 %. No es un error de captura — las mujeres tramitan y renuevan
+            credencial en mayor proporción.
           </p>
+          <p class="panel__nota">${T.escapar(ine.nota_lista_nominal)}</p>
           ${P.pie({
-            fuente: 'Pendiente — INE / IEEC',
-            fechaCorte: null,
-            metodologia: 'Lista nominal simulada como 66–72 % de la población sintética',
-            confianza: 'baja',
+            fuente: ine.fuente + ' · Encarte y cómputos 2024',
+            fechaCorte: ine.fecha_corte,
+            cobertura: '13 municipios · 21 distritos locales',
           })}
         </section>
       </div>
 
-      <!-- ── Lo que sí es real ── -->
+      <!-- ── Cruce de las dos fuentes ── -->
+      <section class="panel">
+        <h3 class="text-h3 panel__titulo">
+          <i data-lucide="git-compare"></i> El único cruce
+        </h3>
+        <div class="rejilla-tarjetas">
+          ${T.cifra('Cobertura de lista', T.pct(ine.lista_nominal / g.poblacion_total * 100), 'calculo',
+            { detalle: 'lista nominal INE ÷ población INEGI', confianza: 'media' })}
+          ${T.cifra('Población no en lista', T.num(g.poblacion_total - ine.lista_nominal), 'calculo',
+            { detalle: 'incluye menores de 18' })}
+          ${T.cifra('Electores por casilla', T.num(Math.round(ine.lista_nominal / casillas)), 'calculo',
+            { detalle: 'lista nominal ÷ casillas 2024' })}
+        </div>
+        <p class="panel__nota">
+          Estas tres cifras cruzan INEGI con INE y por eso van marcadas como
+          cálculo, no como dato. Y los cortes no coinciden: la población es del
+          Censo 2020 y la lista nominal es de 2024. La cobertura real es más
+          baja que la que sale de dividir, porque el denominador tiene cuatro
+          años menos de crecimiento.
+        </p>
+      </section>
+
+      <!-- ── Infraestructura CCT ── -->
       <section class="panel">
         <h3 class="text-h3 panel__titulo">
           <i data-lucide="school"></i> Infraestructura educativa
@@ -115,13 +221,13 @@
             { detalle: 'alumnado ÷ registros' })}
         </div>
         <p class="panel__nota">
-          Este bloque sí sale de una fuente. El catálogo CCT no declara fecha de
-          corte, así que no se le inventa una. Un plantel con dos turnos cuenta
-          como dos registros y un solo sitio físico: para hablar de casillas se
-          usan los 1,482 sitios, no los 2,274 registros.
+          El catálogo CCT no declara fecha de corte, así que no se le inventa una.
+          Un plantel con dos turnos cuenta como dos registros y un solo sitio
+          físico: para hablar de casillas se usan los 1,482 sitios, no los 2,274
+          registros.
         </p>
         ${P.pie({
-          fuente: 'SEP — Catálogo de Centros de Trabajo, vía Google My Maps',
+          fuente: 'SEP — Catálogo de Centros de Trabajo',
           fechaCorte: null,
           cobertura: '2,274 registros en 13 municipios',
         })}
@@ -130,19 +236,19 @@
       <!-- ── Tabla municipal ── -->
       <section class="panel">
         <h3 class="text-h3 panel__titulo"><i data-lucide="table"></i> Detalle por municipio</h3>
-        ${T.exportar('demografía por municipio')}
+        ${T.exportar('demografía y lista nominal por municipio')}
         <div class="tabla-caja" style="margin-top:var(--space-sm)">
           <table class="tabla">
             <thead>
               <tr>
                 <th>Municipio</th>
-                <th>Cabecera</th>
-                <th class="num">Población <span class="badge badge--neutral">INEGI</span></th>
-                <th>Distribución</th>
-                <th class="num">Lista nominal <span class="badge badge--warn">INE</span></th>
-                <th class="num">Cobertura</th>
-                <th class="num">Escuelas <span class="badge badge--success">SEP</span></th>
-                <th class="num">Alumnado <span class="badge badge--success">SEP</span></th>
+                <th class="num">Lista nominal <span class="badge badge--success">INE</span></th>
+                <th>Peso en el estado</th>
+                <th class="num">Secciones <span class="badge badge--success">INE</span></th>
+                <th class="num">Casillas 2024 <span class="badge badge--success">INE</span></th>
+                <th class="num">Participación 2024 <span class="badge badge--success">IEEC</span></th>
+                <th class="num">Escuelas <span class="badge badge--neutral">SEP</span></th>
+                <th class="num">Alumnado <span class="badge badge--neutral">SEP</span></th>
               </tr>
             </thead>
             <tbody>
@@ -150,23 +256,42 @@
                 <tr>
                   <td><strong>${T.escapar(m.nombre)}</strong>
                       <span class="text-small"> ${T.escapar(m.cve_mun)}</span></td>
-                  <td>${T.escapar(m.cabecera)}</td>
-                  <td class="num">${T.num(m.poblacion)}</td>
-                  <td>${T.barra(m.poblacion, maxPob, T.pct(m.poblacion / poblacion * 100))}</td>
                   <td class="num">${T.num(m.lista_nominal)}</td>
-                  <td class="num">${T.pct(m.lista_nominal / m.poblacion * 100)}</td>
+                  <td>${T.barra(m.lista_nominal, maxLista,
+                        estatal ? T.pct(m.lista_nominal / lista * 100) : T.num(m.lista_nominal))}</td>
+                  <td class="num">${T.num(m.casillas_tipo ? m.casillas_tipo.secciones_con_casilla : null)}</td>
+                  <td class="num">${T.num(m.casillas_tipo ? m.casillas_tipo.total : null)}</td>
+                  <td class="num">${T.pct(m.participacion)}</td>
                   <td class="num">${T.num(m.escuelas_cct)}</td>
                   <td class="num">${T.num(m.alumnado_cct)}</td>
                 </tr>`).join('')}
             </tbody>
+            <tfoot>
+              <tr>
+                <th>Total</th>
+                <td class="num">${T.num(lista)}</td>
+                <td></td>
+                <td class="num">${T.num(secciones)}</td>
+                <td class="num">${T.num(casillas)}</td>
+                <td class="num">${T.pct(suma((m) => m.total) / lista * 100)}</td>
+                <td class="num">${T.num(escuelas)}</td>
+                <td class="num">${T.num(alumnado)}</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
         <p class="panel__nota">
-          Las columnas llevan su origen en la cabecera a propósito: población e
-          infraestructura no vienen de la misma fuente que la lista nominal, y
-          sumarlas o compararlas sin decirlo sería un error de lectura.
+          No hay columna de población: el desglose municipal del Censo no está
+          cargado y no se sustituye por un reparto proporcional. Las columnas
+          llevan su origen en la cabecera porque la lista nominal y la
+          infraestructura educativa no vienen de la misma fuente, y compararlas
+          sin decirlo sería un error de lectura.
         </p>
-        ${P.leyenda(true)}
+        ${P.pie({
+          fuente: 'INE — Encarte 2024 · IEEC — cómputos distritales 2024 · SEP — Catálogo CCT',
+          fechaCorte: '2024-06',
+          cobertura: '13 municipios',
+        })}
       </section>
     `;
 

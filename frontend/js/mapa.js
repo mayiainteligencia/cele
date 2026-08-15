@@ -153,10 +153,31 @@
           ],
         },
         {
-          id: 'casillas_historicas',
-          etiqueta: 'Casillas históricas',
-          estado: 'pendiente',
-          origen: 'Encartes INE de procesos anteriores',
+          id: 'casillas_2024',
+          etiqueta: 'Casillas instaladas 2024',
+          estado: 'disponible',
+          tipo: 'puntos',
+          archivo: 'casillas_2024.geojson',
+          claveGeo: 'seccion',
+          nombre: 'inmueble',
+          // Ámbar y más grande que la escuela: aquí sí se votó.
+          punto: {
+            color: '--mapa-casilla',
+            // El sitio con seis urnas pesa distinto que el de una. El radio
+            // crece con la raíz para que un extremo no tape el municipio.
+            radio: (p) => 4 + Math.sqrt(p.n_casillas || 1) * 1.6,
+          },
+          ficha: [
+            ['seccion', 'Sección'],
+            ['casillas', 'Casillas'],
+            ['tipos', 'Tipos'],
+            ['nombre_municipio', 'Municipio'],
+            ['nombre_localidad', 'Localidad'],
+            ['distrito_local', 'Distrito local'],
+            ['ubicacion', 'Domicilio'],
+            ['nombre_cct', 'Plantel CCT'],
+            ['cct', 'Clave CCT'],
+          ],
         },
         {
           id: 'casillas_vigentes',
@@ -305,6 +326,7 @@
       choropleth: null,
       puntos: null,
       alSeleccionar: null,
+      fichaExtra: null,
     }, opciones || {});
 
     el.classList.add('mapa');
@@ -337,8 +359,20 @@
       }
     ).addTo(map);
 
-    // 2,274 puntos en SVG arrastran el navegador; canvas no.
-    const lienzoPuntos = L.canvas({ padding: 0.4 });
+    // 2,274 puntos en SVG arrastran el navegador; canvas no. Cada capa de
+    // puntos vive en su propio panel para poder apilarlas (las casillas por
+    // encima de las escuelas) y para darle a cada una su entrada animada.
+    const PANES = { escuelas: 420, casillas_2024: 440 };
+
+    function panePuntos(id) {
+      const nombre = 'ce-' + id;
+      if (!map.getPane(nombre)) {
+        const p = map.createPane(nombre);
+        p.style.zIndex = String(PANES[id] || 430);
+        p.classList.add('mapa-pane-puntos');
+      }
+      return nombre;
+    }
 
     const capasLeaflet = {};   // id -> LayerGroup
     const datos = {};          // id -> GeoJSON crudo
@@ -383,12 +417,20 @@
       const capa = buscarCapa(id);
 
       if (capa.tipo === 'puntos') {
+        const punto = capa.punto || {};
+        const color = token(punto.color || '--mapa-punto');
+        const radio = typeof punto.radio === 'function'
+          ? punto.radio
+          : () => punto.radio || 3.5;
+        const pane = panePuntos(id);
+
         return L.geoJSON(json, {
-          renderer: lienzoPuntos,
+          renderer: L.canvas({ padding: 0.4, pane }),
+          pane,
           pointToLayer: (f, latlng) =>
             L.circleMarker(latlng, {
-              radius: 3.5,
-              fillColor: token('--mapa-punto'),
+              radius: radio(f.properties),
+              fillColor: color,
               color: token('--mapa-punto-borde'),
               weight: 0.75,
               fillOpacity: 0.85,
@@ -409,7 +451,13 @@
     }
 
     function enlazar(feature, layer, capa) {
-      layer.bindPopup(() => ficha(feature.properties, capa), {
+      // fichaExtra deja que el módulo cuelgue filas propias del popup sin que
+      // el mapa tenga que saber de resultados electorales.
+      layer.bindPopup(() => ficha(
+        feature.properties,
+        capa,
+        cfg.fichaExtra ? cfg.fichaExtra(feature.properties, capa.id) : ''
+      ), {
         className: 'mapa-popup',
         maxWidth: 320,
         autoPanPadding: [24, 24],
@@ -507,18 +555,23 @@
 
       return cargar('municipios').then((jsonGeo) => {
         if (!jsonGeo) return;
+        // Una variable categórica (quién ganó) no tiene escala: cada clase
+        // trae su color. Mezclarla con una rampa secuencial sugeriría un
+        // orden entre partidos que no existe.
+        const cat = v.categorias || null;
         const vals = Object.values(v.valores).filter((x) => typeof x === 'number');
-        const c = cortes(vals, 6);
-        const colores = rampa(v.escala);
+        const c = cat ? null : cortes(vals, 6);
+        const colores = cat ? null : rampa(v.escala);
+        const sinValor = (x) => (cat ? !cat[x] : typeof x !== 'number');
 
         capaChoropleth = L.geoJSON(jsonGeo, {
           style: (feature) => {
             const cve = feature.properties.cve_mun || feature.properties.cvegeo;
             const valor = v.valores[cve] ?? v.valores[cve?.slice(-3)];
-            const sinDato = typeof valor !== 'number';
+            const sinDato = sinValor(valor);
             const color = sinDato
               ? token('--mapa-pendiente')
-              : colores[cubeta(valor, c, colores.length)];
+              : (cat ? token(cat[valor].color) : colores[cubeta(valor, c, colores.length)]);
             return {
               fillColor: color,
               weight: 1.5,
@@ -531,7 +584,7 @@
             const props = feature.properties;
             const cve = props.cve_mun || props.cvegeo;
             const valor = v.valores[cve] ?? v.valores[cve?.slice(-3)];
-            const sinDato = typeof valor !== 'number';
+            const sinDato = sinValor(valor);
 
             layer.bindPopup(
               ficha(
@@ -571,7 +624,7 @@
         });
 
         capaChoropleth.addTo(map);
-        pintarLeyenda(v, c, colores);
+        pintarLeyenda(v, c, colores, cat);
       });
     }
 
@@ -581,12 +634,22 @@
     leyenda.className = 'mapa-leyenda';
     el.appendChild(leyenda);
 
-    function pintarLeyenda(v, c, colores) {
+    function pintarLeyenda(v, c, colores, cat) {
       if (!v) { leyenda.hidden = true; leyenda.innerHTML = ''; return; }
       leyenda.hidden = false;
 
       let escalones = '';
-      if (c && c.paso > 0) {
+      if (cat) {
+        // Sólo las clases que de verdad aparecen: una leyenda con ocho
+        // partidos donde el mapa pinta tres se lee como si faltaran datos.
+        const presentes = new Set(Object.values(v.valores));
+        Object.entries(cat)
+          .filter(([clave]) => presentes.has(clave))
+          .forEach(([, def]) => {
+            escalones += `<li><span class="mapa-leyenda__chip" style="background:${
+              token(def.color)}"></span>${escapar(def.etiqueta)}</li>`;
+          });
+      } else if (c && c.paso > 0) {
         colores.forEach((color, i) => {
           const desde = c.min + c.paso * i;
           escalones += `<li><span class="mapa-leyenda__chip" style="background:${color}"></span>${

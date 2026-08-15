@@ -488,4 +488,153 @@ window.CE = window.CE || {
   toast(t) {
     if (typeof toast === 'function') toast(t);
   },
+
+  /* ── Tinta del hero contra el fondo ──
+     El fondo del home es un video en movimiento: en el mismo segundo,
+     detrás del título pasa el espacio negro y el borde iluminado del
+     planeta. Cualquier color fijo se pierde en uno de los dos.
+
+     Se mide la luminancia del fotograma detrás de CADA bloque de texto,
+     no del hero completo: el título y el contador están en franjas
+     distintas de la imagen y un promedio único le daría a los dos el
+     color equivocado. Al que le toca fondo claro se le pone la clase
+     `sobre-claro`; el color lo decide el CSS.
+
+     No hay red ni librería: un canvas de 24x12 y una media ponderada.
+     Si el video no está listo se usa el poster, y si tampoco, se deja
+     el modo oscuro, que es el que ya tenía la página. */
+  contrasteHero(selectores, respaldo) {
+    const lista = (Array.isArray(selectores) ? selectores : [selectores || '.hero__content'])
+      .map((s) => document.querySelector(s))
+      .filter(Boolean);
+    const escenario = document.querySelector('.bg-stage');
+    if (!lista.length || !escenario) return;
+
+    const video = escenario.querySelector('.bg-stage__video');
+    const poster = new Image();
+    // El mismo fotograma que declara el <video poster>. Se puede sustituir
+    // para probar el umbral con una imagen de luminancia conocida.
+    poster.src = respaldo || 'assets/images/earth.png';
+
+    const lienzo = document.createElement('canvas');
+    lienzo.width = 24;
+    lienzo.height = 12;
+    const ctx = lienzo.getContext('2d', { willReadFrequently: true });
+
+    // Umbral con histéresis por bloque: el video oscila alrededor del
+    // medio y sin esta banda muerta el texto parpadearía entre negro y
+    // blanco.
+    const claro = lista.map(() => false);
+
+    function fuente() {
+      if (video && video.readyState >= 2 && !video.paused) {
+        return { el: video, w: video.videoWidth, h: video.videoHeight };
+      }
+      if (poster.complete && poster.naturalWidth) {
+        return { el: poster, w: poster.naturalWidth, h: poster.naturalHeight };
+      }
+      return null;
+    }
+
+    /** Luminancia media (0-1) del fotograma detrás de una caja, o null. */
+    function luminancia(caja, src) {
+      const vw = escenario.clientWidth;
+      const vh = escenario.clientHeight;
+
+      // object-fit: cover — la imagen se escala al mayor de los dos lados
+      // y se recorta centrada. Sin deshacer ese recorte se mediría el
+      // pixel equivocado.
+      const escala = Math.max(vw / src.w, vh / src.h);
+      const sx = (caja.left - (vw - src.w * escala) / 2) / escala;
+      const sy = (caja.top - (vh - src.h * escala) / 2) / escala;
+      const sw = caja.width / escala;
+      const sh = caja.height / escala;
+      if (sw <= 0 || sh <= 0) return null;
+
+      try {
+        ctx.drawImage(src.el,
+          Math.max(0, sx), Math.max(0, sy),
+          Math.min(sw, src.w), Math.min(sh, src.h),
+          0, 0, lienzo.width, lienzo.height);
+      } catch (e) {
+        return null;   // fotograma no decodificable todavía
+      }
+
+      const px = ctx.getImageData(0, 0, lienzo.width, lienzo.height).data;
+      let suma = 0;
+      for (let i = 0; i < px.length; i += 4) {
+        suma += (0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2]) / 255;
+      }
+      return suma / (px.length / 4);
+    }
+
+    function medir() {
+      const src = fuente();
+      if (!src || !src.w) return;
+
+      lista.forEach((el, i) => {
+        if (el.hidden || !el.offsetParent) return;
+        const lum = luminancia(el.getBoundingClientRect(), src);
+        if (lum === null) return;
+
+        const nuevo = claro[i] ? lum > 0.42 : lum > 0.58;
+        if (nuevo !== claro[i]) {
+          claro[i] = nuevo;
+          el.classList.toggle('sobre-claro', nuevo);
+        }
+      });
+    }
+
+    medir();
+    // 3 Hz: el video es lento y medir cada fotograma sería quemar CPU
+    // para decidir lo mismo.
+    const pulso = setInterval(medir, 320);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) clearInterval(pulso);
+    });
+  },
+
+  /* ── Cuenta regresiva a la jornada electoral ──
+     Domingo 6 de junio de 2027, primer domingo de junio, como manda el
+     artículo 24 de la LGIPE. Arranca en el instante en que se abre la
+     página: no hay fecha de inicio fija ni barra de progreso, porque
+     "cuánto llevamos" depende de qué proceso creas que ya empezó.
+
+     La hora se fija en zona de Campeche (UTC-6, sin horario de verano
+     desde 2022). Sin ella, alguien en otro huso vería otro número. */
+  cuentaRegresiva(contenedor) {
+    const el = typeof contenedor === 'string'
+      ? document.querySelector(contenedor) : contenedor;
+    if (!el) return;
+
+    const JORNADA = new Date('2027-06-06T08:00:00-06:00');
+    const campos = ['dias', 'horas', 'minutos', 'segundos'];
+
+    const pintar = () => {
+      let resto = Math.max(0, JORNADA - new Date());
+      if (!resto) {
+        el.innerHTML = '<p class="cuenta__jornada">Hoy es la jornada electoral.</p>';
+        return true;   // deja de latir
+      }
+
+      const s = Math.floor(resto / 1000);
+      const v = {
+        dias: Math.floor(s / 86400),
+        horas: Math.floor(s / 3600) % 24,
+        minutos: Math.floor(s / 60) % 60,
+        segundos: s % 60,
+      };
+
+      campos.forEach((k) => {
+        const caja = el.querySelector(`[data-cuenta="${k}"]`);
+        if (!caja) return;
+        const txt = k === 'dias' ? String(v[k]) : String(v[k]).padStart(2, '0');
+        if (caja.textContent !== txt) caja.textContent = txt;
+      });
+      return false;
+    };
+
+    if (pintar()) return;
+    const latido = setInterval(() => { if (pintar()) clearInterval(latido); }, 1000);
+  },
 };

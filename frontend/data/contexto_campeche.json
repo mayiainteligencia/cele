@@ -1,0 +1,175 @@
+{
+  "metadata": {
+    "nombre": "Contexto estatal de Campeche",
+    "que_es": "Cifras de contexto que no salen de un archivo procesable: se capturan a mano de la publicación de cada institución. Todo lo de 2024 (casillas, secciones, resultados, lista nominal por municipio) NO vive aquí: sale de data/electoral/, que se genera del insumo original.",
+    "regla": "INEGI y INE no se mezclan. Población y características socioeconómicas son del INEGI; lista nominal, secciones y casillas son del INE/IEEC. Si una cifra cruza las dos, va marcada como cálculo.",
+    "captura": "2026-08"
+  },
+
+  "inegi": {
+    "fuente": "INEGI — Censo de Población y Vivienda 2020",
+    "fecha_corte": "2020-03",
+    "poblacion_total": 928363,
+    "mujeres": 471424,
+    "hombres": 456939,
+    "edad_mediana": 29,
+    "densidad_hab_km2": 16,
+    "lengua_indigena_pct": 4.35,
+    "lenguas_principales": ["maya", "ch'ol", "tseltal"],
+    "informalidad_establecimientos_pct": 54.7,
+    "extremos": {
+      "mas_poblado": { "cve_mun": "04002", "nombre": "Campeche", "poblacion": 294077, "pct_estatal": 31.6 },
+      "menos_poblado": { "cve_mun": "04007", "nombre": "Palizada", "poblacion": 8683, "pct_estatal": 1.0 }
+    },
+    "pendiente": "El desglose de población por municipio no está cargado. Sólo se publican los dos extremos, que son los que trae la ficha del INEGI. Ninguna otra cifra municipal de población se muestra hasta que se cargue el tabulado del Censo."
+  },
+
+  "ine": {
+    "fuente": "INE — Estadísticas del Padrón Electoral y Lista Nominal",
+    "fecha_corte": "2024-06",
+    "lista_nominal": 682833,
+    "mujeres": 349271,
+    "hombres": 333559,
+    "distritos_federales": 2,
+    "distritos_federales_cabeceras": ["Campeche", "Ciudad del Carmen"],
+    "distritos_locales": 21,
+    "nota_lista_nominal": "El corte del padrón publica 682,833. La suma de la lista nominal de las actas de cómputo de 2024 da 691,104. No es una contradicción: son dos cortes distintos, uno del padrón y otro del día de la jornada. En esta plataforma cada cifra se muestra con su origen y no se promedian."
+  },
+
+  "nse": {
+    "procedencia": "estimacion",
+    "confianza": "media",
+    "fuente": "Estimación propia de Cerebro Electoral",
+    "metodologia": "Cruce de ingreso, ocupación y servicios en la vivienda. NO usa la regla AMAI (metodología registrada, requiere licencia) ni se limita a los indicadores observados del INEGI. Por eso los niveles no llevan las etiquetas A/B, C+, C… de la AMAI.",
+    "fecha_corte": "2026-08",
+    "niveles": [
+      {
+        "clave": "alto",
+        "etiqueta": "Alto y medio alto",
+        "pct_bajo": 7,
+        "pct_alto": 9,
+        "color": "--escala-6",
+        "perfil": "Ingresos altos, profesionistas especializados del sector petrolero, empresarios y funcionarios de alto rango.",
+        "vivienda": "Casa grande o departamento de lujo, servicios completos, más de un vehículo y alta conectividad.",
+        "donde": "Zonas exclusivas de Ciudad del Carmen y de Campeche capital."
+      },
+      {
+        "clave": "medio",
+        "etiqueta": "Medio",
+        "pct_bajo": 28,
+        "pct_alto": 32,
+        "color": "--escala-4",
+        "perfil": "Empleo público (docencia, salud, administración), comercio formal y técnicos calificados.",
+        "vivienda": "Casa propia o rentada con servicios completos y al menos un vehículo familiar.",
+        "donde": "Áreas urbanas y cabeceras municipales."
+      },
+      {
+        "clave": "bajo",
+        "etiqueta": "Bajo y vulnerable",
+        "pct_bajo": 60,
+        "pct_alto": 64,
+        "color": "--escala-2",
+        "perfil": "Trabajo informal, pesca artesanal, jornal agrícola y hogares con programas sociales.",
+        "vivienda": "Carencias parciales de infraestructura (drenaje o agua constante), rezago tecnológico y dependencia del transporte público.",
+        "donde": "Municipios rurales y periferias urbanas."
+      }
+    ],
+    "factores": [
+      {
+        "titulo": "Efecto petróleo",
+        "texto": "Eleva el ingreso en Ciudad del Carmen, pero con una inflación local que encarece el costo de vida. Un ingreso alto ahí no significa el mismo poder de compra que en el resto del estado."
+      },
+      {
+        "titulo": "Peso burocrático",
+        "texto": "La capital depende del empleo de gobierno. Eso sostiene una clase media sólida, pero compacta: crece poco y es sensible al ciclo presupuestal."
+      },
+      {
+        "titulo": "Brecha rural-urbana",
+        "texto": "El sur y el este concentran el rezago social severo, y son los que inflan el porcentaje del nivel bajo a escala estatal."
+      }
+    ],
+    "tipologia_municipal": {
+      "procedencia": "inferencia",
+      "nota": "Clasificación cualitativa por perfil económico dominante. NO es un porcentaje por municipio: el modelo no baja a ese nivel y no se va a inventar el desglose.",
+      "grupos": [
+        { "etiqueta": "Urbano petrolero", "municipios": ["04003"],
+          "rasgo": "Ingreso alto concentrado y costo de vida alto." },
+        { "etiqueta": "Urbano burocrático", "municipios": ["04002"],
+          "rasgo": "Clase media de empleo público, estable y compacta." },
+        { "etiqueta": "Urbano intermedio", "municipios": ["04001", "04004", "04009", "04012", "04013"],
+          "rasgo": "Cabecera con servicios y periferia con carencias." },
+        { "etiqueta": "Rural con rezago", "municipios": ["04005", "04006", "04007", "04008", "04010", "04011"],
+          "rasgo": "Predominio de trabajo informal y agrícola, carencias de infraestructura." }
+      ]
+    }
+  },
+
+  "historico": {
+    "procesos": [
+      {
+        "anio": 2021,
+        "cargo": "Gubernatura",
+        "fuente": "IEEC — cómputo estatal de la elección de gubernatura 2021",
+        "fecha_corte": "2021-06",
+        "procedencia": "dato",
+        "titular": "La elección más cerrada de la historia moderna del estado: tres fuerzas en tercios.",
+        "resultados": [
+          { "bloque": "SHH", "etiqueta": "Morena-PT", "pct": 33.2, "candidatura": "Layda Sansores" },
+          { "bloque": "MC", "etiqueta": "Movimiento Ciudadano", "pct": 31.5, "candidatura": "Eliseo Fernández" },
+          { "bloque": "PRI-PRD", "etiqueta": "PRI-PAN-PRD", "pct": 30.8, "candidatura": "Christian Castro" }
+        ],
+        "nota": "Porcentajes redondeados a una decimal tal como los publica el cómputo estatal."
+      }
+    ],
+    "lectura": "En 2021 la distancia entre el primero y el tercero fue de 2.4 puntos. En 2024, con el mismo electorado, el primero saca más de 15 puntos al segundo y el bloque PRI-PRD cae a un tercio de lo que tenía. No es un desplazamiento, es un reordenamiento: el tripartidismo dejó de existir."
+  },
+
+  "proyeccion_2027": {
+    "procedencia": "estimacion",
+    "confianza": "media",
+    "cargo": "Gubernatura",
+    "fecha_jornada": "2027-06-06",
+    "fuente": "Modelo propio de Cerebro Electoral",
+    "fecha_corte": "2026-08",
+    "metodologia": "Simulación de intervalos sobre el piso electoral observado en 2024 y encuestas de intención de voto de mediados de 2026. NO es un pronóstico puntual: cada fuerza se publica con su rango y su probabilidad de victoria, nunca con un número solo.",
+    "supuestos": [
+      "El piso de 2024 se mantiene como base y no se extrapola linealmente.",
+      "La participación de una elección de gubernatura se comporta distinto a la de una concurrente federal.",
+      "No se modela ruptura interna de ninguna fuerza: si ocurre, el escenario cambia y hay que recorrer el modelo."
+    ],
+    "fuerzas": [
+      {
+        "bloque": "SHH",
+        "etiqueta": "Morena-PVEM-PT",
+        "pct_bajo": 38,
+        "pct_alto": 48,
+        "prob_victoria": 65,
+        "rol": "Favorito probable",
+        "analisis": "Piso alto sostenido por la estructura de programas sociales federales y el control del aparato estatal. Sólo una ruptura interna mayor mueve este escenario.",
+        "figuras": ["Liz Hernández", "Aníbal Ostoa"]
+      },
+      {
+        "bloque": "MC",
+        "etiqueta": "Movimiento Ciudadano",
+        "pct_bajo": 25,
+        "pct_alto": 35,
+        "prob_victoria": 30,
+        "rol": "Retador volátil",
+        "analisis": "La única fuerza con crecimiento orgánico. Su rango es el más ancho porque depende casi por completo de la candidatura: si logra polarizar, su techo toca el piso del primero.",
+        "figuras": ["Biby Rabelo", "Eliseo Fernández"]
+      },
+      {
+        "bloque": "PRI-PRD",
+        "etiqueta": "PRI-PAN",
+        "pct_bajo": 10,
+        "pct_alto": 18,
+        "prob_victoria": 5,
+        "rol": "Oposición diluida",
+        "analisis": "Probabilidad de triunfo estadísticamente marginal. Su papel en 2027 es testimonial, o de bisagra si declinara hacia otra fuerza, cosa que hoy no está sobre la mesa.",
+        "figuras": []
+      }
+    ],
+    "variable_critica": "Qué pasa con el voto que hoy retiene el PRI. Si Movimiento Ciudadano lo absorbe, la elección se cierra; si el PRI lo conserva, el escenario dominante es la victoria del bloque de Morena.",
+    "advertencia": "Una proyección no es un resultado. Se publica con rango y probabilidad, se recorre cuando cambian los supuestos, y no sustituye al cómputo oficial."
+  }
+}

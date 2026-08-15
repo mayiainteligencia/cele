@@ -837,6 +837,18 @@
 .aviso-simulado svg { width: 16px; height: 16px; color: var(--sev-media); flex: 0 0 auto; margin-top: 2px; }
 .aviso-simulado strong { color: var(--text-heading); }
 
+/* Variante para el encabezado de un modelo. Marcar una proyección es
+   obligatorio, pero el ámbar de "datos de demostración" dice otra cosa: ahí
+   la cifra no vale, aquí sí vale y sólo hay que leerla como estimación.
+   Toma el color del badge de Estimación para que sea la misma señal. */
+.aviso-simulado--modelo {
+  background: var(--velo-08);
+  border-color: var(--border-light);
+  border-left: 3px solid var(--accent-cyan);
+}
+
+.aviso-simulado--modelo svg { color: var(--accent-cyan); }
+
 
 /* ════════════════════════════════════════════
    PANEL, TARJETA Y TABLA DE DATOS

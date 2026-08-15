@@ -1,0 +1,10 @@
+Cargando: circuito exterior medido ejemplo.xlsx
+  Filas crudas: 77 | Columnas: 26
+  Columnas ignoradas (sin información): ['measures', 'structure', 'affinity']
+  Coords válidas México: 77 de 77
+  Tipos: {'cartelera': 44, 'puente': 14, 'pantalla_digital': 13, 'cartelera_digital': 3, 'tunel': 2, 'muro': 1}
+  Registros normalizados: 77
+  DOOH: 16
+  Zonas en resumen: 9
+✓ Guardado: /Users/martinfranciscocortesbuendia/Desktop/EdgeNET/monitorIAExtras/backend/datalab/datos/ooh_circuito.json (77 registros)
+✓ Resumen guardado: /Users/martinfranciscocortesbuendia/Desktop/EdgeNET/monitorIAExtras/backend/datalab/datos/ooh_resumen_circuito.json

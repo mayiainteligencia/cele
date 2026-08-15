@@ -1,149 +1,209 @@
 /* Vista: Nivel socioeconómico.
 
-   La spec exige distinguir cuatro cosas que suelen confundirse:
-     1. indicadores observados del INEGI
-     2. índices públicos de marginación (CONAPO)
-     3. NSE estimado por metodología propia   <- lo único que hay aquí
-     4. NSE AMAI, que requiere licencia       <- no está y no se simula
+   Esto es una ESTIMACIÓN propia, y así se presenta en cada pantalla. No es
+   el NSE de la AMAI —esa metodología está registrada y requiere licencia—
+   ni son los indicadores observados del INEGI. Por eso los niveles se
+   llaman "alto / medio / bajo" y no A/B, C+, C.
 
-   Toda estimación muestra metodología, fecha, confianza y cobertura. */
+   Regla dura: ningún nivel se imprime como un número solo. Todos salen con
+   su rango, que es lo que el modelo realmente produce.
+
+   El modelo no baja a nivel municipio. En vez de inventar un porcentaje por
+   municipio, se publica la tipología cualitativa, marcada como inferencia. */
 
 (function () {
   'use strict';
 
   const T = window.Territorio;
   const P = window.Procedencia;
-
-  const ORIGENES = [
-    { titulo: 'Indicadores observados', fuente: 'INEGI — Censo de Población y Vivienda',
-      estado: 'pendiente',
-      texto: 'Vivienda, escolaridad, servicios y ocupación medidos directamente. No están cargados.' },
-    { titulo: 'Índice de marginación', fuente: 'CONAPO',
-      estado: 'pendiente',
-      texto: 'Índice público a nivel municipal y por localidad. No está cargado.' },
-    { titulo: 'NSE estimado propio', fuente: 'Modelo interno',
-      estado: 'presente',
-      texto: 'Lo que se muestra en esta pantalla. Estimación sobre un proxy de ruralidad derivado del catálogo CCT.' },
-    { titulo: 'NSE AMAI', fuente: 'AMAI — requiere licencia',
-      estado: 'sin-licencia',
-      texto: 'La regla AMAI 2022 es propietaria. No se usa ni se aproxima: sin licencia, no se publica.' },
-  ];
+  const E = window.Electoral;
 
   document.addEventListener('DOMContentLoaded', () => {
-    T.cargar().then((d) => {
-      const vista = Object.assign({}, d);
-      vista.municipios = T.conectarFiltros(d, (mun) => {
+    Promise.all([T.cargar(), E.cargar()]).then(([ctx, elec]) => {
+      const todos = Object.values(elec.municipios)
+        .sort((a, b) => a.cve_mun.localeCompare(b.cve_mun));
+      const datos = { municipios: todos, nse: ctx.nse };
+      const vista = Object.assign({}, datos);
+      vista.municipios = T.conectarFiltros(datos, (mun) => {
         vista.municipios = mun;
         pintar(vista);
       });
       pintar(vista);
-    }).catch(() => {});
+    }).catch((err) => {
+      console.error('nse:', err);
+      document.getElementById('contenido').innerHTML =
+        '<p class="text-small">No se pudo cargar la estimación socioeconómica.</p>';
+    });
   });
 
   function pintar(d) {
+    const n = d.nse;
     const mun = d.municipios;
-    const cortes = d.nse_cortes;
-    const colores = T.tokens(T.COLORES_ESCALA.concat(['--serie-7']));
+    const porClave = {};
+    mun.forEach((m) => { porClave[m.cve_mun] = m; });
 
-    // Distribución estatal: promedio ponderado por población.
-    const poblacion = mun.reduce((a, m) => a + m.poblacion, 0);
-    const estatal = {};
-    cortes.forEach((c) => {
-      estatal[c] = Math.round(
-        mun.reduce((a, m) => a + m.nse[c] * m.poblacion, 0) / poblacion * 10
-      ) / 10;
-    });
-
-    document.getElementById('aviso').innerHTML = T.avisoSimulado(
-      'La distribución socioeconómica es una estimación de demostración construida ' +
-      'sobre un proxy de ruralidad, no sobre datos de ingreso ni de vivienda.'
-    );
+    document.getElementById('aviso').innerHTML = '';
 
     document.getElementById('cabecera-pills').innerHTML =
-      P.badge('estimacion', { confianza: 'baja' }) + P.badge('simulado');
+      P.badge('estimacion', {
+        detalle: 'con intervalo',
+        confianza: n.confianza,
+        fuente: n.fuente,
+        fechaCorte: n.fecha_corte,
+      });
+
+    const colores = T.tokens(n.niveles.map((x) => x.color));
+    // La cinta usa el centro del rango sólo para repartir el ancho; el número
+    // que se lee siempre es el intervalo.
+    const centro = (x) => (x.pct_bajo + x.pct_alto) / 2;
 
     document.getElementById('contenido').innerHTML = `
 
-      <!-- De dónde puede venir un NSE -->
+      <!-- ── Qué es y qué no es ── -->
       <section class="panel">
-        <h3 class="text-h3 panel__titulo"><i data-lucide="git-branch"></i> Cuatro orígenes distintos</h3>
-        <div class="rejilla-tarjetas">
-          ${ORIGENES.map((o) => `
+        <h3 class="text-h3 panel__titulo">
+          <i data-lucide="layers-3"></i> Estimación de nivel socioeconómico
+        </h3>
+        <p class="tarjeta__texto" style="max-width:78ch">
+          Campeche tiene dos economías encima del mismo mapa: la petrolera y
+          burocrática de Ciudad del Carmen y la capital, y la agrícola e informal
+          del resto. Cualquier promedio estatal esconde esa partición, así que
+          aquí van primero los rangos y luego lo que los produce.
+        </p>
+
+        <div style="margin-top:var(--space-md)">
+          ${T.cinta(Object.fromEntries(n.niveles.map((x) =>
+            [x.etiqueta, Math.round(centro(x) * 10) / 10])), colores)}
+        </div>
+
+        <div class="rejilla-tarjetas" style="margin-top:var(--space-md)">
+          ${n.niveles.map((x, i) => `
             <article class="tarjeta">
               <header class="tarjeta__cabeza">
-                <strong>${o.titulo}</strong>
-                ${o.estado === 'presente' ? P.badge('estimacion')
-                  : o.estado === 'sin-licencia' ? '<span class="badge badge--danger">Sin licencia</span>'
-                  : '<span class="badge badge--warn">Pendiente</span>'}
+                <strong style="color:${colores[i]}">${T.escapar(x.etiqueta)}</strong>
+                <span class="badge">${T.intervalo(centro(x), x.pct_bajo, x.pct_alto)}</span>
               </header>
-              <p class="tarjeta__texto">${o.texto}</p>
-              ${P.pie({ fuente: o.fuente })}
+              <p class="tarjeta__texto">${T.escapar(x.perfil)}</p>
+              <dl class="proc-pie">
+                <dt>Vivienda</dt><dd>${T.escapar(x.vivienda)}</dd>
+                <dt>Dónde</dt><dd>${T.escapar(x.donde)}</dd>
+              </dl>
             </article>`).join('')}
         </div>
-        <p class="panel__nota">
-          Mezclar estos cuatro en una sola cifra es el error más común al hablar de
-          nivel socioeconómico. Aquí sólo el tercero tiene datos, y va etiquetado
-          como estimación en todas las tablas.
-        </p>
-      </section>
 
-      <!-- Distribución estatal -->
-      <section class="panel">
-        <h3 class="text-h3 panel__titulo"><i data-lucide="layers-3"></i> Distribución estatal estimada</h3>
-        ${T.cinta(estatal, colores)}
-        <div class="rejilla-tarjetas" style="margin-top:var(--space-md)">
-          ${cortes.map((c, i) => `
-            <div class="cifra">
-              <span class="cifra__valor">${estatal[c].toFixed(1)} %</span>
-              <span class="cifra__etiqueta">
-                <span class="punto-escala" style="background:${colores[i]}"></span>
-                Nivel ${T.escapar(c)}
-              </span>
-            </div>`).join('')}
-        </div>
+        <p class="panel__nota">
+          Los tres rangos se leen como rangos: el central que pinta la cinta
+          existe sólo para repartir el ancho de la barra. Sumar los extremos
+          bajos da 95 % y los altos 105 %, que es justo lo que significa que
+          esto es una estimación y no un conteo.
+        </p>
         ${P.pie({
-          fuente: 'Modelo interno de demostración',
-          fechaCorte: null,
-          metodologia: 'Distribución sintética modulada por un índice de ruralidad derivado de la proporción de planteles CONAFE y comunitarios del catálogo CCT. Ponderación estatal por población simulada.',
-          confianza: 'baja',
-          cobertura: '13 de 13 municipios',
+          fuente: n.fuente,
+          fechaCorte: n.fecha_corte,
+          metodologia: n.metodologia,
+          confianza: n.confianza,
+          cobertura: 'Entidad 04',
         })}
       </section>
 
-      <!-- Detalle municipal -->
+      <!-- ── Qué mueve la estimación ── -->
       <section class="panel">
-        <h3 class="text-h3 panel__titulo"><i data-lucide="table"></i> Detalle por municipio</h3>
-        ${T.exportar('NSE por municipio')}
-        <div class="tabla-caja" style="margin-top:var(--space-sm)">
+        <h3 class="text-h3 panel__titulo">
+          <i data-lucide="sliders-horizontal"></i> Los tres factores que la determinan
+        </h3>
+        <div class="rejilla-tarjetas">
+          ${n.factores.map((f) => `
+            <article class="tarjeta">
+              <header class="tarjeta__cabeza"><strong>${T.escapar(f.titulo)}</strong></header>
+              <p class="tarjeta__texto">${T.escapar(f.texto)}</p>
+            </article>`).join('')}
+        </div>
+        <p class="panel__nota">
+          Si alguno de estos tres se mueve —cae el precio del crudo, se recorta
+          el presupuesto estatal— la distribución se recorre y hay que volver a
+          estimar. Un rango vigente hoy no es un rango vigente siempre.
+        </p>
+      </section>
+
+      <!-- ── Tipología municipal ── -->
+      <section class="panel">
+        <h3 class="text-h3 panel__titulo">
+          <i data-lucide="map-pin"></i> Perfil económico por municipio
+          ${P.badge('inferencia')}
+        </h3>
+        <div class="tabla-caja">
           <table class="tabla">
             <thead>
               <tr>
-                <th>Municipio</th>
-                <th class="num">Ruralidad</th>
-                ${cortes.map((c) => `<th class="num">${T.escapar(c)}</th>`).join('')}
-                <th style="min-width:180px">Distribución</th>
-                <th>Procedencia</th>
+                <th>Perfil</th>
+                <th>Municipios</th>
+                <th>Rasgo dominante</th>
+                <th class="num">Lista nominal</th>
+                <th class="num">Participación 2024</th>
               </tr>
             </thead>
             <tbody>
-              ${mun.map((m) => `
+              ${n.tipologia_municipal.grupos.map((g) => {
+                const ms = g.municipios.map((c) => porClave[c]).filter(Boolean);
+                if (!ms.length) return '';
+                const ln = ms.reduce((a, m) => a + m.lista_nominal, 0);
+                const votos = ms.reduce((a, m) => a + m.total, 0);
+                return `
                 <tr>
-                  <td><strong>${T.escapar(m.nombre)}</strong>
-                      <span class="text-small"> ${T.escapar(m.cve_mun)}</span></td>
-                  <td class="num">${T.pct(m.indice_ruralidad * 100)}</td>
-                  ${cortes.map((c) => `<td class="num">${m.nse[c].toFixed(1)}</td>`).join('')}
-                  <td>${T.cinta(m.nse, colores)}</td>
-                  <td>${P.badge('estimacion', { compacto: true, confianza: 'baja' })}</td>
-                </tr>`).join('')}
+                  <td><strong>${T.escapar(g.etiqueta)}</strong></td>
+                  <td>${ms.map((m) => T.escapar(m.nombre)).join(', ')}</td>
+                  <td class="text-small">${T.escapar(g.rasgo)}</td>
+                  <td class="num">${T.num(ln)}</td>
+                  <td class="num">${T.pct(votos / ln * 100)}</td>
+                </tr>`;
+              }).join('')}
             </tbody>
           </table>
         </div>
         <p class="panel__nota">
-          El índice de ruralidad sí se calcula sobre datos reales: es la proporción
-          de planteles CONAFE y de servicio comunitario sobre el total de registros
-          CCT del municipio. Es un proxy, no una medición de ingreso.
+          ${T.escapar(n.tipologia_municipal.nota)}
+          La lista nominal y la participación de las dos últimas columnas sí son
+          dato del INE y del IEEC: se ponen aquí para que el perfil se pueda
+          contrastar contra algo medido, no para validarlo.
         </p>
-        ${P.leyenda(true)}
+        ${P.pie({
+          fuente: n.fuente + ' · Lista nominal y participación: INE / IEEC 2024',
+          fechaCorte: n.fecha_corte,
+          metodologia: 'Clasificación cualitativa por perfil económico dominante',
+          confianza: 'media',
+        })}
+      </section>
+
+      <!-- ── Lo que esto no es ── -->
+      <section class="panel">
+        <h3 class="text-h3 panel__titulo"><i data-lucide="shield-alert"></i> Alcance</h3>
+        <div class="rejilla-tarjetas">
+          <article class="tarjeta">
+            <header class="tarjeta__cabeza"><strong>No es NSE AMAI</strong></header>
+            <p class="tarjeta__texto">
+              La regla AMAI está registrada y requiere licencia. Por eso los
+              niveles de aquí no se llaman A/B, C+, C, D+, D, E: usar esas
+              etiquetas implicaría haber aplicado esa metodología.
+            </p>
+          </article>
+          <article class="tarjeta">
+            <header class="tarjeta__cabeza"><strong>No son datos del INEGI</strong></header>
+            <p class="tarjeta__texto">
+              El INEGI publica indicadores observados —ingreso, ocupación,
+              servicios en la vivienda— y esos entran como insumo. La
+              clasificación en niveles es propia y el INEGI no la avala.
+            </p>
+          </article>
+          <article class="tarjeta">
+            <header class="tarjeta__cabeza"><strong>No baja a sección</strong></header>
+            <p class="tarjeta__texto">
+              El modelo estima a escala estatal y agrupa municipios por perfil.
+              Un NSE por sección electoral requiere el cruce con AGEB del Censo,
+              que todavía no está cargado.
+            </p>
+          </article>
+        </div>
+        ${P.leyenda()}
       </section>
     `;
 
