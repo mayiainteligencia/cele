@@ -998,6 +998,41 @@
 .tabla td { color: var(--text-body); }
 .tabla td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .tabla th.num { text-align: right; }
+
+/* Fila destacada de una tabla: en el barrido de sensibilidad marca cuál de
+   los escenarios es el que se publica. Sin ella, las cinco filas se leen
+   como cinco resultados en vez de como un resultado y sus alternativas. */
+/* Fila atenuada: una correlación cuyo intervalo incluye el cero. No se
+   oculta —el dato se publica— pero se baja de peso para que no compita
+   visualmente con las que sí dicen algo. */
+.tabla .fila--atenuada td { opacity: 0.55; }
+
+.tabla .fila--activa {
+  background: var(--cyan-tinte-sm);
+}
+.tabla .fila--activa td { color: var(--text-heading); }
+
+/* Punto de color que identifica una fuerza política. Vivía en mapa.css, pero
+   lo pinta electoral.js —módulo compartido— y historico.html no carga esa
+   hoja: los puntos salían sin estilo. Es un componente genérico, no del mapa. */
+.punto-color {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border-radius: 50%;
+  vertical-align: baseline;
+}
+
+/* Matriz ancha: 13 municipios x 16 contendientes. Con el padding normal no
+   cabe ni scrolleando cómodo. Sólo aprieta el espaciado y baja el cuerpo;
+   no toca color ni borde, que siguen siendo los de .tabla. */
+.tabla--compacta th,
+.tabla--compacta td {
+  padding: 5px var(--space-xs);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
 .tabla td strong { color: var(--text-heading); }
 
 /* Barra proporcional dentro de una celda. */

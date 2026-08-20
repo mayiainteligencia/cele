@@ -44,10 +44,7 @@
           <p>Exploración interactiva de capas vectoriales INEGI 2024, AGEBs urbanas/rurales, localidades y catálogo educativo SEP CCT.</p>
         </div>
 
-        <div class="mando-header__pills">
-          <span class="badge badge--success" style="padding:6px 12px;">8 capas disponibles</span>
-          <span class="badge badge--neutral" style="padding:6px 12px;">4 pendientes de insumo INE</span>
-        </div>
+        <div class="mando-header__pills" id="carto-pills"></div>
       </section>
 
       <!-- Coloreado municipal: los botones que antes se enganchaban
@@ -76,6 +73,31 @@
           <button class="subnav-btn" data-colorear="nulos_2024">
             <i data-lucide="file-x"></i><span>Voto nulo 2024</span>
           </button>
+          <button class="subnav-btn" data-colorear="competitividad_2024">
+            <i data-lucide="swords"></i><span>Competitividad</span>
+          </button>
+        </div>
+
+        <span class="text-label">Población (Censo 2020)</span>
+        <div class="subnav-bar" role="group" aria-label="Variable de población">
+          <button class="subnav-btn" data-colorear="censo_poblacion_total">
+            <i data-lucide="users"></i><span>Población total</span>
+          </button>
+          <button class="subnav-btn" data-colorear="censo_mujeres">
+            <i data-lucide="user"></i><span>Mujeres</span>
+          </button>
+          <button class="subnav-btn" data-colorear="censo_hombres">
+            <i data-lucide="user"></i><span>Hombres</span>
+          </button>
+          <button class="subnav-btn" data-colorear="censo_mayores_18">
+            <i data-lucide="user-check"></i><span>Mayores de 18</span>
+          </button>
+          <button class="subnav-btn" data-colorear="censo_menores_18">
+            <i data-lucide="baby"></i><span>Menores de 18</span>
+          </button>
+          <button class="subnav-btn" data-colorear="censo_mayores_50">
+            <i data-lucide="user-round"></i><span>Mayores de 50</span>
+          </button>
         </div>
         <span id="carto-proc"></span>
       </section>
@@ -86,6 +108,8 @@
            el mapa en 320 px por más que la altura dijera 650. -->
       <section class="mando-map-card" id="mapa-cartografia"
                style="flex:none; height: min(680px, 72vh);"></section>
+
+      <section class="panel" id="resumen-estatal"></section>
 
       <!-- Inventario de Capas y Metadatos Cartográficos -->
       <section class="panel">
@@ -112,6 +136,7 @@
 
   <script src="js/mapa.js"></script>
   <script src="js/electoral.js"></script>
+  <script src="js/censo.js"></script>
   <script src="js/procedencia.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
@@ -159,8 +184,112 @@
         ${Procedencia.pie({ fuente: c.fuente, fechaCorte: c.corte })}
       </article>`).join('');
 
+    // Las píldoras se cuentan del catálogo, no se escriben a mano: la última
+    // vez que se escribieron a mano quedaron desfasadas tres fases seguidas.
+    const todas = CerebroMapa.CATALOGO.flatMap((g) => g.capas);
+    const disp = todas.filter((c) => c.estado === 'disponible').length;
+    const pend = todas.length - disp;
+    const pills = document.getElementById('carto-pills');
+    if (pills) {
+      pills.innerHTML =
+        `<span class="badge badge--success" style="padding:6px 12px;">${disp} capas disponibles</span>` +
+        `<span class="badge badge--neutral" style="padding:6px 12px;">${pend} pendientes de insumo</span>`;
+    }
+
     document.getElementById('inventario-leyenda').innerHTML = Procedencia.leyenda();
     Procedencia.iconos();
+  }
+
+  /* Resumen del estado: quién ganó Campeche y quién ganó dónde.
+     El agregado sale de Electoral.agregar(), la misma función que usa
+     historico.html — aquí no se vuelve a calcular ganador ni margen. */
+  function pintarResumen(elec) {
+    const E = window.Electoral;
+    const P = window.Procedencia;
+    const municipios = Object.values(elec.municipios);
+    const ag = E.agregar(municipios);
+    const porGanador = E.municipiosPorGanador(municipios);
+    const esc = (v) => String(v === null || v === undefined ? '\u2014' : v)
+      .replace(/[&<>"]/g, (c) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const c = (b) => `var(${E.color(b)})`;
+
+    document.getElementById('resumen-estatal').innerHTML = `
+      <h3 class="text-h3 panel__titulo">
+        <i data-lucide="flag"></i> Quién ganó Campeche en 2024
+        ${P.badge('dato', { fuente: elec.meta.fuente, fechaCorte: elec.meta.fecha_corte })}
+      </h3>
+      <p class="tarjeta__texto" style="max-width:78ch">
+        Diputaciones locales de mayoría relativa, agregado de las
+        ${E.num(ag.secciones)} secciones de los 13 municipios. Ganar el estado
+        por votos y ganar más municipios son cosas distintas: abajo están las
+        dos lecturas.
+      </p>
+
+      <div class="rejilla-tarjetas" style="margin-top:var(--space-md)">
+        <div class="cifra">
+          <span class="cifra__valor" style="color:${c(ag.ganador)}">${
+            esc(E.etiqueta(ag.ganador))}</span>
+          <span class="cifra__etiqueta">Fuerza más votada</span>
+          <span class="cifra__pie">${P.badge('dato', { compacto: true })}</span>
+        </div>
+        <div class="cifra">
+          <span class="cifra__valor">${ag.margen.toFixed(1)} pp</span>
+          <span class="cifra__etiqueta">Margen sobre ${esc(E.etiqueta(ag.segundo))}</span>
+          <span class="cifra__pie">${P.badge('calculo', {
+            compacto: true, detalle: '1\u00b0 \u2212 2\u00b0 sobre v\u00e1lidos' })}</span>
+        </div>
+        <div class="cifra">
+          <span class="cifra__valor">${E.pct(ag.participacion)}</span>
+          <span class="cifra__etiqueta">Participación</span>
+          <span class="cifra__pie">${P.badge('calculo', {
+            compacto: true, detalle: 'total \u00f7 lista nominal' })}</span>
+        </div>
+        <div class="cifra">
+          <span class="cifra__valor">${E.num(ag.validos)}</span>
+          <span class="cifra__etiqueta">Votos válidos</span>
+          <span class="cifra__pie">${P.badge('dato', { compacto: true })}</span>
+        </div>
+      </div>
+
+      <div class="tabla-caja" style="margin-top:var(--space-md)">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Fuerza</th>
+              <th class="num">Municipios</th>
+              <th>Cuáles</th>
+              <th class="num">% de válidos</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${porGanador.map(([b, ms]) => `
+              <tr>
+                <td><span class="punto-color" style="background:${c(b)}"></span>
+                    <strong>${esc(E.etiqueta(b))}</strong></td>
+                <td class="num">${ms.length}</td>
+                <td class="text-small">${ms.map((m) =>
+                  `${esc(m.nombre)} <span style="opacity:.6">+${
+                    m.margen.toFixed(0)}</span>`).join(' \u00b7 ')}</td>
+                <td class="num">${E.pct(ag.bloques[b] / ag.validos * 100)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <p class="panel__nota">
+        El margen de cada municipio va en puntos porcentuales sobre su segundo
+        lugar. Haz clic en un municipio del mapa para ver su ficha completa con
+        los ${ag.ordenPartidos.length} contendientes.
+      </p>
+      ${P.pie({
+        fuente: elec.meta.fuente,
+        fechaCorte: elec.meta.fecha_corte,
+        metodologia: 'Agregación de los resultados municipales. El ganador se '
+          + 'decide sobre el bloque de coalición, no sobre el partido suelto.',
+        cobertura: elec.meta.cobertura,
+        confianza: 'alta',
+      })}`;
+    P.iconos();
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -169,8 +298,13 @@
     Promise.all([
       fetch('data/geo/escuelas_campeche.geojson').then((r) => r.json()),
       Electoral.cargar(),
+      Censo.cargar(),
+      // Sólo para el σ que fija el umbral de competitividad. Sin esto habría
+      // que duplicar el 4.5 aquí, y una constante duplicada es una constante
+      // que se desincroniza en cuanto llegue más tracking.
+      Electoral.cargarEncuestas(),
     ])
-      .then(([json, elec]) => {
+      .then(([json, elec, censo, encuestas]) => {
         const escuelas = {};
         const alumnado = {};
         json.features.forEach((f) => {
@@ -234,7 +368,14 @@
             filas.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('');
         }
 
+        // El σ medido viaja con los datos electorales: registrarVariables y
+        // la ficha lo usan para clasificar competitividad.
+        elec.sigma = encuestas.sigma_recomendada.recomendado_pp;
+        Censo.registrarVariables(censo);
+
         const fichaSeccion = Electoral.fichaSeccion(elec);
+        const fichaMunicipio = Electoral.fichaMunicipio(elec);
+        const fichaCenso = Censo.ficha(censo);
 
         const mapa = CerebroMapa.crear('#mapa-cartografia', {
           capas: ['limite', 'municipios', 'localidades', 'casillas_2024'],
@@ -244,16 +385,47 @@
           // lo que es.
           fichaExtra: (props, capaId) => {
             const escuela = props.cct ? porCct[props.cct] : null;
-            return (escuela ? filasEscuela(escuela) : '') + fichaSeccion(props, capaId);
+            return (escuela ? filasEscuela(escuela) : '')
+              + fichaSeccion(props, capaId)
+              + fichaMunicipio(props, capaId)
+              + fichaCenso(props, capaId);
           },
         });
 
-        // Los coloreados de 2024 salen de cómputos oficiales; los del CCT, de
-        // una agregación del catálogo. La procedencia se declara por variable.
-        const FUENTE_VARIABLE = {
-          escuelas_por_municipio: json.metadata.fuente,
-          alumnado: json.metadata.fuente,
+        pintarResumen(elec);
+
+        /* Procedencia por variable, no una sola para todas. Antes el badge
+           decía "Cálculo" para cualquier coloreado, y eso es falso para las
+           que vienen tal cual de la fuente: la población total del Censo es
+           DATO, mientras que "menores de 18" es una resta que hicimos
+           nosotros. La distinción es justamente lo que el badge existe para
+           comunicar. */
+        const PROC_VARIABLE = {
+          escuelas_por_municipio: { tipo: 'calculo', fuente: json.metadata.fuente,
+            fechaCorte: json.metadata.fecha_corte, detalle: 'conteo del catálogo CCT por municipio' },
+          alumnado: { tipo: 'calculo', fuente: json.metadata.fuente,
+            fechaCorte: json.metadata.fecha_corte, detalle: 'suma del alumnado del catálogo CCT' },
         };
+        ['ganador_2024', 'participacion_2024', 'margen_2024', 'nulos_2024',
+         'lista_nominal_2024', 'competitividad_2024'].forEach((id) => {
+          PROC_VARIABLE[id] = {
+            tipo: id === 'ganador_2024' || id === 'lista_nominal_2024' ? 'dato' : 'calculo',
+            fuente: elec.meta.fuente, fechaCorte: elec.meta.fecha_corte,
+            detalle: 'agregación por municipio',
+          };
+        });
+        // El Censo declara campo por campo si es dato o cálculo; se lee de ahí.
+        Censo.CAMPOS.forEach((c) => {
+          const tipo = censo.meta.procedencia_por_campo[c.k];
+          PROC_VARIABLE['censo_' + c.k] = {
+            tipo: tipo,
+            fuente: censo.meta.fuente,
+            fechaCorte: censo.meta.fecha_corte,
+            detalle: tipo === 'dato'
+              ? 'columna del ITER, sin transformar'
+              : censo.meta.derivaciones[c.k],
+          };
+        });
 
         const proc = document.getElementById('carto-proc');
         document.querySelectorAll('[data-colorear]').forEach((btn) => {
@@ -262,11 +434,10 @@
               b.classList.toggle('subnav-btn--active', b === btn));
             const id = btn.dataset.colorear;
             mapa.setChoropleth(id || null);
-            proc.innerHTML = id
-              ? Procedencia.badge('calculo', {
-                  detalle: 'agregación por municipio',
-                  fuente: FUENTE_VARIABLE[id] || elec.meta.fuente,
-                  fechaCorte: FUENTE_VARIABLE[id] ? null : elec.meta.fecha_corte,
+            const p = PROC_VARIABLE[id];
+            proc.innerHTML = p
+              ? Procedencia.badge(p.tipo, {
+                  detalle: p.detalle, fuente: p.fuente, fechaCorte: p.fechaCorte,
                 })
               : '';
             Procedencia.iconos();

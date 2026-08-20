@@ -127,6 +127,17 @@
   margin-bottom: var(--space-xs);
 }
 
+/* Muestra del trazo en el panel de capas: replica la línea que se dibuja en
+   el mapa, para que el panel funcione como leyenda. El borde superior es el
+   truco: un span de 14 px con border-top hereda grosor y patrón sin más CSS. */
+.mapa-panel__trazo {
+  display: inline-block;
+  width: 14px;
+  vertical-align: middle;
+  margin-right: 6px;
+  flex: none;
+}
+
 .mapa-panel__item {
   display: flex;
   align-items: center;
@@ -238,7 +249,7 @@
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.42);
+  box-shadow: var(--sombra-ficha);
   animation: mapa-ficha-entrar 0.18s ease-out both;
 }
 
@@ -401,15 +412,6 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-
-.punto-color {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-right: 5px;
-  border-radius: 50%;
-  vertical-align: baseline;
 }
 
 .mapa-ficha__meta {

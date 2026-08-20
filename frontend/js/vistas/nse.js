@@ -19,10 +19,11 @@
   const E = window.Electoral;
 
   document.addEventListener('DOMContentLoaded', () => {
-    Promise.all([T.cargar(), E.cargar()]).then(([ctx, elec]) => {
+    Promise.all([T.cargar(), E.cargar(), E.cargarCorrelaciones()])
+      .then(([ctx, elec, corr]) => {
       const todos = Object.values(elec.municipios)
         .sort((a, b) => a.cve_mun.localeCompare(b.cve_mun));
-      const datos = { municipios: todos, nse: ctx.nse };
+      const datos = { municipios: todos, nse: ctx.nse, corr: corr };
       const vista = Object.assign({}, datos);
       vista.municipios = T.conectarFiltros(datos, (mun) => {
         vista.municipios = mun;
@@ -35,6 +36,152 @@
         '<p class="text-small">No se pudo cargar la estimación socioeconómica.</p>';
     });
   });
+
+  /* Correlaciones. La pieza central no son los coeficientes: son los
+     intervalos. Un r de 0.48 con n=12 tiene un intervalo que incluye el cero,
+     así que enseñarlo sin su rango sería exactamente el error que esta parte
+     del sistema existe para no cometer. Por eso ninguna tabla imprime un r
+     suelto: siempre va con su IC y con la marca de si cruza cero. */
+  function panelCorrelaciones(c) {
+    if (!c) return '';
+    const m = c.meta;
+    const fila = (x) => `
+      <tr${x.incluye_cero ? ' class="fila--atenuada"' : ''}>
+        <td>${T.escapar(x.etiqueta)}</td>
+        <td class="num">${x.n}</td>
+        <td class="num"><strong>${x.r > 0 ? '+' : ''}${x.r}</strong></td>
+        <td class="num">${x.ic95 ? `[${x.ic95[0]}, ${x.ic95[1]}]` : '—'}</td>
+        <td>${x.incluye_cero
+          ? '<strong>incluye el cero</strong>'
+          : 'no incluye el cero'}</td>
+      </tr>`;
+    const cab = `
+      <thead>
+        <tr>
+          <th>Variables cruzadas</th>
+          <th class="num">n</th>
+          <th class="num">r</th>
+          <th class="num">IC 95%</th>
+          <th>Lectura</th>
+        </tr>
+      </thead>`;
+
+    return `
+      <section class="panel">
+        <h3 class="text-h3 panel__titulo">
+          <i data-lucide="git-compare-arrows"></i> Correlaciones
+          ${P.badge('inferencia', { detalle: 'variables agregadas' })}
+        </h3>
+
+        <div class="aviso-simulado">
+          <i data-lucide="users-round"></i>
+          <span><strong>Esto describe territorios, no personas.</strong>
+          ${T.escapar(m.falacia_ecologica)}</span>
+        </div>
+
+        <h4 class="text-h3" style="margin-top:var(--space-lg)">
+          Por sección · ${T.num(c.seccion.correlaciones[0].n)} observaciones
+        </h4>
+        <p class="tarjeta__texto" style="max-width:78ch">
+          Con este número de unidades los intervalos se cierran y el
+          coeficiente se puede leer.
+        </p>
+        <div class="tabla-caja" style="margin-top:var(--space-sm)">
+          <table class="tabla">${cab}
+            <tbody>${c.seccion.correlaciones.map(fila).join('')}</tbody>
+          </table>
+        </div>
+
+        <h4 class="text-h3" style="margin-top:var(--space-lg)">
+          Participación por tipo de sección
+        </h4>
+        <div class="tabla-caja" style="margin-top:var(--space-sm)">
+          <table class="tabla">
+            <thead>
+              <tr><th>Tipo</th><th class="num">Secciones</th>
+                  <th class="num">Participación media</th><th class="num">IC 95%</th></tr>
+            </thead>
+            <tbody>
+              ${c.seccion.participacion_por_tipo.grupos.map((g) => `
+                <tr>
+                  <td><strong>${T.escapar(g.grupo)}</strong></td>
+                  <td class="num">${g.n}</td>
+                  <td class="num">${T.pct(g.media)}</td>
+                  <td class="num">[${g.ic95[0]}, ${g.ic95[1]}]</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+        <p class="panel__nota">
+          ${T.escapar(c.seccion.participacion_por_tipo.nota)} Dos medias con
+          intervalos que se solapan no son dos medias distintas.
+        </p>
+
+        <h4 class="text-h3" style="margin-top:var(--space-lg)">
+          Por municipio · ${T.num(c.municipal.correlaciones[0].n)} observaciones
+        </h4>
+        <p class="tarjeta__texto" style="max-width:78ch">
+          ${T.escapar(c.municipal.advertencias.n_pequeno)}
+        </p>
+        <div class="tabla-caja" style="margin-top:var(--space-sm)">
+          <table class="tabla">${cab}
+            <tbody>${c.municipal.correlaciones.map(fila).join('')}</tbody>
+          </table>
+        </div>
+        <p class="panel__nota">
+          <strong>Cuánto pesa un solo municipio.</strong>
+          ${c.municipal.correlaciones.filter((x) => x.jackknife).map((x) =>
+            `Quitar ${T.escapar(x.jackknife.municipio || '—')} mueve
+             «${T.escapar(x.etiqueta.toLowerCase())}» en
+             ${x.jackknife.maximo_cambio} puntos de r`).slice(0, 2).join('; ')}.
+          Con doce unidades, una sola puede sostener la correlación entera.
+        </p>
+        <p class="panel__nota">
+          ${T.escapar(c.municipal.advertencias.calkini_contaminado)}
+          ${T.escapar(c.municipal.advertencias.desfase_temporal)}
+        </p>
+
+        <h4 class="text-h3" style="margin-top:var(--space-lg)">
+          Nivel socioeconómico
+        </h4>
+        <div class="aviso-simulado">
+          <i data-lucide="circle-slash"></i>
+          <span><strong>No hay correlación con ingreso.</strong>
+          ${T.escapar(c.nse.por_que_no_hay_correlacion)}</span>
+        </div>
+        <div class="tabla-caja" style="margin-top:var(--space-sm)">
+          <table class="tabla">
+            <thead>
+              <tr><th>Tipología</th><th class="num">Municipios</th>
+                  <th class="num">Participación media</th><th class="num">IC 95%</th>
+                  <th>Rasgo</th></tr>
+            </thead>
+            <tbody>
+              ${c.nse.grupos.map((g) => `
+                <tr>
+                  <td><strong>${T.escapar(g.etiqueta)}</strong></td>
+                  <td class="num">${g.n}</td>
+                  <td class="num">${T.pct(g.participacion_media)}</td>
+                  <td class="num">${g.ic95 ? `[${g.ic95[0]}, ${g.ic95[1]}]` : '—'}</td>
+                  <td class="text-small">${T.escapar(g.rasgo)}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+        <p class="panel__nota">${T.escapar(c.nse.advertencia_grupos)}</p>
+
+        ${P.pie({
+          fuente: Object.values(m.fuentes).filter(Boolean).join(' · '),
+          fechaCorte: m.fecha_corte,
+          metodologia: `Coeficiente de ${m.metodo.coeficiente}. `
+            + `${m.metodo.intervalo} ${m.metodo.jackknife} `
+            + `Una correlación no es causalidad: ${m.no_es_causalidad}`,
+          confianza: 'baja',
+          cobertura: `${c.seccion.correlaciones[0].n} secciones · `
+            + `${c.municipal.correlaciones[0].n} municipios`,
+        })}
+      </section>`;
+  }
 
   function pintar(d) {
     const n = d.nse;
@@ -205,6 +352,8 @@
         </div>
         ${P.leyenda()}
       </section>
+
+      ${panelCorrelaciones(d.corr)}
     `;
 
     P.iconos();

@@ -54,106 +54,14 @@
       <section class="mando-header">
         <div class="mando-header__title-box">
           <h1><i data-lucide="shield-alert" style="color:var(--accent-cyan);"></i> Forensia Electoral y Detección de Anomalías</h1>
-          <p>Auditoría estadística de patrones de votación histórico, análisis de variabilidad PREP vs Cómputos y semáforo de integridad.</p>
+          <p>Distancia de cada sección respecto a la mediana de las secciones de su mismo tamaño. Una desviación estadística no es una acusación: el nivel rojo sólo lo enciende una resolución del Tribunal.</p>
         </div>
 
-        <div class="mando-header__pills">
-          <span class="badge badge--success">Motor Estadístico Activo</span>
-          <span class="badge badge--neutral">Semáforo Verificado</span>
-        </div>
+        <div class="mando-header__pills" id="cabecera-pills"></div>
       </section>
 
-      <section class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-card__label"><span>Alertas Verdes (Normal)</span><i data-lucide="check-circle" class="icon-xs" style="color:var(--status-success);"></i></div>
-          <div class="kpi-card__value" style="color:var(--status-success);">11</div>
-          <div class="kpi-card__sub">Municipios con variabilidad histórica esperada</div>
-        </div>
+      <div data-territorio id="contenido"></div>
 
-        <div class="kpi-card">
-          <div class="kpi-card__label"><span>Alertas Amarillas (Atención)</span><i data-lucide="alert-triangle" class="icon-xs" style="color:var(--sev-media);"></i></div>
-          <div class="kpi-card__value" style="color:var(--sev-media);">2</div>
-          <div class="kpi-card__sub">Votos nulos por encima del promedio ponderado</div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-card__label"><span>Alertas Naranja (Riesgo)</span><i data-lucide="alert-circle" class="icon-xs" style="color:var(--sev-alta);"></i></div>
-          <div class="kpi-card__value" style="color:var(--sev-alta);">0</div>
-          <div class="kpi-card__sub">Divergencia PREP vs Cómputos > 3.5%</div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-card__label"><span>Alertas Rojas (Crítico)</span><i data-lucide="octagon-alert" class="icon-xs" style="color:var(--sev-critica);"></i></div>
-          <div class="kpi-card__value" style="color:var(--sev-critica);">0</div>
-          <div class="kpi-card__sub">Anomalía severa que requiere revisión jurídica</div>
-        </div>
-      </section>
-
-      <section class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg);">
-        <h3 class="text-h3" style="margin-bottom:var(--space-sm); display:flex; align-items:center; gap:8px;">
-          <i data-lucide="list-checks" class="icon-sm" style="color:var(--accent-cyan);"></i> Matriz de Auditoría Forense por Municipio
-        </h3>
-        
-        <div style="overflow-x:auto; border-radius:var(--radius-md); border:1px solid var(--glass-border); margin-top:var(--space-md);">
-          <table class="tabla-forensia">
-            <thead>
-              <tr>
-                <th>Municipio</th>
-                <th>Variación PREP vs Cómputo</th>
-                <th>Tasa Votos Nulos</th>
-                <th>Participación Histórica</th>
-                <th>Nivel de Riesgo</th>
-                <th>Acción Jurídica</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>Campeche (04002)</strong></td>
-                <td>0.8% (Normal)</td>
-                <td>2.1%</td>
-                <td>61.4%</td>
-                <td><span class="badge badge--success">VERDE</span></td>
-                <td>Sin observación</td>
-              </tr>
-              <tr>
-                <td><strong>Carmen (04003)</strong></td>
-                <td>1.2% (Normal)</td>
-                <td>2.4%</td>
-                <td>58.9%</td>
-                <td><span class="badge badge--success">VERDE</span></td>
-                <td>Sin observación</td>
-              </tr>
-              <tr>
-                <td><strong>Champotón (04004)</strong></td>
-                <td>2.9% (Elevado)</td>
-                <td>4.8% (Atípico)</td>
-                <td>64.1%</td>
-                <td><span class="badge" style="background:var(--sev-media-bg); color:var(--sev-media);">AMARILLO</span></td>
-                <td>Auditoría de Actas Sección 0142</td>
-              </tr>
-              <tr>
-                <td><strong>Dzitbalché (04013)</strong></td>
-                <td>1.1% (Normal)</td>
-                <td>2.3%</td>
-                <td>63.0%</td>
-                <td><span class="badge badge--success">VERDE</span></td>
-                <td>Sin observación</td>
-              </tr>
-              <tr>
-                <td><strong>Seybaplaya (04012)</strong></td>
-                <td>3.1% (Elevado)</td>
-                <td>4.6% (Atípico)</td>
-                <td>66.2%</td>
-                <td><span class="badge" style="background:var(--sev-media-bg); color:var(--sev-media);">AMARILLO</span></td>
-                <td>Verificación de muestra aleatoria</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-    </div>
-  
       <!-- Consola de Agentes CE en Vivo -->
       <section class="glass-strong" style="padding:var(--space-md); border-radius:var(--radius-lg);">
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
@@ -166,8 +74,12 @@
 
   </main>
 
+  <script src="js/procedencia.js"></script>
+  <script src="js/territorio.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/electoral.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/vistas/forensia.js"></script>
   <script>lucide.createIcons();</script>
 </body>
 </html>

@@ -125,12 +125,12 @@ body[data-page="inicio"] .filter-bar { position: fixed; z-index: var(--z-filter-
 }
 
 .main--home .sobre-claro {
-  /* color-ok: tintas de contraste sobre fotograma claro; no son de paleta
-     porque la paleta entera está calibrada para fondo oscuro. */
-  --hero-tinta: #08101f;
-  --hero-tinta-2: #33465f;
-  --hero-cuerpo: #142033;
-  --hero-velo: rgba(244, 248, 255, 0.72);
+  /* Sobre el fotograma claro de la portada, la paleta oscura no contrasta.
+     Estas cuatro tintas viven en colors.css como el resto de los colores. */
+  --hero-tinta: var(--hero-claro-tinta);
+  --hero-tinta-2: var(--hero-claro-tinta-2);
+  --hero-cuerpo: var(--hero-claro-cuerpo);
+  --hero-velo: var(--hero-claro-velo);
 }
 
 .hero__titulo {

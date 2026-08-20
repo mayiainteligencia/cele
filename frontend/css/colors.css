@@ -261,12 +261,25 @@
   --sombra-lg:          0 16px 40px -10px rgba(0, 0, 0, 0.65);
   --sombra-negra:       rgba(0, 0, 0, 0.20);
   --sombra-negra-alta:  rgba(0, 0, 0, 0.50);
+  /* Sombra de la ficha emergente del mapa. Es más corta y menos densa que
+     --sombra-lg porque el popup flota a pocos píxeles del punto, no sobre
+     el fondo de la página. */
+  --sombra-ficha:       0 12px 34px rgba(0, 0, 0, 0.42);
 
   /* Velos blancos: bordes y superficies apenas visibles. */
   --velo-01:            rgba(255, 255, 255, 0.02);
   --velo-05:            rgba(255, 255, 255, 0.05);
   --velo-08:            rgba(255, 255, 255, 0.08);
   --velo-10:            rgba(255, 255, 255, 0.10);
+
+  /* Tintas del hero sobre fotograma claro. La paleta entera está calibrada
+     para fondo oscuro, así que la portada necesita su propio juego de tintas
+     legibles sobre una imagen clara. Sólo las consume .main--home .sobre-claro
+     en layout.css; no se reusan en ningún otro sitio. */
+  --hero-claro-tinta:   #08101f;
+  --hero-claro-tinta-2: #33465f;
+  --hero-claro-cuerpo:  #142033;
+  --hero-claro-velo:    rgba(244, 248, 255, 0.72);
 
   /* Marca CE. El degradado del monograma es identidad, no paleta de UI:
      por eso vive aparte y no se reusa para nada más. */

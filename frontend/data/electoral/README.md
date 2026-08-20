@@ -3,8 +3,12 @@
 Todo lo de aquí se genera con:
 
 ```
-backend/datalab/venv/bin/python frontend/data/electoral/build_electoral.py
+backend/datalab/venv/bin/python backend/datalab/pipeline/build_electoral.py
 ```
+
+El código vive en `backend/datalab/pipeline/`, junto al crudo y al venv que lo
+lee. Aquí sólo están las salidas, porque el frontend es estático y las trae con
+`fetch` del propio repo: no hay servidor que las sirva.
 
 Los insumos crudos viven en `backend/datalab/uploads/ResultadosYCasillas/` y no
 se tocan: el encarte del INE (`ubicacionCasillas.xlsx`) y los 21 archivos

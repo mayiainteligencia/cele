@@ -108,21 +108,53 @@
       capas: [
         {
           id: 'distritos_federales',
-          etiqueta: 'Distritos federales',
-          estado: 'pendiente',
-          origen: 'Cartografía Electoral INE',
+          etiqueta: 'Distritos federales (2)',
+          estado: 'disponible',
+          tipo: 'poligono',
+          archivo: 'distritos_federales.geojson',
+          claveGeo: 'numero',
+          nombre: 'etiqueta',
+          // Los 2 federales son la división más gruesa: línea sólida y ancha.
+          trazo: { color: '--serie-3', grosor: 3, relleno: 0.04 },
+          bajoDemanda: true, // 471 KB
         },
         {
           id: 'distritos_locales',
-          etiqueta: 'Distritos locales',
-          estado: 'pendiente',
-          origen: 'Cartografía Electoral INE / IEEC',
+          etiqueta: 'Distritos locales (21)',
+          estado: 'disponible',
+          tipo: 'poligono',
+          archivo: 'distritos_locales.geojson',
+          claveGeo: 'numero',
+          nombre: 'etiqueta',
+          // 21 locales: la rejilla más fina, en guion corto para que no compita
+          // con el trazo federal cuando ambos están encendidos.
+          trazo: { color: '--serie-4', grosor: 1.5, guion: '5,4', relleno: 0.03 },
+          bajoDemanda: true, // 596 KB
         },
         {
+          id: 'distritos_judiciales',
+          etiqueta: 'Distritos judiciales electorales',
+          estado: 'disponible',
+          tipo: 'poligono',
+          archivo: 'distritos_judiciales.geojson',
+          claveGeo: 'numero',
+          nombre: 'etiqueta',
+          ficha: [['circuito', 'Circuito']],
+          // Uno solo, y cubre el estado entero: guion largo y sin relleno, para
+          // que no tape lo que hay debajo.
+          trazo: { color: '--serie-6', grosor: 2, guion: '12,6', relleno: 0 },
+          bajoDemanda: true, // 442 KB
+        },
+        {
+          // El endpoint del INE responde "en qué distrito cae esta sección",
+          // no "qué forma tiene". La jerarquía sección->distrito->municipio sí
+          // se tiene (data/electoral/secciones_catalogo_2026.json); el polígono
+          // no. Sin él la sección no se puede pintar como superficie.
           id: 'secciones',
           etiqueta: 'Secciones electorales',
           estado: 'pendiente',
-          origen: 'Cartografía Electoral INE',
+          origen: 'Shapefile del Marco Geográfico Electoral (INE). El endpoint '
+                + 'público no publica geometría de sección.',
         },
       ],
     },
@@ -458,12 +490,22 @@
         });
       }
 
+      // Cada capa de polígono puede traer su propio trazo. Antes todas
+      // compartían --mapa-limite: con distrito federal y local encendidos a la
+      // vez, las dos rejillas se dibujaban idénticas y no había forma de saber
+      // qué línea era de quién. El color viene de la paleta de series, que
+      // existe justamente para distinguir categorías sin ordenarlas.
+      const tr = capa.trazo || {};
+      const linea = token(tr.color || '--mapa-limite');
       return L.geoJSON(json, {
         style: () => ({
-          color: token('--mapa-limite'),
-          weight: 1.5,
-          fillColor: token('--mapa-limite'),
-          fillOpacity: 0.05,
+          color: linea,
+          weight: tr.grosor || 1.5,
+          // El guion distingue por FORMA, no sólo por color: dos capas
+          // encendidas se separan aunque el usuario no distinga los tonos.
+          dashArray: tr.guion || null,
+          fillColor: linea,
+          fillOpacity: tr.relleno === undefined ? 0.05 : tr.relleno,
         }),
         onEachFeature: (f, lyr) => enlazar(f, lyr, capa),
       });
@@ -664,7 +706,12 @@
               }</strong></td></tr>` +
               (v.procedencia
                 ? `<tr><th>Naturaleza</th><td>${escapar(v.procedencia)}</td></tr>`
-                : '')
+                : '') +
+              // El choropleth también recibe fichaExtra. Sin esto, hacer clic
+              // en un municipio daba una ficha distinta según si había o no un
+              // coloreado activo: con coloreado sólo salía la variable pintada,
+              // y se perdían las filas que cuelgan los módulos.
+              (cfg.fichaExtra ? cfg.fichaExtra({ ...props, cve_mun: cve }, 'choropleth') : '')
             );
 
             layer.on({
@@ -742,13 +789,21 @@
         const items = g.capas.map((c) => {
           const pendiente = c.estado === 'pendiente';
           const activa = cfg.capas.includes(c.id);
+          // Muestra de trazo: la misma línea que se dibuja en el mapa, para
+          // que el panel sea la leyenda y no haya que adivinar qué capa es
+          // cada rejilla cuando hay varias encendidas.
+          const muestra = c.trazo
+            ? `<span class="mapa-panel__trazo" aria-hidden="true" style="
+                 border-top:${c.trazo.grosor || 1.5}px ${
+                   c.trazo.guion ? 'dashed' : 'solid'} var(${c.trazo.color})"></span>`
+            : '';
           return `
             <li class="mapa-panel__item${pendiente ? ' mapa-panel__item--pendiente' : ''}">
               <label>
                 <input type="checkbox" data-capa="${c.id}"
                        ${activa && !pendiente ? 'checked' : ''}
                        ${pendiente ? 'disabled' : ''}>
-                <span>${escapar(c.etiqueta)}</span>
+                ${muestra}<span>${escapar(c.etiqueta)}</span>
               </label>
               ${pendiente
                 ? `<span class="mapa-panel__pendiente" title="${escapar(c.origen)}">pendiente de insumo</span>`

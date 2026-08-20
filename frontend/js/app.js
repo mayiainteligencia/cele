@@ -249,25 +249,24 @@ function initExecutiveMap() {
   if (!elMapa || typeof CerebroMapa === 'undefined') return;
 
   // Carga los datos de las escuelas para registrar variables de choropleth
-  fetch('data/geo/escuelas_campeche.geojson')
+  // Agregado precalculado, no el geojson de 2 MB: aquí sólo se cuenta.
+  fetch('data/censo/cct_por_municipio.json')
     .then((r) => r.json())
     .then((json) => {
       const escuelas = {};
       const alumnado = {};
 
-      json.features.forEach((f) => {
-        const k = f.properties.cve_mun;
-        if (!k) return;
-        escuelas[k] = (escuelas[k] || 0) + 1;
-        alumnado[k] = (alumnado[k] || 0) + (f.properties.alumnos_total || 0);
+      Object.entries(json.municipios).forEach(([k, m]) => {
+        escuelas[k] = m.planteles;
+        alumnado[k] = m.alumnos;
       });
 
       CerebroMapa.registrarVariable('escuelas_por_municipio', {
         etiqueta: 'Escuelas CCT por Municipio',
         valores: escuelas,
         formato: (v) => v.toLocaleString('es-MX') + ' escuelas',
-        fuente: json.metadata?.fuente || 'SEP — Catálogo de Centros de Trabajo',
-        fechaCorte: json.metadata?.fecha_corte || '2024',
+        fuente: json.fuente,
+        fechaCorte: json.fecha_corte,
         procedencia: 'Cálculo sobre catálogo CCT SEP Campeche',
       });
 
@@ -275,8 +274,8 @@ function initExecutiveMap() {
         etiqueta: 'Alumnado Registrado',
         valores: alumnado,
         formato: (v) => v.toLocaleString('es-MX') + ' alumnos',
-        fuente: json.metadata?.fuente || 'SEP — Catálogo de Centros de Trabajo',
-        fechaCorte: json.metadata?.fecha_corte || '2024',
+        fuente: json.fuente,
+        fechaCorte: json.fecha_corte,
         procedencia: 'Cálculo sobre catálogo CCT SEP Campeche',
       });
 

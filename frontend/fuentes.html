@@ -39,95 +39,18 @@
           <p>Auditoría completa de insumos geoespaciales, transformaciones cartográficas de proyección y fechas de corte.</p>
         </div>
 
-        <div class="mando-header__pills">
-          <span class="badge badge--success">Ninguna geometría simulada</span>
-          <span class="badge badge--warn">5 capas pendientes del INE</span>
-        </div>
+        <div class="mando-header__pills" id="cabecera-pills"></div>
       </section>
 
-      <!-- Panel de Detalles Técnicos -->
-      <section class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg); display:flex; flex-direction:column; gap:var(--space-md);">
-        <h3 class="text-h3" style="display:flex; align-items:center; gap:8px;">
-          <i data-lucide="file-check" class="icon-sm" style="color:var(--accent-cyan);"></i> Insumos Procesados en el Repositorio Geoespacial
-        </h3>
-
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:var(--space-md);">
-          
-          <div style="background:var(--panel-fondo); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
-            <h4 style="color:var(--text-heading); font-size:1rem; margin-bottom:8px;">1. Marco Geoestadístico INEGI 2024</h4>
-            <ul style="font-size:0.8rem; color:var(--text-body); display:flex; flex-direction:column; gap:4px; list-style:disc; padding-left:18px;">
-              <li><strong>Fuente:</strong> Instituto Nacional de Estadística y Geografía (INEGI)</li>
-              <li><strong>Corte:</strong> Agosto 2024 (Edición más reciente que incluye Dzitbalché 04013 y Seybaplaya 04012)</li>
-              <li><strong>Proyección Original:</strong> EPSG:6372 / Mexico ITRF2008 / LCC (metros)</li>
-              <li><strong>Proyección en Visor:</strong> EPSG:4326 WGS84 (Latitud/Longitud)</li>
-              <li><strong>Archivos:</strong> <code>municipios.geojson</code>, <code>limite_estatal.geojson</code>, <code>localidades.geojson</code>, <code>ageb_urbanas.geojson</code>, <code>ageb_rurales.geojson</code></li>
-            </ul>
-          </div>
-
-          <div style="background:var(--panel-fondo); padding:var(--space-md); border-radius:var(--radius-md); border:1px solid var(--glass-border);">
-            <h4 style="color:var(--text-heading); font-size:1rem; margin-bottom:8px;">2. Catálogo CCT — SEP Campeche</h4>
-            <ul style="font-size:0.8rem; color:var(--text-body); display:flex; flex-direction:column; gap:4px; list-style:disc; padding-left:18px;">
-              <li><strong>Fuente:</strong> Secretaría de Educación Pública — Catálogo de Centros de Trabajo (CCT)</li>
-              <li><strong>Corte:</strong> <em>no declarada por la fuente</em> — el catálogo CCT no publica fecha de corte, y no se le asigna una</li>
-              <li><strong>Cobertura:</strong> 2,274 planteles educativos en 1,482 sitios físicos únicos</li>
-              <li><strong>Atributos:</strong> CCT, Nivel, Sostenimiento, Turno, Alumnado total, Aulas existentes y en uso</li>
-              <li><strong>Archivo:</strong> <code>escuelas_campeche.geojson</code> (2.11 MB)</li>
-            </ul>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- Absorbido de electoral.html: el estatus de la cartografía del INE
-           vivía en una página suelta y huérfana; su lugar natural es el
-           registro de fuentes. -->
-      <section class="panel">
-        <h3 class="text-h3 panel__titulo">
-          <i data-lucide="clock"></i> Cartografía electoral INE / IEEC — pendiente de acceso
-        </h3>
-        <div class="rejilla-tarjetas" id="fuentes-pendientes"></div>
-        <p class="panel__nota">
-          Ninguna de estas capas se dibuja con geometría inventada. Están
-          registradas en el catálogo del mapa, aparecen con el checkbox
-          inhabilitado y declaran su origen en el tooltip. En cuanto llegue el
-          archivo, se sueltan en <code>frontend/data/geo/</code> y se activan.
-        </p>
-      </section>
-
-      <!-- Datos de demostración -->
-      <section class="panel">
-        <h3 class="text-h3 panel__titulo">
-          <i data-lucide="flask-conical"></i> Datos de demostración
-        </h3>
-        <div class="aviso-simulado">
-          <i data-lucide="alert-triangle"></i>
-          <span><strong>El módulo territorial usa cifras sintéticas.</strong>
-          Población, lista nominal, secciones, casillas, NSE, resultados históricos
-          y proyección 2027 salen de <code>data/mock/territorio.json</code>, generado
-          por <code>build_mock.py</code> con semilla fija. No provienen del INEGI,
-          del INE ni del IEEC. Lo real de ese archivo es sólo el esqueleto: los 13
-          municipios con sus claves y los agregados del catálogo CCT.</span>
-        </div>
-        <div class="rejilla-tarjetas" style="margin-top:var(--space-md)" id="fuentes-simulado"></div>
-      </section>
-
-    </div>
-  
-      <!-- Consola de Agentes CE en Vivo -->
-      <section class="glass-strong" style="padding:var(--space-md); border-radius:var(--radius-lg);">
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-          <span style="display:inline-block;width:7px;height:7px;background:var(--accent-cyan);border-radius:50%;box-shadow:0 0 6px var(--accent-cyan);" class="animate-pulse"></span>
-          <strong style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-heading); font-family:var(--font-heading);">Agentes CE — Monitor en Vivo</strong>
-          <i data-lucide="cpu" class="icon-xs" style="color:var(--accent-cyan); margin-left:auto;"></i>
-        </div>
-        <div id="live-agents-feed" style="font-size:0.72rem; font-family:monospace; display:flex; flex-direction:column; gap:5px;"></div>
-      </section>
+      <div data-territorio id="contenido"></div>
 
   </main>
 
   <script src="js/procedencia.js"></script>
+  <script src="js/territorio.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/vistas/fuentes.js"></script>
   <script>
     const PENDIENTES = [
       ['Secciones electorales', 'Cartografía Electoral INE',

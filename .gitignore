@@ -2,6 +2,9 @@ node_modules
 .DS_Store
 *.log
 
+backend/datalab
+backend/monitorsol
+
 # ── Artefactos de backend/datalab/build_campeche.py ──
 # campeche.json y geo.json SÍ se versionan: el build de Vercel clona del repo y
 # no corre Python, así que si no están el `tsc` falla con
@@ -42,3 +45,23 @@ backend/node_modules/
 .env
 *.env
 !*.env.example
+
+# __pycache__ de los pipelines. build_ine_cartografia.py importa de
+# build_electoral.py, y eso genera bytecode que no va al repo.
+backend/datalab/pipeline/__pycache__/
+
+# Texto extraído de los PDF del IEEC y del Congreso. Es crudo: se conserva
+# para poder re-verificar las transcripciones sin volver a descargar.
+!backend/datalab/uploads/ieec_acuerdos/
+
+# Crudo de ASECAM y el intermedio TLS que su servidor no envía. Se conservan:
+# el PEM es parte del insumo, sin él la descarga no puede verificar.
+!backend/datalab/uploads/asecam/
+
+# ── Documentación interna de trabajo ──
+# Contexto y criterio arquitectónico. No se suben: son notas de trabajo con
+# el estado real del proyecto (deuda, residuos, qué está simulado), no
+# documentación pública del repositorio.
+CONTEXTO.md
+ARQUITECTURA.md
+APRENDIZAJES.md

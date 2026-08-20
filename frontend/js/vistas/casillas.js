@@ -32,13 +32,14 @@
   const CORTE = '2024-06';
 
   document.addEventListener('DOMContentLoaded', () => {
-    E.cargar().then((d) => {
+    Promise.all([E.cargar(), E.cargarCatalogo()]).then(([d, cat]) => {
       // conectarFiltros espera { municipios: [...] } con cve_mun y nombre.
       const todos = Object.values(d.municipios)
         .filter((m) => m.casillas_tipo)
         .sort((a, b) => a.cve_mun.localeCompare(b.cve_mun));
 
-      const datos = { municipios: todos, meta: d.meta };
+      const datos = { municipios: todos, meta: d.meta,
+                      secciones: d.secciones, catalogo: cat };
       const vista = Object.assign({}, datos);
       vista.municipios = T.conectarFiltros(datos, (mun) => {
         vista.municipios = mun;
@@ -185,6 +186,9 @@
         })}
       </section>
 
+      <!-- Proporcionalidad por distrito -->
+      ${panelDistritos(d)}
+
       <!-- 2027 -->
       <section class="panel">
         <h3 class="text-h3 panel__titulo"><i data-lucide="calendar-clock"></i> Proceso 2027</h3>
@@ -207,5 +211,153 @@
     P.iconos();
     T.conectarExportar();
     if (window.lucide) window.lucide.createIcons();
+  }
+
+  /* ── Proporcionalidad por distrito ──
+
+     La tabla de arriba agrupa por municipio, que es una aproximación: el
+     municipio no es la unidad con la que el INE reparte casillas. La unidad es
+     la SECCIÓN, y las secciones se agrupan en distritos. Este panel ancla el
+     cálculo a los distritos reales — los locales del propio cómputo, los
+     federales del catálogo cartográfico del INE que trajo la Fase 1.
+
+     El municipio no desaparece: sigue siendo la unidad de operación. Pero para
+     preguntar si el reparto de casillas es proporcional al padrón, el distrito
+     es la unidad correcta. */
+
+  function panelDistritos(d) {
+    if (!d.secciones) return '';
+
+    const local = E.porDistrito(d.secciones, (s, r) => r.distrito_local);
+    const federal = E.porDistrito(d.secciones,
+      (s) => (d.catalogo.secciones[s] ? d.catalogo.secciones[s].distrito_federal : null));
+
+    const tot = (f) => f.filas.reduce((a, g) => ({
+      secciones: a.secciones + g.secciones,
+      lista_nominal: a.lista_nominal + g.lista_nominal,
+      normativas: a.normativas + g.normativas,
+      casillas: a.casillas + g.casillas,
+    }), { secciones: 0, lista_nominal: 0, normativas: 0, casillas: 0 });
+
+    const tl = tot(local);
+    const exactos = local.filas.filter((g) => g.diferencia === 0).length;
+    const maxLN = Math.max(...local.filas.map((g) => g.lista_nominal));
+
+    const fila = (g, etiqueta) => `
+      <tr>
+        <td><strong>${T.escapar(etiqueta)}</strong></td>
+        <td class="num">${T.num(g.secciones)}</td>
+        <td class="num">${T.barra(g.lista_nominal, maxLN, T.num(g.lista_nominal))}</td>
+        <td class="num">${T.num(Math.round(g.electores_por_seccion))}</td>
+        <td class="num">${T.num(g.normativas)}</td>
+        <td class="num"><strong>${T.num(g.casillas)}</strong></td>
+        <td class="num">${g.diferencia === 0 ? '—' : (g.diferencia > 0 ? '+' : '') + g.diferencia}</td>
+        <td class="num">${T.num(Math.round(g.electores_por_casilla))}</td>
+        <td class="num">${T.pct(g.participacion)}</td>
+      </tr>`;
+
+    const cabecera = `
+      <thead>
+        <tr>
+          <th>Distrito</th>
+          <th class="num">Secciones</th>
+          <th class="num">Lista nominal</th>
+          <th class="num">Electores/sección</th>
+          <th class="num">Casillas normativas</th>
+          <th class="num">Instaladas</th>
+          <th class="num">Dif.</th>
+          <th class="num">Electores/casilla</th>
+          <th class="num">Participación</th>
+        </tr>
+      </thead>`;
+
+    return `
+      <section class="panel">
+        <h3 class="text-h3 panel__titulo">
+          <i data-lucide="scale"></i> Proporcionalidad de casillas por distrito
+          ${P.badge('calculo', { detalle: 'LGIPE art. 253' })}
+        </h3>
+        <p class="tarjeta__texto" style="max-width:78ch">
+          La ley reparte casillas por <strong>lista nominal de la sección</strong>,
+          no por población ni por municipio: una casilla por cada
+          ${E.ELECTORES_POR_CASILLA} electores o fracción, mínimo una por sección.
+          Aquí esa cuenta se ancla a los distritos reales — los locales salen del
+          cómputo, los federales del catálogo cartográfico del INE.
+        </p>
+
+        <div class="rejilla-tarjetas" style="margin-top:var(--space-md)">
+          ${T.cifra('Casillas normativas', T.num(tl.normativas), 'calculo',
+            { detalle: 'suma de ⌈lista nominal ÷ ' + E.ELECTORES_POR_CASILLA + '⌉ por sección' })}
+          ${T.cifra('Instaladas en 2024', T.num(tl.casillas), 'dato',
+            { fuente: FUENTE, fechaCorte: CORTE })}
+          ${T.cifra('Diferencia', (tl.casillas - tl.normativas > 0 ? '+' : '')
+            + T.num(tl.casillas - tl.normativas), 'calculo',
+            { detalle: 'instaladas − normativas' })}
+          ${T.cifra('Distritos exactos', exactos + ' de ' + local.filas.length, 'calculo',
+            { detalle: 'sin desviación respecto a la norma' })}
+        </div>
+
+        <h4 class="text-h3" style="margin-top:var(--space-lg)">Distritos locales</h4>
+        <div class="tabla-caja" style="margin-top:var(--space-sm)">
+          <table class="tabla tabla--compacta">
+            ${cabecera}
+            <tbody>${local.filas.map((g) => fila(g, 'Distrito local ' + g.distrito)).join('')}</tbody>
+            <tfoot>
+              <tr>
+                <th>Total</th>
+                <td class="num">${T.num(tl.secciones)}</td>
+                <td class="num">${T.num(tl.lista_nominal)}</td>
+                <td class="num">${T.num(Math.round(tl.lista_nominal / tl.secciones))}</td>
+                <td class="num">${T.num(tl.normativas)}</td>
+                <td class="num"><strong>${T.num(tl.casillas)}</strong></td>
+                <td class="num">${tl.casillas - tl.normativas > 0 ? '+' : ''}${tl.casillas - tl.normativas}</td>
+                <td class="num">${T.num(Math.round(tl.lista_nominal / tl.casillas))}</td>
+                <td class="num"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <h4 class="text-h3" style="margin-top:var(--space-lg)">Distritos federales</h4>
+        <div class="tabla-caja" style="margin-top:var(--space-sm)">
+          <table class="tabla tabla--compacta">
+            ${cabecera}
+            <tbody>${federal.filas.map((g) => fila(g, 'Distrito federal ' + g.distrito)).join('')}</tbody>
+          </table>
+        </div>
+        ${federal.huerfanas.length ? `
+          <p class="panel__nota">
+            <strong>${federal.huerfanas.length} secciones quedan fuera del corte
+            federal:</strong> ${T.escapar(federal.huerfanas.join(', '))}. Tienen
+            resultado en 2024 pero no aparecen en el catálogo del INE de 2026 —
+            unas desaparecieron por reseccionalización y otras nunca fueron
+            territoriales (voto anticipado y en el extranjero). Se declaran aquí
+            en vez de repartirse entre los dos distritos.
+          </p>` : ''}
+
+        <p class="panel__nota">
+          <strong>Lo que esta cuenta no dice.</strong> La fórmula predice bien el
+          <em>total</em> de casillas de una sección —reproduce exacto 517 de 542
+          en 2024, y nunca queda por encima de lo instalado— pero no predice el
+          <em>tipo</em>. El excedente sobre la norma no es error: son casillas
+          extraordinarias, que se instalan donde la geografía impide llegar a la
+          casilla de la sección, y especiales, para electores en tránsito.
+          Ninguna de las dos depende del tamaño del padrón, así que ninguna sale
+          de esta división.
+        </p>
+        ${P.pie({
+          fuente: 'Lista nominal y casillas: IEEC, cómputos distritales 2024. '
+            + 'Distritos federales: INE, catálogos cartográficos febrero 2026',
+          fechaCorte: CORTE,
+          metodologia: 'LGIPE art. 253: una casilla por cada '
+            + E.ELECTORES_POR_CASILLA + ' electores de la lista nominal seccional '
+            + 'o fracción, mínimo una por sección. Se calcula por sección y se '
+            + 'suma por distrito; calcularlo sobre el total del distrito daría '
+            + 'menos casillas, porque perdería el redondeo de cada sección.',
+          confianza: 'alta',
+          cobertura: local.filas.length + ' distritos locales · '
+            + federal.filas.length + ' distritos federales',
+        })}
+      </section>`;
   }
 })();

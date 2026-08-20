@@ -21,15 +21,16 @@
     Promise.all([
       T.cargar(),
       E.cargar(),
-      fetch('data/geo/escuelas_campeche.geojson').then((r) => r.json()),
+      // El agregado por municipio lo precalcula build_censo.py: son 13
+      // números. Bajar los 2 MB del geojson para contarlos era la deuda
+      // número uno del proyecto.
+      fetch('data/censo/cct_por_municipio.json').then((r) => r.json()),
     ]).then(([ctx, elec, cct]) => {
       const escuelas = {};
       const alumnado = {};
-      cct.features.forEach((f) => {
-        const k = f.properties.cve_mun;
-        if (!k) return;
-        escuelas[k] = (escuelas[k] || 0) + 1;
-        alumnado[k] = (alumnado[k] || 0) + (f.properties.alumnos_total || 0);
+      Object.entries(cct.municipios).forEach(([k, m]) => {
+        escuelas[k] = m.planteles;
+        alumnado[k] = m.alumnos;
       });
 
       const todos = Object.values(elec.municipios)
