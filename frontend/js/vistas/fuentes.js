@@ -88,7 +88,9 @@
                       : '<span class="text-small">—</span>'}</td>
                     <td>${a.procedencia
                       ? P.badge(a.procedencia, { compacto: true })
-                      : '<span class="text-small">—</span>'}</td>
+                      : a.procedencia_desglosada
+                        ? '<span class="text-small">por bloque</span>'
+                        : '<span class="text-small">—</span>'}</td>
                     <td class="text-small">${a.generado_por
                       ? T.escapar(a.generado_por.split('/').pop())
                       : '<em>captura manual</em>'}</td>

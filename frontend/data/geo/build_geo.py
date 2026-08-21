@@ -189,6 +189,8 @@ def construir_escuelas() -> dict:
             "fecha_corte": None,
             "nota": "Ubicaciones POTENCIALES. Ninguna está aprobada como casilla "
                     "por el INE; eso requiere el encarte del proceso vigente.",
+            "procedencia": "dato",
+            "generado_por": "frontend/data/geo/build_geo.py",
             "total": len(features),
         },
         "features": features,
@@ -250,6 +252,10 @@ def construir_cabeceras(escuelas: dict) -> dict:
             "nota": "Coordenada = mediana de las escuelas de la localidad cabecera. "
                     "Punto de anclaje para el coloreado provisional; NO es el "
                     "centroide del municipio ni sustituye al polígono del INEGI.",
+            # CÁLCULO, no dato: la SEP no publica una coordenada de cabecera.
+            # Ésta la derivamos nosotros y por eso no se marca como dato.
+            "procedencia": "calculo",
+            "generado_por": "frontend/data/geo/build_geo.py",
             "total": len(features),
         },
         "features": features,

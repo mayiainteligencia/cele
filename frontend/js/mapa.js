@@ -109,40 +109,59 @@
         {
           id: 'distritos_federales',
           etiqueta: 'Distritos federales (2)',
+          queElige: 'Elige diputaciones al Congreso de la Unión.',
+          origen: 'INE — Cartografía electoral (SIGE8), corte 2026-02',
           estado: 'disponible',
           tipo: 'poligono',
           archivo: 'distritos_federales.geojson',
           claveGeo: 'numero',
           nombre: 'etiqueta',
           // Los 2 federales son la división más gruesa: línea sólida y ancha.
-          trazo: { color: '--serie-3', grosor: 3, relleno: 0.04 },
+          // Ámbar: el matiz más cálido de los tres, para que la división
+          // mayor se lea primero.
+          trazo: { color: '--serie-4', grosor: 3.5, relleno: 0.04 },
           bajoDemanda: true, // 471 KB
         },
         {
           id: 'distritos_locales',
           etiqueta: 'Distritos locales (21)',
+          queElige: 'Elige diputaciones al Congreso del Estado de Campeche.',
+          origen: 'INE — Cartografía electoral (SIGE8), corte 2026-02',
           estado: 'disponible',
           tipo: 'poligono',
           archivo: 'distritos_locales.geojson',
           claveGeo: 'numero',
           nombre: 'etiqueta',
           // 21 locales: la rejilla más fina, en guion corto para que no compita
-          // con el trazo federal cuando ambos están encendidos.
-          trazo: { color: '--serie-4', grosor: 1.5, guion: '5,4', relleno: 0.03 },
+          // con el trazo federal cuando ambos están encendidos. Cian, en el
+          // extremo frío opuesto al ámbar federal.
+          trazo: { color: '--serie-2', grosor: 1.75, guion: '5,4', relleno: 0.03 },
           bajoDemanda: true, // 596 KB
         },
         {
           id: 'distritos_judiciales',
-          etiqueta: 'Distritos judiciales electorales',
+          etiqueta: 'Distrito judicial electoral (1, todo el estado)',
+          queElige: 'Demarcación para la elección de cargos judiciales. '
+                  + 'No tiene partido asociado: la boleta judicial no lleva '
+                  + 'afiliación partidista.',
+          origen: 'INE — Cartografía electoral (SIGE8), corte 2026-02',
           estado: 'disponible',
           tipo: 'poligono',
           archivo: 'distritos_judiciales.geojson',
           claveGeo: 'numero',
           nombre: 'etiqueta',
-          ficha: [['circuito', 'Circuito']],
-          // Uno solo, y cubre el estado entero: guion largo y sin relleno, para
-          // que no tape lo que hay debajo.
-          trazo: { color: '--serie-6', grosor: 2, guion: '12,6', relleno: 0 },
+          // El circuito lo publica fichaDistrito junto al resto del bloque
+          // judicial; declararlo también aquí lo imprimía dos veces.
+          // OJO: el distrito judicial 1 ES Campeche entero — el 58 % de sus
+          // vértices caen a menos de 500 m del límite estatal (medido contra
+          // limite_estatal.geojson). Con un trazo fino y sin relleno se
+          // dibujaba exactamente encima del contorno del estado, que ya está
+          // pintado, y el usuario veía "no pasó nada" al encender la capa.
+          //
+          // Por eso: punteado ancho —que no se confunde con el sólido federal
+          // ni con el guion corto local— y un tinte apenas perceptible que
+          // confirma que la capa respondió al clic. Rosa, el tercer matiz.
+          trazo: { color: '--serie-6', grosor: 4, guion: '1,9', relleno: 0.05 },
           bajoDemanda: true, // 442 KB
         },
         {
@@ -313,6 +332,14 @@
 
     if (extra) filas += extra;
 
+    // Qué se elige en esta demarcación. Las tres se dibujan igual y se
+    // superponen sobre el mismo territorio; sin esto no hay forma de saber
+    // que responden a tres elecciones distintas.
+    let queElige = '';
+    if (capa.queElige) {
+      queElige = `<p class="mapa-ficha__quelige">${escapar(capa.queElige)}</p>`;
+    }
+
     // Estatus de ubicación: una escuela registrada NO es una casilla futura.
     let aviso = '';
     if (props.estatus_ubicacion) {
@@ -328,6 +355,7 @@
       <div class="mapa-ficha">
         <h4 class="mapa-ficha__titulo">${titulo}</h4>
         <p class="mapa-ficha__clave">${clave}</p>
+        ${queElige}
         ${aviso}
         ${filas ? `<table class="mapa-ficha__tabla"><tbody>${filas}</tbody></table>` : ''}
         <dl class="mapa-ficha__meta">
@@ -497,15 +525,36 @@
       // existe justamente para distinguir categorías sin ordenarlas.
       const tr = capa.trazo || {};
       const linea = token(tr.color || '--mapa-limite');
+
+      // `colorFeature` deja que el módulo tiña cada polígono según algo que el
+      // mapa no tiene por qué conocer —quién ganó ahí, por ejemplo—. Devuelve
+      // un token o null; null significa "sin dato", y entonces la capa se
+      // queda con su trazo normal en vez de pintarse de un color inventado.
+      const teñir = (f) => {
+        if (!cfg.colorFeature) return null;
+        const tok = cfg.colorFeature(f.properties || {}, capa.id);
+        return tok ? token(tok) : null;
+      };
+
       return L.geoJSON(json, {
-        style: () => ({
-          color: linea,
+        style: (f) => ({
+          color: teñir(f) || linea,
           weight: tr.grosor || 1.5,
           // El guion distingue por FORMA, no sólo por color: dos capas
           // encendidas se separan aunque el usuario no distinga los tonos.
           dashArray: tr.guion || null,
-          fillColor: linea,
-          fillOpacity: tr.relleno === undefined ? 0.05 : tr.relleno,
+          fillColor: teñir(f) || linea,
+          // Un polígono teñido sube su relleno: es el color lo que comunica,
+          // no la línea. Sin tinte se respeta el relleno declarado en la capa.
+          fillOpacity: teñir(f) ? 0.45
+                     : tr.relleno === undefined ? 0.05 : tr.relleno,
+          // Leaflet simplifica cada trazo al dibujarlo (Douglas-Peucker) y su
+          // `smoothFactor` por defecto es 1.0 ≈ 1 px de tolerancia. Sobre una
+          // costa como la de Campeche eso recorta entrantes visibles y el
+          // distrito se ve aplanado contra el mapa oficial del INE — aunque el
+          // dato guardado tenga los 1 955 vértices exactos que da la API.
+          // 0.4 conserva el detalle sin volver el render pesado.
+          smoothFactor: 0.4,
         }),
         onEachFeature: (f, lyr) => enlazar(f, lyr, capa),
       });
@@ -547,17 +596,95 @@
       if (ev.key === 'Escape' && !panelFicha.hidden) cerrarFicha();
     });
 
+
+    /* ── Bloque "Conoce tu distrito", formato INE ──
+       La página oficial del INE responde a un punto con tres bloques idénticos
+       en forma: clave de entidad + número de distrito, uno por cada división.
+       Se reproduce ese formato porque es el que la gente ya reconoce de
+       cartografia.ine.mx, y porque hace explícito que son tres divisiones
+       distintas sobre el mismo territorio, no una jerarquía.
+
+       El número NO se saca de una tabla nuestra: se resuelve por geometría,
+       preguntando qué polígono descargado del INE contiene al punto clicado.
+       Si ninguno lo contiene —o la capa no se pudo cargar— se dice que falta
+       el dato. Nunca se rellena con un número plausible. */
+
+    const DIVISIONES = [
+      ['distritos_federales', 'Distrito federal'],
+      ['distritos_locales',   'Distrito local'],
+      ['distritos_judiciales', 'Distrito judicial'],
+    ];
+
+    // Rayo horizontal, con paridad por anillo: un anillo interior (hueco)
+    // invierte la pertenencia, que es justo lo que necesita un distrito con
+    // enclaves. Sirve para Polygon y MultiPolygon.
+    function dentroAnillo(pt, anillo) {
+      let dentro = false;
+      for (let i = 0, j = anillo.length - 1; i < anillo.length; j = i++) {
+        const [xi, yi] = anillo[i];
+        const [xj, yj] = anillo[j];
+        if ((yi > pt[1]) !== (yj > pt[1]) &&
+            pt[0] < ((xj - xi) * (pt[1] - yi)) / (yj - yi) + xi) dentro = !dentro;
+      }
+      return dentro;
+    }
+
+    function dentro(pt, geom) {
+      const polis = geom.type === 'Polygon' ? [geom.coordinates]
+                  : geom.type === 'MultiPolygon' ? geom.coordinates : [];
+      for (const anillos of polis) {
+        if (!anillos.length || !dentroAnillo(pt, anillos[0])) continue;
+        // Está dentro del contorno; queda fuera si cae en un hueco.
+        let enHueco = false;
+        for (let k = 1; k < anillos.length; k++) {
+          if (dentroAnillo(pt, anillos[k])) { enHueco = true; break; }
+        }
+        if (!enHueco) return true;
+      }
+      return false;
+    }
+
+    function bloqueINE(latlng) {
+      const pt = [latlng.lng, latlng.lat];
+      const filas = DIVISIONES.map(([id, etiqueta]) => {
+        const json = datos[id];
+        let valor;
+        if (!json) {
+          valor = '<em>capa sin cargar</em>';
+        } else {
+          const hit = (json.features || []).find((f) => f.geometry && dentro(pt, f.geometry));
+          valor = hit ? escapar(hit.properties.numero) : '<em>falta ese dato</em>';
+        }
+        return `
+          <div class="mapa-ine__bloque">
+            <span class="mapa-ine__par"><span>Clave de entidad:</span> <strong>4</strong></span>
+            <span class="mapa-ine__par"><span>${escapar(etiqueta)}:</span> <strong>${valor}</strong></span>
+          </div>`;
+      }).join('');
+
+      return `
+        <section class="mapa-ine">
+          <h5 class="mapa-ine__titulo">Conoce tu distrito</h5>
+          ${filas}
+          <p class="mapa-ine__nota">
+            Resuelto contra los polígonos del INE (SIGE8, corte 2026-02)
+            preguntando cuál contiene este punto. Enciende la capa para que su
+            división se pueda resolver.
+          </p>
+        </section>`;
+    }
+
     function enlazar(feature, layer, capa) {
       // fichaExtra deja que el módulo cuelgue filas propias sin que el mapa
       // tenga que saber de resultados electorales.
       layer.on('click', (ev) => {
         L.DomEvent.stop(ev);   // que el clic del mapa no cierre lo que abrimos
         resaltar(layer);
-        mostrarFicha(ficha(
-          feature.properties,
-          capa,
-          cfg.fichaExtra ? cfg.fichaExtra(feature.properties, capa.id) : ''
-        ));
+        const extra = cfg.fichaExtra
+          ? cfg.fichaExtra(feature.properties, capa.id) : '';
+        const ine = capa.id.startsWith('distritos_') && ev.latlng
+          ? bloqueINE(ev.latlng) : '';
+        mostrarFicha(ficha(feature.properties, capa, extra) + ine);
         if (cfg.alSeleccionar) cfg.alSeleccionar(feature.properties, capa.id);
       });
     }
@@ -805,6 +932,9 @@
                        ${pendiente ? 'disabled' : ''}>
                 ${muestra}<span>${escapar(c.etiqueta)}</span>
               </label>
+              ${c.queElige
+                ? `<p class="mapa-panel__quelige">${escapar(c.queElige)}</p>`
+                : ''}
               ${pendiente
                 ? `<span class="mapa-panel__pendiente" title="${escapar(c.origen)}">pendiente de insumo</span>`
                 : ''}

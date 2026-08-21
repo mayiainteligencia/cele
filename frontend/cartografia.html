@@ -303,8 +303,11 @@
       // que duplicar el 4.5 aquí, y una constante duplicada es una constante
       // que se desincroniza en cuanto llegue más tracking.
       Electoral.cargarEncuestas(),
+      // El ganador de mayoría relativa por distrito local, para teñir esa
+      // capa. Si falla, el mapa sigue: se pierde el color, no la página.
+      Electoral.cargarDiputaciones().catch(() => null),
     ])
-      .then(([json, elec, censo, encuestas]) => {
+      .then(([json, elec, censo, encuestas, dip]) => {
         const escuelas = {};
         const alumnado = {};
         json.features.forEach((f) => {
@@ -373,6 +376,70 @@
         elec.sigma = encuestas.sigma_recomendada.recomendado_pp;
         Censo.registrarVariables(censo);
 
+        /* ── Quién ganó cada distrito local ──
+           Se reusa `mr_distritos` de diputaciones_2024.json tal cual: es el
+           reparto de mayoría relativa ya construido y verificado contra el
+           acuerdo CG/116/2024. Aquí no se recalcula ningún ganador — sólo se
+           indexa por número de distrito para poder teñir su polígono.
+
+           No hay equivalente federal: los 21 archivos DIP MR del IEEC son de
+           diputaciones LOCALES (lo dice su propio encabezado), así que la capa
+           de distritos federales se queda sin tinte en vez de heredar un
+           ganador de otra elección. Y la judicial no se tiñe por diseño: los
+           cargos judiciales de elección popular no llevan partido en la boleta.
+
+           `dip` puede no haber cargado; el operador ?. deja el mapa funcionando
+           sin color en vez de romper la página entera por un choropleth. */
+        const ganadorLocal = {};
+        (dip && dip.mr_distritos ? dip.mr_distritos : []).forEach((d) => {
+          ganadorLocal[d.distrito] = d;
+        });
+
+        /* Filas propias de cada tipo de distrito. Cada demarcación responde
+           por lo suyo y calla sobre lo que no le toca:
+
+           - local    → quién ganó la mayoría relativa ahí en 2024.
+           - judicial → circuito y distrito, que es el dato judicial real que
+                        existe. NO se tiñe ni se le atribuye partido: los
+                        cargos judiciales de elección popular (reforma
+                        2024-2025) no llevan afiliación partidista en la
+                        boleta, así que un color de partido aquí sería una
+                        afirmación falsa, no una simplificación.
+           - federal  → se declara que falta el resultado, en vez de heredar
+                        el local. Son elecciones distintas. */
+        function fichaDistrito(props, capaId) {
+          const fila = (k, v) => `<tr><th>${esc(k)}</th><td>${v}</td></tr>`;
+
+          if (capaId === 'distritos_locales') {
+            const g = ganadorLocal[props.numero];
+            if (!g) return '';
+            const col = `var(${Electoral.color(g.ganador)})`;
+            return '<tr><th colspan="2" class="mapa-ficha__sub">'
+              + 'Diputación local 2024 (mayoría relativa)</th></tr>'
+              + fila('Ganó', `<span class="punto-color" style="background:${col}"></span> `
+                     + esc(Electoral.etiqueta(g.ganador)))
+              + fila('Votos', (g.votos || 0).toLocaleString('es-MX'))
+              + fila('Porcentaje', esc(g.pct) + ' %')
+              + fila('Segundo lugar', esc(Electoral.etiqueta(g.segundo)))
+              + fila('Margen', esc(g.margen_pp) + ' pp');
+          }
+
+          if (capaId === 'distritos_judiciales') {
+            return '<tr><th colspan="2" class="mapa-ficha__sub">'
+              + 'Demarcación judicial</th></tr>'
+              + fila('Circuito', esc(props.circuito))
+              + fila('Distrito judicial', esc(props.numero))
+              + fila('Partido', '<em>no aplica</em>');
+          }
+
+          if (capaId === 'distritos_federales') {
+            return '<tr><th colspan="2" class="mapa-ficha__sub">'
+              + 'Diputación federal</th></tr>'
+              + fila('Resultado', '<em>sin dato en el repositorio</em>');
+          }
+          return '';
+        }
+
         const fichaSeccion = Electoral.fichaSeccion(elec);
         const fichaMunicipio = Electoral.fichaMunicipio(elec);
         const fichaCenso = Censo.ficha(censo);
@@ -380,12 +447,20 @@
         const mapa = CerebroMapa.crear('#mapa-cartografia', {
           capas: ['limite', 'municipios', 'localidades', 'casillas_2024'],
           panelCapas: true,
+          // Sólo se tiñe el distrito local, y sólo si hay ganador para ese
+          // número. Devolver null es "sin dato": la capa mantiene su trazo.
+          colorFeature: (props, capaId) => {
+            if (capaId !== 'distritos_locales') return null;
+            const g = ganadorLocal[props.numero];
+            return g ? Electoral.color(g.ganador) : null;
+          },
           // El punto de la casilla abre con el plantel y con el resultado de
           // su sección; el polígono, con lo suyo. Cada geometría responde por
           // lo que es.
           fichaExtra: (props, capaId) => {
             const escuela = props.cct ? porCct[props.cct] : null;
             return (escuela ? filasEscuela(escuela) : '')
+              + fichaDistrito(props, capaId)
               + fichaSeccion(props, capaId)
               + fichaMunicipio(props, capaId)
               + fichaCenso(props, capaId);

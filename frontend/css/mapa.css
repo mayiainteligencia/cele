@@ -573,3 +573,72 @@
 
   .mapa .leaflet-overlay-pane path.leaflet-interactive { transition: none; }
 }
+
+/* ── Bloque "Conoce tu distrito" ──
+   Reproduce el formato de cartografia.ine.mx: tres bloques con la misma
+   forma (clave de entidad + número), uno por división. Se separan con línea
+   para que se lean como tres respuestas y no como una lista continua. */
+.mapa-ine {
+  margin-top: var(--space-md);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--glass-border);
+}
+
+.mapa-ine__titulo {
+  margin: 0 0 var(--space-sm);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.mapa-ine__bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: var(--space-xs) 0;
+}
+
+.mapa-ine__bloque + .mapa-ine__bloque {
+  border-top: 1px dashed var(--glass-border);
+}
+
+.mapa-ine__par {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.mapa-ine__par strong {
+  color: var(--text-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+.mapa-ine__nota {
+  margin: var(--space-sm) 0 0;
+  font-size: 0.66rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+/* Qué elige cada demarcación. Las tres capas de distrito se dibujan sobre el
+   mismo territorio y sin esto no hay cómo saber que responden a elecciones
+   distintas — federal, estatal y judicial. */
+.mapa-panel__quelige {
+  margin: 0.15rem 0 0 1.55rem;
+  font-size: 0.66rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.mapa-ficha__quelige {
+  margin: 0 0 var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  border-left: 2px solid var(--glass-border);
+}

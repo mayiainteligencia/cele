@@ -3,9 +3,25 @@
     "nombre": "Contexto estatal de Campeche",
     "que_es": "Cifras de contexto que no salen de un archivo procesable: se capturan a mano de la publicación de cada institución. Todo lo de 2024 (casillas, secciones, resultados, lista nominal por municipio) NO vive aquí: sale de data/electoral/, que se genera del insumo original.",
     "regla": "INEGI y INE no se mezclan. Población y características socioeconómicas son del INEGI; lista nominal, secciones y casillas son del INE/IEEC. Si una cifra cruza las dos, va marcada como cálculo.",
-    "captura": "2026-08"
+    "captura": "2026-08",
+    "fuentes": {
+      "inegi": "INEGI — Censo de Población y Vivienda 2020",
+      "ine": "INE — Estadísticas del Padrón Electoral y Lista Nominal",
+      "nse": "Estimación propia de Cerebro Electoral",
+      "proyeccion_2027": "Modelo propio de Cerebro Electoral"
+    },
+    "fecha_corte": null,
+    "por_que_sin_fecha_corte": "No hay una: cada bloque tiene la suya (Censo 2020, INE 2024, proyección 2027). Poner una sola aquí sería atribuirle a todo el corte de uno.",
+    "procedencia_por_bloque": {
+      "inegi": "dato",
+      "ine": "dato",
+      "nse": "estimacion",
+      "historico": "dato",
+      "proyeccion_2027": "simulado"
+    },
+    "generado_por": null,
+    "por_que_sin_pipeline": "Ningún script lo escribe. Son cifras que cada institución publica en prosa o en PDF, capturadas a mano y fechadas en `captura`. Si alguna llega a publicarse en formato procesable, sale de aquí y se va a su propio pipeline."
   },
-
   "inegi": {
     "fuente": "INEGI — Censo de Población y Vivienda 2020",
     "fecha_corte": "2020-03",
@@ -15,15 +31,28 @@
     "edad_mediana": 29,
     "densidad_hab_km2": 16,
     "lengua_indigena_pct": 4.35,
-    "lenguas_principales": ["maya", "ch'ol", "tseltal"],
+    "lenguas_principales": [
+      "maya",
+      "ch'ol",
+      "tseltal"
+    ],
     "informalidad_establecimientos_pct": 54.7,
     "extremos": {
-      "mas_poblado": { "cve_mun": "04002", "nombre": "Campeche", "poblacion": 294077, "pct_estatal": 31.6 },
-      "menos_poblado": { "cve_mun": "04007", "nombre": "Palizada", "poblacion": 8683, "pct_estatal": 1.0 }
+      "mas_poblado": {
+        "cve_mun": "04002",
+        "nombre": "Campeche",
+        "poblacion": 294077,
+        "pct_estatal": 31.6
+      },
+      "menos_poblado": {
+        "cve_mun": "04007",
+        "nombre": "Palizada",
+        "poblacion": 8683,
+        "pct_estatal": 1.0
+      }
     },
     "pendiente": "El desglose de población por municipio no está cargado. Sólo se publican los dos extremos, que son los que trae la ficha del INEGI. Ninguna otra cifra municipal de población se muestra hasta que se cargue el tabulado del Censo."
   },
-
   "ine": {
     "fuente": "INE — Estadísticas del Padrón Electoral y Lista Nominal",
     "fecha_corte": "2024-06",
@@ -31,11 +60,13 @@
     "mujeres": 349271,
     "hombres": 333559,
     "distritos_federales": 2,
-    "distritos_federales_cabeceras": ["Campeche", "Ciudad del Carmen"],
+    "distritos_federales_cabeceras": [
+      "Campeche",
+      "Ciudad del Carmen"
+    ],
     "distritos_locales": 21,
     "nota_lista_nominal": "El corte del padrón publica 682,833. La suma de la lista nominal de las actas de cómputo de 2024 da 691,104. No es una contradicción: son dos cortes distintos, uno del padrón y otro del día de la jornada. En esta plataforma cada cifra se muestra con su origen y no se promedian."
   },
-
   "nse": {
     "procedencia": "estimacion",
     "confianza": "media",
@@ -92,18 +123,46 @@
       "procedencia": "inferencia",
       "nota": "Clasificación cualitativa por perfil económico dominante. NO es un porcentaje por municipio: el modelo no baja a ese nivel y no se va a inventar el desglose.",
       "grupos": [
-        { "etiqueta": "Urbano petrolero", "municipios": ["04003"],
-          "rasgo": "Ingreso alto concentrado y costo de vida alto." },
-        { "etiqueta": "Urbano burocrático", "municipios": ["04002"],
-          "rasgo": "Clase media de empleo público, estable y compacta." },
-        { "etiqueta": "Urbano intermedio", "municipios": ["04001", "04004", "04009", "04012", "04013"],
-          "rasgo": "Cabecera con servicios y periferia con carencias." },
-        { "etiqueta": "Rural con rezago", "municipios": ["04005", "04006", "04007", "04008", "04010", "04011"],
-          "rasgo": "Predominio de trabajo informal y agrícola, carencias de infraestructura." }
+        {
+          "etiqueta": "Urbano petrolero",
+          "municipios": [
+            "04003"
+          ],
+          "rasgo": "Ingreso alto concentrado y costo de vida alto."
+        },
+        {
+          "etiqueta": "Urbano burocrático",
+          "municipios": [
+            "04002"
+          ],
+          "rasgo": "Clase media de empleo público, estable y compacta."
+        },
+        {
+          "etiqueta": "Urbano intermedio",
+          "municipios": [
+            "04001",
+            "04004",
+            "04009",
+            "04012",
+            "04013"
+          ],
+          "rasgo": "Cabecera con servicios y periferia con carencias."
+        },
+        {
+          "etiqueta": "Rural con rezago",
+          "municipios": [
+            "04005",
+            "04006",
+            "04007",
+            "04008",
+            "04010",
+            "04011"
+          ],
+          "rasgo": "Predominio de trabajo informal y agrícola, carencias de infraestructura."
+        }
       ]
     }
   },
-
   "historico": {
     "procesos": [
       {
@@ -114,16 +173,30 @@
         "procedencia": "dato",
         "titular": "La elección más cerrada de la historia moderna del estado: tres fuerzas en tercios.",
         "resultados": [
-          { "bloque": "SHH", "etiqueta": "Morena-PT", "pct": 33.2, "candidatura": "Layda Sansores" },
-          { "bloque": "MC", "etiqueta": "Movimiento Ciudadano", "pct": 31.5, "candidatura": "Eliseo Fernández" },
-          { "bloque": "PRI-PRD", "etiqueta": "PRI-PAN-PRD", "pct": 30.8, "candidatura": "Christian Castro" }
+          {
+            "bloque": "SHH",
+            "etiqueta": "Morena-PT",
+            "pct": 33.2,
+            "candidatura": "Layda Sansores"
+          },
+          {
+            "bloque": "MC",
+            "etiqueta": "Movimiento Ciudadano",
+            "pct": 31.5,
+            "candidatura": "Eliseo Fernández"
+          },
+          {
+            "bloque": "PRI-PRD",
+            "etiqueta": "PRI-PAN-PRD",
+            "pct": 30.8,
+            "candidatura": "Christian Castro"
+          }
         ],
         "nota": "Porcentajes redondeados a una decimal tal como los publica el cómputo estatal."
       }
     ],
     "lectura": "En 2021 la distancia entre el primero y el tercero fue de 2.4 puntos. En 2024, con el mismo electorado, el primero saca más de 15 puntos al segundo y el bloque PRI-PRD cae a un tercio de lo que tenía. No es un desplazamiento, es un reordenamiento: el tripartidismo dejó de existir."
   },
-
   "proyeccion_2027": {
     "procedencia": "estimacion",
     "confianza": "media",
@@ -146,7 +219,10 @@
         "prob_victoria": 65,
         "rol": "Favorito probable",
         "analisis": "Piso alto sostenido por la estructura de programas sociales federales y el control del aparato estatal. Sólo una ruptura interna mayor mueve este escenario.",
-        "figuras": ["Liz Hernández", "Aníbal Ostoa"]
+        "figuras": [
+          "Liz Hernández",
+          "Aníbal Ostoa"
+        ]
       },
       {
         "bloque": "MC",
@@ -156,7 +232,10 @@
         "prob_victoria": 30,
         "rol": "Retador volátil",
         "analisis": "La única fuerza con crecimiento orgánico. Su rango es el más ancho porque depende casi por completo de la candidatura: si logra polarizar, su techo toca el piso del primero.",
-        "figuras": ["Biby Rabelo", "Eliseo Fernández"]
+        "figuras": [
+          "Biby Rabelo",
+          "Eliseo Fernández"
+        ]
       },
       {
         "bloque": "PRI-PRD",

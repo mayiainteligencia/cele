@@ -152,6 +152,10 @@ def convertir(zf: zipfile.ZipFile, base: str) -> dict:
             "fuente": FUENTE,
             "fecha_corte": FECHA_CORTE,
             "crs_origen": "EPSG:6372 (Mexico ITRF2008 / LCC)",
+            # Geometría del INEGI reproyectada a WGS84. Reproyectar no la
+            # convierte en cálculo: es el mismo polígono en otro sistema.
+            "procedencia": "dato",
+            "generado_por": "frontend/data/geo/build_inegi.py",
             "total": len(features),
         },
         "features": features,
