@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Integración de casillas de Campeche por tipo INE: básica, contigua, extraordinaria y especial.">
-  <title>Dónde se vota · Cerebro Electoral</title>
+  <meta name="description" content="Resultados de procesos anteriores y proyección probabilística 2027 con intervalos y escenarios.">
+  <title>Predicción 2027 · Cerebro Electoral</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/auth.css">
 </head>
-<body data-page="casillas">
+<body data-page="prediccion">
 
   <nav class="sidebar" id="sidebar" aria-label="Navegación principal"></nav>
 
@@ -27,13 +27,13 @@
 
       <section class="mando-header">
         <div class="mando-header__title-box">
-          <h1><i data-lucide="vote"></i> Dónde se vota</h1>
-          <p>Las 1,230 casillas que se instalaron en Campeche en 2024, clasificadas con la nomenclatura oficial del INE. Las de 2027 están pendientes de aprobación.</p>
+          <h1><i data-lucide="trending-up"></i> Predicción 2027</h1>
+          <p>Hacia dónde apunta la gubernatura de 2027, con su rango y su probabilidad.</p>
         </div>
         <div class="mando-header__pills" id="cabecera-pills"></div>
       </section>
 
-      <div id="filtros"></div>
+      
       <div id="aviso"></div>
       <div data-territorio id="contenido"></div>
 
@@ -46,6 +46,6 @@
   <script src="js/electoral.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
-  <script src="js/vistas/casillas.js"></script>
+  <script src="js/vistas/prediccion.js"></script>
 </body>
 </html>

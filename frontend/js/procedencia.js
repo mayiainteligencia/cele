@@ -93,6 +93,11 @@
       op.fuente ? `Fuente: ${op.fuente}` : '',
       op.fechaCorte ? `Corte: ${op.fechaCorte}` : '',
       op.confianza ? CONFIANZA[op.confianza] || op.confianza : '',
+      // Nota libre, para lo que sólo aplica a esa cifra: por ejemplo que una
+      // simulación tiene semilla fija y por tanto es reproducible. Va en el
+      // tooltip para que la aclaración exista donde alguien la busca, sin
+      // ocupar sitio en pantalla.
+      op.nota || '',
     ].filter(Boolean).join(' · ');
 
     const detalle = op.detalle

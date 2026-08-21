@@ -21,26 +21,13 @@
     Promise.all([
       T.cargar(),
       E.cargar(),
-      // El agregado por municipio lo precalcula build_censo.py: son 13
-      // números. Bajar los 2 MB del geojson para contarlos era la deuda
-      // número uno del proyecto.
-      fetch('data/censo/cct_por_municipio.json').then((r) => r.json()),
-    ]).then(([ctx, elec, cct]) => {
-      const escuelas = {};
-      const alumnado = {};
-      Object.entries(cct.municipios).forEach(([k, m]) => {
-        escuelas[k] = m.planteles;
-        alumnado[k] = m.alumnos;
-      });
-
+      // Ya no se descarga el agregado CCT: los planteles son la pregunta de
+      // "Dónde se vota", no la de quién vive aquí.
+    ]).then(([ctx, elec]) => {
       const todos = Object.values(elec.municipios)
-        .sort((a, b) => a.cve_mun.localeCompare(b.cve_mun))
-        .map((m) => Object.assign({}, m, {
-          escuelas_cct: escuelas[m.cve_mun] || 0,
-          alumnado_cct: alumnado[m.cve_mun] || 0,
-        }));
+        .sort((a, b) => a.cve_mun.localeCompare(b.cve_mun));
 
-      const datos = { municipios: todos, ctx: ctx, cct: cct.metadata };
+      const datos = { municipios: todos, ctx: ctx };
       const vista = Object.assign({}, datos);
       vista.municipios = T.conectarFiltros(datos, (mun) => {
         vista.municipios = mun;
@@ -61,8 +48,6 @@
 
     const suma = (f) => mun.reduce((a, m) => a + f(m), 0);
     const lista = suma((m) => m.lista_nominal);
-    const escuelas = suma((m) => m.escuelas_cct);
-    const alumnado = suma((m) => m.alumnado_cct);
     const casillas = suma((m) => (m.casillas_tipo ? m.casillas_tipo.total : 0));
     const secciones = suma((m) => (m.casillas_tipo ? m.casillas_tipo.secciones_con_casilla : 0));
     const maxLista = Math.max(...mun.map((m) => m.lista_nominal));
@@ -205,34 +190,11 @@
         </p>
       </section>
 
-      <!-- ── Infraestructura CCT ── -->
-      <section class="panel">
-        <h3 class="text-h3 panel__titulo">
-          <i data-lucide="school"></i> Infraestructura educativa
-          <span class="badge badge--success">Origen: SEP</span>
-        </h3>
-        <div class="rejilla-tarjetas">
-          ${T.cifra('Registros CCT', T.num(escuelas), 'dato',
-            { fuente: 'SEP — Catálogo de Centros de Trabajo' })}
-          ${T.cifra('Sitios físicos', '1,482', 'calculo',
-            { detalle: 'coordenadas únicas', fuente: 'SEP — CCT' })}
-          ${T.cifra('Alumnado registrado', T.num(alumnado), 'dato',
-            { fuente: 'SEP — Catálogo de Centros de Trabajo' })}
-          ${T.cifra('Alumnado por plantel', T.num(Math.round(alumnado / escuelas)), 'calculo',
-            { detalle: 'alumnado ÷ registros' })}
-        </div>
-        <p class="panel__nota">
-          El catálogo CCT no declara fecha de corte, así que no se le inventa una.
-          Un plantel con dos turnos cuenta como dos registros y un solo sitio
-          físico: para hablar de casillas se usan los 1,482 sitios, no los 2,274
-          registros.
-        </p>
-        ${P.pie({
-          fuente: 'SEP — Catálogo de Centros de Trabajo',
-          fechaCorte: null,
-          cobertura: '2,274 registros en 13 municipios',
-        })}
-      </section>
+      <!-- El panel de infraestructura educativa vivía aquí, y también en
+           municipios.html y en su propia vista. Tres sitios para el mismo
+           dato. Ahora vive sólo en "Dónde se vota", que es la pregunta a la
+           que sirve: en qué inmueble se instala una casilla. -->
+
 
       <!-- ── Tabla municipal ── -->
       <section class="panel">
@@ -248,8 +210,6 @@
                 <th class="num">Secciones <span class="badge badge--success">INE</span></th>
                 <th class="num">Casillas 2024 <span class="badge badge--success">INE</span></th>
                 <th class="num">Participación 2024 <span class="badge badge--success">IEEC</span></th>
-                <th class="num">Escuelas <span class="badge badge--neutral">SEP</span></th>
-                <th class="num">Alumnado <span class="badge badge--neutral">SEP</span></th>
               </tr>
             </thead>
             <tbody>
@@ -263,8 +223,6 @@
                   <td class="num">${T.num(m.casillas_tipo ? m.casillas_tipo.secciones_con_casilla : null)}</td>
                   <td class="num">${T.num(m.casillas_tipo ? m.casillas_tipo.total : null)}</td>
                   <td class="num">${T.pct(m.participacion)}</td>
-                  <td class="num">${T.num(m.escuelas_cct)}</td>
-                  <td class="num">${T.num(m.alumnado_cct)}</td>
                 </tr>`).join('')}
             </tbody>
             <tfoot>
@@ -275,8 +233,6 @@
                 <td class="num">${T.num(secciones)}</td>
                 <td class="num">${T.num(casillas)}</td>
                 <td class="num">${T.pct(suma((m) => m.total) / lista * 100)}</td>
-                <td class="num">${T.num(escuelas)}</td>
-                <td class="num">${T.num(alumnado)}</td>
               </tr>
             </tfoot>
           </table>

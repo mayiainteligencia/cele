@@ -29,13 +29,18 @@ const NAV = [
     page: 'territorio', icon: 'map', label: 'Territorio',
     href: 'cartografia.html',
     sub: [
+      // Una pregunta por vista. Antes `historico` respondía cuatro (cómo se
+      // votó en 2024, cómo quedó el Congreso, cómo se votó en 2021 y qué pasa
+      // en 2027) y los datos de escuelas estaban repartidos en tres vistas.
       { href: 'cartografia.html',    page: 'cartografia',    label: 'Mapa maestro',    icon: 'layers' },
       { href: 'municipios.html',     page: 'municipios',     label: 'Municipios',      icon: 'building-2' },
-      { href: 'infraestructura.html', page: 'infraestructura', label: 'Infraestructura CCT', icon: 'school' },
-      { href: 'casillas.html',       page: 'casillas',       label: 'Casillas',        icon: 'vote' },
-      { href: 'demografia.html',     page: 'demografia',     label: 'Demografía y lista nominal', icon: 'users-round' },
+      { href: 'demografia.html',     page: 'demografia',     label: 'Demografía',      icon: 'users-round' },
       { href: 'nse.html',            page: 'nse',            label: 'Socioeconómico',  icon: 'layers-3' },
-      { href: 'historico.html',      page: 'historico',      label: 'Histórico y proyección', icon: 'trending-up' },
+      // Casillas e inmuebles eran dos pestañas para una sola pregunta: el
+      // catálogo CCT existe justamente como sitios candidatos a alojar casilla.
+      { href: 'casillas.html',       page: 'casillas',       label: 'Dónde se vota',   icon: 'vote' },
+      { href: 'historico.html',      page: 'historico',      label: 'Resultados',      icon: 'history' },
+      { href: 'prediccion.html',     page: 'prediccion',     label: 'Predicción',      icon: 'trending-up' },
     ],
   },
   {

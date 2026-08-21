@@ -18,20 +18,14 @@
   const E = window.Electoral;
 
   document.addEventListener('DOMContentLoaded', () => {
-    Promise.all([T.cargar(), E.cargar(), E.cargarProyeccion(),
-                 E.cargarDiputaciones()])
-      .then(([ctx, elec, proyeccion, dip]) => {
+    // Ya no carga la proyección: esta vista es sólo lo medido.
+    Promise.all([T.cargar(), E.cargar(), E.cargarDiputaciones()])
+      .then(([ctx, elec, dip]) => {
       const todos = Object.values(elec.municipios)
         .sort((a, b) => a.cve_mun.localeCompare(b.cve_mun));
       const datos = {
         municipios: todos,
         historico: ctx.historico,
-        proyeccion: ctx.proyeccion_2027,
-        // `simulacion` y `sensibilidad` son las claves del archivo; el
-        // cargador genérico ya no las renombra.
-        sim: proyeccion.simulacion,
-        sensibilidad: proyeccion.sensibilidad,
-        metaProyeccion: proyeccion.meta,
         dip: dip,
         meta: elec.meta,
       };
@@ -203,9 +197,6 @@
 
   function pintar(d) {
     const mun = d.municipios;
-    const proy = d.proyeccion;
-    const sim = d.sim;
-    const sens = d.sensibilidad;
     const g2021 = d.historico.procesos.find((p) => p.anio === 2021);
 
     // ── Agregado de 2024 ──
@@ -230,13 +221,7 @@
     document.getElementById('aviso').innerHTML = '';
 
     document.getElementById('cabecera-pills').innerHTML =
-      P.badge('dato', { detalle: '2021 y 2024', fuente: 'IEEC', fechaCorte: '2024-06' }) +
-      P.badge('estimacion', {
-        detalle: `Monte Carlo, ${T.num(sim.iteraciones)} iteraciones`,
-        confianza: proy.confianza,
-        fuente: d.metaProyeccion.fuente_base,
-        fechaCorte: d.metaProyeccion.fecha_corte,
-      });
+      P.badge('dato', { detalle: '2021 y 2024', fuente: 'IEEC', fechaCorte: '2024-06' });
 
     document.getElementById('contenido').innerHTML = `
 
@@ -424,181 +409,11 @@
       </section>
 
 
-      <!-- ════ MODELO ════ -->
-
-      <section class="panel panel--proyeccion">
-        <h3 class="text-h3 panel__titulo">
-          <i data-lucide="trending-up"></i> Proyección ${proy.cargo} 2027
-          ${P.badge('estimacion', {
-            detalle: `Monte Carlo · ${T.num(sim.iteraciones)} iteraciones`,
-            confianza: proy.confianza,
-          })}
-        </h3>
-
-        <div class="aviso-simulado aviso-simulado--modelo">
-          <i data-lucide="info"></i>
-          <span><strong>Esto es un modelo, no un resultado.</strong>
-          ${T.escapar(proy.advertencia)}</span>
-        </div>
-
-        <div class="tabla-caja" style="margin-top:var(--space-md)">
-          <table class="tabla">
-            <thead>
-              <tr>
-                <th>Fuerza</th>
-                <th>Rol</th>
-                <th class="num">Intervalo estimado</th>
-                <th class="num">Prob. de victoria</th>
-                <th>Rango</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${sim.fuerzas.map((s) => {
-                // El análisis cualitativo (rol, figuras) sigue viniendo del
-                // contexto capturado; los NÚMEROS vienen de la simulación. Los
-                // rangos escritos a mano se retiraron: tener dos cifras para la
-                // misma pregunta en la misma página es la forma más rápida de
-                // que nadie se crea ninguna.
-                const q = (proy.fuerzas || []).find((f) => f.bloque === s.bloque) || {};
-                return `
-                <tr>
-                  <td><span class="punto-color" style="background:${color(s.bloque)}"></span>
-                      <strong>${T.escapar(q.etiqueta || E.etiqueta(s.bloque))}</strong></td>
-                  <td class="text-small">${T.escapar(q.rol || '—')}</td>
-                  <td class="num">${T.intervalo(s.p50, s.p5, s.p95)}</td>
-                  <td class="num">${T.pct(s.prob_victoria, 1)}</td>
-                  <td>${T.barra(s.prob_victoria, 100, T.pct(s.prob_victoria, 1))}</td>
-                </tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-        </div>
-
-        <div class="rejilla-tarjetas" style="margin-top:var(--space-md)">
-          ${proy.fuerzas.map((f) => {
-            const s = sim.fuerzas.find((x) => x.bloque === f.bloque);
-            return `
-            <article class="tarjeta">
-              <header class="tarjeta__cabeza">
-                <strong style="color:${color(f.bloque)}">${T.escapar(f.etiqueta)}</strong>
-                ${s ? `<span class="badge">${T.pct(s.p5, 0)} – ${T.pct(s.p95, 0)}</span>` : ''}
-              </header>
-              <p class="tarjeta__texto">${T.escapar(f.analisis)}</p>
-              ${f.figuras.length ? `<p class="text-small">Figuras mencionadas:
-                ${f.figuras.map(T.escapar).join(' · ')}</p>` : ''}
-            </article>`;
-          }).join('')}
-        </div>
-
-        <p class="panel__nota">
-          <strong>La variable crítica.</strong> ${T.escapar(proy.variable_critica)}
-        </p>
-
-        <!-- ── Cuánto de esto es dato y cuánto es supuesto ── -->
-        <h4 class="text-label" style="margin-top:var(--space-md)">
-          Sensibilidad al supuesto de dispersión
-        </h4>
-        <p class="tarjeta__texto" style="max-width:78ch">
-          La <strong>media</strong> de la simulación es el resultado real de
-          2024. La <strong>dispersión</strong> no: sólo hay una transición
-          observada (2021→2024) y con n=1 no se estima una varianza, se supone.
-          Esta tabla corre el mismo modelo con distintos supuestos de σ para
-          que se vea cuánto de la conclusión viene del dato y cuánto del
-          supuesto.
-        </p>
-        <div class="tabla-caja" style="margin-top:var(--space-sm)">
-          <table class="tabla tabla--compacta">
-            <thead>
-              <tr>
-                <th>σ del líder</th>
-                ${sim.fuerzas.slice(0, 3).map((s) =>
-                  `<th class="num">${T.escapar(E.etiqueta(s.bloque))}</th>`).join('')}
-                <th class="num">Intervalo del líder</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${sens.map((e) => `
-                <tr${e.sigma_lider_pp === sim.sigma_lider_pp ? ' class="fila--activa"' : ''}>
-                  <td><strong>${e.sigma_lider_pp} pp</strong>${
-                    e.sigma_lider_pp === sim.sigma_lider_pp
-                      ? ' <span class="text-small">(publicado)</span>' : ''}</td>
-                  ${sim.fuerzas.slice(0, 3).map((s) =>
-                    `<td class="num">${T.pct(e.prob_victoria[s.bloque], 1)}</td>`).join('')}
-                  <td class="num">${e.p5_p95_lider[0]}–${e.p5_p95_lider[1]}%</td>
-                </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
-        <p class="panel__nota">
-          Entre el escenario más estable y el más volátil, la probabilidad de
-          victoria del favorito va de
-          ${T.pct(sens[0].prob_victoria[sim.fuerzas[0].bloque], 1)} a
-          ${T.pct(sens[sens.length - 1].prob_victoria[sim.fuerzas[0].bloque], 1)}.
-          Esa diferencia no sale de ningún dato: sale de cuánto se supone que
-          puede moverse el electorado en tres años.
-        </p>
-
-        <h4 class="text-label" style="margin-top:var(--space-md)">Supuestos del modelo</h4>
-        <ul class="lista-supuestos">
-          ${proy.supuestos.map((s) => `<li>${T.escapar(s)}</li>`).join('')}
-        </ul>
-
-        ${P.pie({
-          fuente: d.metaProyeccion.fuente_base,
-          fechaCorte: d.metaProyeccion.fecha_corte,
-          // El método completo, no "modelo propio": cuántas iteraciones, qué
-          // distribución, qué semilla y qué intervalo se está enseñando. Sin
-          // esto, "Estimación" es una etiqueta sin contenido.
-          metodologia: `${d.metaProyeccion.metodo}, semilla ${sim.semilla}. `
-            + `${d.metaProyeccion.distribucion} `
-            + `El intervalo publicado es P5–P95 (90% de las iteraciones); `
-            + `σ del bloque líder ${sim.sigma_lider_pp} pp `
-            + `(κ Dirichlet ${sim.kappa_dirichlet}). `
-            + `Error de Monte Carlo sobre la probabilidad: ±${sim.error_montecarlo_pp} pp.`,
-          confianza: proy.confianza,
-          cobertura: 'Entidad 04 · jornada del 6 de junio de 2027',
-        })}
-      </section>
-
-      <!-- ── Del pasado al modelo ── -->
-      <section class="panel">
-        <h3 class="text-h3 panel__titulo">
-          <i data-lucide="git-compare"></i> Qué cambia entre lo medido y lo proyectado
-        </h3>
-        <div class="tabla-caja">
-          <table class="tabla">
-            <thead>
-              <tr>
-                <th>Fuerza</th>
-                <th class="num">2021 gubernatura</th>
-                <th class="num">2024 dip. locales</th>
-                <th class="num">2027 proyectado</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${proy.fuerzas.map((f) => {
-                const h = g2021.resultados.find((r) => r.bloque === f.bloque);
-                const v = bloques[f.bloque];
-                return `
-                <tr>
-                  <td><span class="punto-color" style="background:${color(f.bloque)}"></span>
-                      <strong>${T.escapar(f.etiqueta)}</strong></td>
-                  <td class="num">${h ? T.pct(h.pct) : '—'}</td>
-                  <td class="num">${v ? T.pct(v / validos * 100) : '—'}</td>
-                  <td class="num">${T.intervalo((f.pct_bajo + f.pct_alto) / 2, f.pct_bajo, f.pct_alto)}</td>
-                </tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-        </div>
-        <p class="panel__nota">
-          Las tres columnas no son comparables sin cuidado: 2021 es gubernatura,
-          2024 es diputaciones locales y 2027 es una estimación de gubernatura.
-          Un cargo distinto mueve la participación y el voto diferenciado. La
-          tabla sirve para ver la tendencia, no para restar columnas.
-        </p>
-        ${P.leyenda()}
-      </section>
+      <!-- La proyección 2027 vivía aquí. Se fue a su propia vista
+           (prediccion.html): esta página respondía cuatro preguntas a la vez
+           —cómo se votó en 2024, cómo quedó el Congreso, cómo se votó en 2021
+           y qué va a pasar en 2027— y la última es de otra naturaleza: las
+           tres primeras son dato medido, la cuarta es una estimación. -->
     `;
 
     P.iconos();

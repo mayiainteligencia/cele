@@ -206,11 +206,136 @@
           Campeche y Carmen.
         </p>
       </section>
+
+      ${inventarioCCT()}
     `;
 
     P.iconos();
     T.conectarExportar();
+    conectarInventario();
     if (window.lucide) window.lucide.createIcons();
+  }
+
+  /* ── Inventario de inmuebles (catálogo CCT) ──
+     Tenía vista propia, `infraestructura.html`. Se fusionó aquí porque el
+     catálogo CCT existe en este proyecto por una sola razón: son los sitios
+     candidatos a alojar una casilla. Eran dos pestañas para una pregunta.
+
+     Va plegado y se carga SOLO al abrirlo. El geojson pesa 2 MB y bajarlo al
+     entrar habría reintroducido justo la deuda que se saldó precalculando el
+     agregado por municipio: quien viene a ver casillas por tipo no debe pagar
+     dos megas por un inventario que quizá no abra. */
+
+  function inventarioCCT() {
+    return `
+      <section class="panel">
+        <details class="desplegable" id="cct-desplegable">
+          <summary class="desplegable__cabeza">
+            <span class="text-h3">
+              <i data-lucide="school"></i> Inventario de inmuebles (catálogo CCT)
+            </span>
+            <span class="badge badge--neutral">2,274 planteles · se carga al abrir</span>
+          </summary>
+
+          <div class="desplegable__cuerpo">
+            <p class="tarjeta__texto" style="max-width:78ch">
+              Los planteles que la SEP registra en Campeche. Son
+              <strong>ubicaciones potenciales</strong>: ninguna está aprobada
+              como casilla —eso lo define el encarte del proceso vigente—. Un
+              plantel con dos turnos son dos registros y un solo inmueble.
+            </p>
+
+            <label class="campo-busqueda">
+              <i data-lucide="search"></i>
+              <input type="text" id="cct-buscar"
+                     placeholder="Buscar por clave CCT, nombre o municipio…"
+                     autocomplete="off">
+            </label>
+            <p class="text-small" id="cct-conteo">Sin cargar.</p>
+
+            <div class="tabla-caja">
+              <table class="tabla tabla--compacta">
+                <thead>
+                  <tr>
+                    <th>CCT</th><th>Plantel</th><th>Municipio</th>
+                    <th>Nivel</th><th>Turno</th>
+                    <th class="num">Alumnado</th><th class="num">Aulas</th>
+                  </tr>
+                </thead>
+                <tbody id="cct-filas"></tbody>
+              </table>
+            </div>
+
+            ${P.pie({
+              fuente: 'SEP — Catálogo de Centros de Trabajo',
+              fechaCorte: null,
+              metodologia: 'Catálogo tal cual lo publica la SEP. La coordenada '
+                + 'del plantel es la que trae el propio catálogo; no se geocodifica '
+                + 'ni se corrige.',
+              confianza: 'alta',
+              cobertura: '2,274 planteles en los 13 municipios',
+            })}
+          </div>
+        </details>
+      </section>`;
+  }
+
+  function conectarInventario() {
+    const det = document.getElementById('cct-desplegable');
+    if (!det) return;
+    let escuelas = null;
+
+    const pintarFilas = (termino) => {
+      const cuerpo = document.getElementById('cct-filas');
+      const conteo = document.getElementById('cct-conteo');
+      if (!cuerpo || !escuelas) return;
+      const q = (termino || '').toLowerCase().trim();
+      const hay = escuelas.filter((e) =>
+        !q
+        || (e.cct || '').toLowerCase().includes(q)
+        || (e.nombre_centro_trabajo || '').toLowerCase().includes(q)
+        || (e.nombre_municipio || '').toLowerCase().includes(q));
+
+      // Se pintan 50: 2,274 filas en el DOM cuelgan el desplazamiento y
+      // nadie las lee. El conteo dice cuántas hay de verdad, para que el
+      // recorte sea visible en vez de parecer que no existen más.
+      conteo.textContent = hay.length === escuelas.length
+        ? `${T.num(escuelas.length)} planteles · se muestran los primeros 50`
+        : `${T.num(hay.length)} de ${T.num(escuelas.length)} coinciden`
+          + (hay.length > 50 ? ' · se muestran los primeros 50' : '');
+
+      cuerpo.innerHTML = hay.slice(0, 50).map((e) => `
+        <tr>
+          <td><strong>${T.escapar(e.cct)}</strong></td>
+          <td>${T.escapar(e.nombre_centro_trabajo)}</td>
+          <td>${T.escapar(e.nombre_municipio || '—')}</td>
+          <td><span class="badge badge--neutral">${T.escapar(e.nivel || '—')}</span></td>
+          <td>${T.escapar(e.nombre_turno || '—')}</td>
+          <td class="num">${T.num(e.alumnos_total)}</td>
+          <td class="num">${T.num(e.aulas_en_uso != null ? e.aulas_en_uso : e.aulas_existentes)}</td>
+        </tr>`).join('')
+        || '<tr><td colspan="7" class="text-small">Ninguno coincide.</td></tr>';
+    };
+
+    det.addEventListener('toggle', () => {
+      if (!det.open || escuelas) return;         // sólo la primera apertura
+      document.getElementById('cct-conteo').textContent = 'Cargando 2 MB…';
+      fetch('data/geo/escuelas_campeche.geojson')
+        .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then((j) => {
+          escuelas = j.features.map((f) => f.properties);
+          pintarFilas('');
+          if (window.lucide) window.lucide.createIcons();
+        })
+        .catch((err) => {
+          console.error('inventario CCT:', err);
+          document.getElementById('cct-conteo').textContent =
+            'No se pudo cargar el catálogo de planteles.';
+        });
+    });
+
+    const buscar = document.getElementById('cct-buscar');
+    if (buscar) buscar.addEventListener('input', (e) => pintarFilas(e.target.value));
   }
 
   /* ── Proporcionalidad por distrito ──
