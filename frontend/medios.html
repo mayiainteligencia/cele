@@ -166,9 +166,23 @@
       border-color: var(--cyan-tinte-md);
       box-shadow: 0 0 10px var(--cyan-tinte-xs);
     }
+    /* Logo de la emisora. Sustituye al punto de color: con veinte emisoras,
+       el logo identifica más rápido que cualquier paleta. */
+    .emisora-logo {
+      width: 30px; height: 30px;
+      flex-shrink: 0;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      background: var(--velo-05);
+      border: 1px solid var(--glass-border);
+    }
+
+    /* Respaldo si un logo no carga: el punto de siempre. Antes tomaba su
+       color de un inline que ya no existe, así que ahora lo trae él. */
     .emisora-dot {
       width: 7px; height: 7px; border-radius: 50%;
       flex-shrink: 0;
+      background: var(--accent-cyan);
     }
 
     /* ── Testigos / historial ─────────────────── */
@@ -611,15 +625,50 @@
   let alertasCount = 0;
   let keywordsActivas = ['candidato', 'campeche', 'partido', 'campaña', 'elecciones'];
 
-  // ── Emisoras preset con datos reales de Campeche + nacionales ──
+  /* ── Emisoras de Campeche ──
+     Las 20 que se monitorean, con su stream y su logo. Sustituyen al preset
+     anterior, que eran emisoras nacionales de la Ciudad de México: no servían
+     para vigilar la conversación de una elección estatal.
+
+     `cat` agrupa por lo que la emisora emite, porque es lo que decide dónde
+     vale la pena poner palabras clave: una de noticias y una de música pesan
+     distinto para el monitoreo electoral.
+
+     OJO CON LAS DE zeno.fm — son cinco: Radio Delfín, Nunkiní, IRIDIUM,
+     Cadena Dance y Monte Miel. Su servidor devuelve 401 a cualquier cliente
+     que se identifique como navegador, y 200 si el User-Agent parece un
+     reproductor (`WinampMPEG/5.0` sirve). Se probaron las veinte: las quince
+     restantes responden con cualquier UA.
+
+     Esto le toca al backend, no a esta página: quien baje el audio en
+     MonitorSol tiene que mandar un UA de reproductor, o esas cinco fallarán
+     en silencio con un 401 que parece una emisora caída. IRIDIUM además
+     redirige (302) a surfernetwork con un token de vida corta, así que hay
+     que seguir la redirección en cada conexión y no cachear la URL final. */
   const EMISORAS_PRESET = [
-    { nombre: 'MVS Noticias 102.5 FM',   url: 'https://20603.live.streamtheworld.com/XHMVSFM_SC',     color: 'var(--accent-cyan)', cat: 'nacional' },
-    { nombre: 'Radio Disney 92.1 FM',    url: 'https://18323.live.streamtheworld.com/XHFOFMAAC_SC',    color: 'var(--accent-purple)', cat: 'nacional' },
-    { nombre: 'W Radio 96.9 FM',         url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/XEWSFMAAC_SC', color: 'var(--accent-warm)', cat: 'nacional' },
-    { nombre: 'Radio Fórmula',           url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/XERFMAAC_SC',   color: 'var(--accent-blue)', cat: 'nacional' },
-    { nombre: 'La Mejor 97.7 FM',        url: 'https://18213.live.streamtheworld.com/XERCFM_SC',       color: 'var(--status-success)', cat: 'nacional' },
-    { nombre: 'Imagen Radio 90.5 FM',    url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/XERFMAAC_SC',   color: 'var(--sev-critica)', cat: 'nacional' },
+    { nombre: 'Ahora Noticias Radio',        url: 'https://radio13.servidorderadio.net/8102/stream',                  logo: 'ahoranoticias.png',                cat: 'noticias' },
+    { nombre: 'Radio Fórmula Campeche',      url: 'https://sp2.servidorrprivado.com:10886/stream',                    logo: 'radioformulacampeche.webp',        cat: 'noticias' },
+    { nombre: 'TRC Radio Campeche',          url: 'https://streamingcwsradio30.com/8288/stream',                      logo: 'trcradio.jpg',                     cat: 'noticias' },
+    { nombre: 'El Heraldo · Cd. del Carmen', url: 'https://ss1.audiorama.com.mx:6676/stream',                         logo: 'heraldo.png',                      cat: 'noticias' },
+    { nombre: 'Ke Buena 102.7 FM',           url: 'https://sp2.servidorrprivado.com:10887/stream',                    logo: 'kebuena1027.png',                  cat: 'musical' },
+    { nombre: 'Ke Buena 103.9 FM',           url: 'https://sp2.servidorrprivado.com:10888/stream',                    logo: 'lakebuena1039.png',                cat: 'musical' },
+    { nombre: 'Kiss 101.9 FM',               url: 'https://cast4.my-control-panel.com/proxy/televis2/kisscampeche',   logo: 'kiss1019.jpeg',                    cat: 'musical' },
+    { nombre: 'Exa FM Campeche',             url: 'https://14223.live.streamtheworld.com/XHMI_SC',                    logo: 'exacampeche.jpg',                  cat: 'musical' },
+    { nombre: 'FM Globo 101.3',              url: 'https://15053.live.streamtheworld.com/XHMAB_SC',                   logo: 'fmglobo.jpeg',                     cat: 'musical' },
+    { nombre: 'La Reverenda 100.5 FM',       url: 'https://s2.mexside.net:8240/;',                                    logo: 'lareverenda.png',                  cat: 'musical' },
+    { nombre: 'Radio Delfín 88.9 FM',        url: 'https://stream.zeno.fm/4u09mv8m1k0uv',                             logo: 'radiodelfin.png',                  cat: 'musical' },
+    { nombre: 'Cadena Dance México',         url: 'https://stream.zeno.fm/zw8bzfsgqm0uv',                             logo: 'radiodance.png',                   cat: 'musical' },
+    { nombre: 'Voxa 102.1 FM',               url: 'https://stream.casthost.net/listen/voxa_la_voz_de_dios/radio.mp3', logo: 'voxa.jpeg',                        cat: 'religiosa' },
+    { nombre: 'Yeshua Radio Cristiana',      url: 'https://ec3.yesstreaming.net:1415/stream',                         logo: 'yeshua.jpeg',                      cat: 'religiosa' },
+    { nombre: 'Monte Miel Radio',            url: 'https://stream.zeno.fm/dhmdzt6f60wtv',                             logo: 'montemiel.jpg',                    cat: 'religiosa' },
+    { nombre: 'Radio UAC',                   url: 'https://radiouac.uacam.mx:8000/;',                                 logo: 'universidadautonomacampeche.png',  cat: 'universitaria' },
+    { nombre: 'XEXPUJ · Voz del Corazón de la Selva', url: 'https://radios.inpi.gob.mx:8080/xexpuj',                  logo: 'xexpuj.jpeg',                      cat: 'indígena' },
+    { nombre: 'Nunkiní Radio',               url: 'https://stream.zeno.fm/wdfd4k09x98uv',                             logo: 'nunkini.jpeg',                     cat: 'comunitaria' },
+    { nombre: 'Sordera Radio',               url: 'https://azuracast-nuremberg.myautodj.com/listen/sorderaradio/radio.mp3', logo: 'sordera.jpeg',               cat: 'comunitaria' },
+    { nombre: 'IRIDIUM FM',                  url: 'https://stream.zeno.fm/j980lwkulmxtv',                             logo: 'iridium.jpg',                      cat: 'comunitaria' },
   ];
+
+  const RUTA_LOGOS = 'assets/images/emisoras/';
 
   const KW_SUGERIDAS = ['candidato', 'campeche', 'partido', 'campaña', 'elecciones', 'votos', 'gobernador', 'diputado', 'pemex', 'carmen', 'calakmul'];
 
@@ -699,8 +748,9 @@
   function renderEmisoras() {
     const grid = document.getElementById('emisoras-preset');
     grid.innerHTML = EMISORAS_PRESET.map((e, i) => `
-      <button class="emisora-btn" data-idx="${i}" onclick="selectEmisora(${i})">
-        <span class="emisora-dot" style="background:${e.color};"></span>
+      <button class="emisora-btn" data-idx="${i}" onclick="selectEmisora(${i})" title="${e.nombre}">
+        <img class="emisora-logo" src="${RUTA_LOGOS}${e.logo}" alt="" loading="lazy"
+             onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'emisora-dot'}))">
         <div>
           <div style="font-size:0.78rem; font-weight:600; color:var(--text-heading); line-height:1.2;">${e.nombre}</div>
           <div style="font-size:0.65rem; color:var(--text-muted);">${e.cat}</div>

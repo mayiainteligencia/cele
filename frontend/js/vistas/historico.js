@@ -27,7 +27,9 @@
         municipios: todos,
         historico: ctx.historico,
         proyeccion: ctx.proyeccion_2027,
-        sim: proyeccion.sim,
+        // `simulacion` y `sensibilidad` son las claves del archivo; el
+        // cargador genérico ya no las renombra.
+        sim: proyeccion.simulacion,
         sensibilidad: proyeccion.sensibilidad,
         metaProyeccion: proyeccion.meta,
         dip: dip,
