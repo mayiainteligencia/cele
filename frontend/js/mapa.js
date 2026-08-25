@@ -231,6 +231,38 @@
           ],
         },
         {
+          // Rojo y grande: es el único punto del mapa que afirma un hecho
+          // documental —una sentencia firme— y no una estimación. Va después
+          // de casillas_2024 para dibujarse encima de ellas.
+          //
+          // Sólo tres de las seis secciones anuladas caen aquí: el encarte no
+          // publica coordenadas y las otras tres no cruzan contra el catálogo
+          // CCT. El faltante está declarado en la metadata del geojson.
+          //
+          // OJO CON LA LECTURA: esto NO es un mapa de riesgo. La nota del
+          // cómputo cita la sentencia y no el motivo, así que el punto dice
+          // "aquí se anuló una casilla", nunca por qué. La ficha lo imprime.
+          id: 'casillas_anuladas',
+          etiqueta: 'Casillas anuladas por el Tribunal 2024',
+          estado: 'disponible',
+          tipo: 'puntos',
+          archivo: 'casillas_anuladas_2024.geojson',
+          claveGeo: 'seccion',
+          nombre: 'inmueble',
+          punto: { color: '--sev-critica', radio: 8 },
+          ficha: [
+            ['seccion', 'Sección'],
+            ['casillas_anuladas', 'Casillas anuladas'],
+            ['expediente', 'Expediente'],
+            ['distrito_local', 'Distrito local'],
+            ['causal', 'Motivo de la anulación'],
+            ['nota_computo', 'Nota del cómputo'],
+            ['nombre_municipio', 'Municipio'],
+            ['nombre_localidad', 'Localidad'],
+            ['ubicacion', 'Domicilio'],
+          ],
+        },
+        {
           id: 'casillas_vigentes',
           etiqueta: 'Casillas aprobadas 2027',
           estado: 'pendiente',
