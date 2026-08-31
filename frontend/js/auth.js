@@ -91,7 +91,7 @@ function renderSidebar() {
 
   nav.innerHTML = `
     <div class="sidebar__avatar">
-      <a href="index.html" class="avatar avatar--sm avatar--ce" data-tooltip="Cerebro Electoral (CE)">
+      <a href="ecosistema.html" class="avatar avatar--sm avatar--ce" data-tooltip="Cerebro Electoral (CE)">
         <span class="ce-brand-badge">CE</span>
       </a>
     </div>

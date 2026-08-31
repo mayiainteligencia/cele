@@ -1,0 +1,560 @@
+/* ============================================
+   CEREBRO ELECTORAL — ECOSISTEMA
+   ============================================
+   Pantalla landing del ecosistema completo.
+   Layout fullscreen, animaciones átomo/Jarvis,
+   tipografía dorada y bloque tech decorativo.
+   ============================================ */
+
+/* ── Reset para esta página ── */
+body[data-page="ecosistema"] {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background: #080c14;
+}
+
+/* ── Fondo fullscreen ── */
+.eco-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.eco-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg,
+      rgba(8, 12, 20, 0.75) 0%,
+      rgba(8, 12, 20, 0.45) 35%,
+      rgba(8, 12, 20, 0.55) 65%,
+      rgba(8, 12, 20, 0.85) 100%
+    );
+}
+
+/* ── Contenedor principal ── */
+.eco-container {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 5vw;
+  gap: 28px;
+}
+
+/* ── Botón de regreso ── */
+.eco-back {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  background: rgba(148, 178, 230, 0.08);
+  border: 1px solid rgba(190, 214, 255, 0.15);
+  color: #b6c2d4;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+
+.eco-back:hover {
+  background: rgba(148, 178, 230, 0.16);
+  border-color: rgba(190, 214, 255, 0.3);
+  color: #eef2f9;
+  transform: translateX(-2px);
+}
+
+.eco-back svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ════════════════════════════════════════════
+   TÍTULO PRINCIPAL
+   ════════════════════════════════════════════ */
+
+.eco-title-block {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.eco-title {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-style: italic;
+  font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+  font-weight: 700;
+  color: transparent;
+  background: linear-gradient(135deg, #d4a820 0%, #f5e06b 40%, #c49a1a 70%, #f5d442 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  margin: 0;
+  line-height: 1.1;
+  text-shadow: none;
+  filter: drop-shadow(0 2px 12px rgba(212, 168, 32, 0.35));
+}
+
+.eco-subtitle-small {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.7rem, 1.4vw, 0.95rem);
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #d4a820;
+  margin: 6px 0 2px;
+}
+
+.eco-headline {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: clamp(1.6rem, 4vw, 3rem);
+  font-weight: 800;
+  color: #eef2f9;
+  margin: 0;
+  line-height: 1.15;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.5);
+}
+
+.eco-headline-accent {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-style: italic;
+  font-size: clamp(1.3rem, 3.2vw, 2.4rem);
+  font-weight: 400;
+  color: transparent;
+  background: linear-gradient(135deg, #d4a820 0%, #f5e06b 50%, #c49a1a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  margin: 0;
+  filter: drop-shadow(0 2px 8px rgba(212, 168, 32, 0.3));
+}
+
+/* ════════════════════════════════════════════
+   GRID DE MÓDULOS
+   ════════════════════════════════════════════ */
+
+.eco-modules {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.eco-modules-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* ── Cada módulo ── */
+.eco-module {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px 10px 10px;
+  border-radius: 14px;
+  background: rgba(148, 178, 230, 0.06);
+  border: 1px solid rgba(190, 214, 255, 0.1);
+  backdrop-filter: blur(8px);
+  text-decoration: none;
+  color: #eef2f9;
+  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  cursor: pointer;
+  min-width: 200px;
+}
+
+.eco-module:hover {
+  background: rgba(148, 178, 230, 0.14);
+  border-color: rgba(34, 211, 238, 0.35);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow:
+    0 8px 32px rgba(34, 211, 238, 0.12),
+    0 0 20px rgba(34, 211, 238, 0.06);
+}
+
+.eco-module--disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.eco-module--disabled:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(190, 214, 255, 0.1);
+  background: rgba(148, 178, 230, 0.06);
+}
+
+.eco-module__label {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.7rem, 1.3vw, 0.88rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+}
+
+/* ════════════════════════════════════════════
+   ANIMACIÓN ÁTOMO / JARVIS
+   ════════════════════════════════════════════
+   3 órbitas elípticas rotando alrededor de un
+   núcleo luminoso. Puro CSS.
+   ════════════════════════════════════════════ */
+
+.atom {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.atom__core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%,
+    #ccff33 0%,
+    #7fff00 45%,
+    #a0ff00 100%
+  );
+  box-shadow:
+    0 0 14px rgba(160, 255, 0, 0.7),
+    0 0 32px rgba(127, 255, 0, 0.45),
+    0 0 55px rgba(160, 255, 0, 0.2);
+  animation: atomPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes atomPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow:
+      0 0 14px rgba(160, 255, 0, 0.7),
+      0 0 32px rgba(127, 255, 0, 0.45),
+      0 0 55px rgba(160, 255, 0, 0.2);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    box-shadow:
+      0 0 22px rgba(160, 255, 0, 0.9),
+      0 0 45px rgba(127, 255, 0, 0.65),
+      0 0 70px rgba(160, 255, 0, 0.35);
+  }
+}
+
+/* Las 3 órbitas */
+.atom__ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+}
+
+/* Electrón (bolita que recorre la órbita) */
+.atom__ring::after {
+  content: '';
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  top: -2.5px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Órbita 1 — horizontal */
+.atom__ring--1 {
+  width: 74px;
+  height: 30px;
+  margin-top: -15px;
+  margin-left: -37px;
+  border-color: rgba(160, 255, 0, 0.5);
+  animation: atomOrbit1 3.5s linear infinite;
+}
+.atom__ring--1::after {
+  background: #a0ff00;
+  box-shadow: 0 0 8px #a0ff00, 0 0 16px rgba(160, 255, 0, 0.5);
+}
+
+/* Órbita 2 — inclinada 60° */
+.atom__ring--2 {
+  width: 70px;
+  height: 26px;
+  margin-top: -13px;
+  margin-left: -35px;
+  border-color: rgba(127, 255, 0, 0.45);
+  transform: rotate(60deg);
+  animation: atomOrbit2 5s linear infinite;
+}
+.atom__ring--2::after {
+  background: #7fff00;
+  box-shadow: 0 0 8px #7fff00, 0 0 16px rgba(127, 255, 0, 0.5);
+}
+
+/* Órbita 3 — inclinada -60° */
+.atom__ring--3 {
+  width: 66px;
+  height: 22px;
+  margin-top: -11px;
+  margin-left: -33px;
+  border-color: rgba(204, 255, 51, 0.4);
+  transform: rotate(-60deg);
+  animation: atomOrbit3 7s linear infinite;
+}
+.atom__ring--3::after {
+  background: #ccff33;
+  box-shadow: 0 0 8px #ccff33, 0 0 16px rgba(204, 255, 51, 0.5);
+}
+
+/* Keyframes: cada órbita rota en su propio plano 3D */
+@keyframes atomOrbit1 {
+  0%   { transform: rotateX(70deg) rotateZ(0deg); }
+  100% { transform: rotateX(70deg) rotateZ(360deg); }
+}
+
+@keyframes atomOrbit2 {
+  0%   { transform: rotateX(70deg) rotateY(60deg) rotateZ(0deg); }
+  100% { transform: rotateX(70deg) rotateY(60deg) rotateZ(360deg); }
+}
+
+@keyframes atomOrbit3 {
+  0%   { transform: rotateX(70deg) rotateY(-60deg) rotateZ(0deg); }
+  100% { transform: rotateX(70deg) rotateY(-60deg) rotateZ(360deg); }
+}
+
+/* Perspectiva 3D para que las órbitas luzcan elípticas */
+.atom {
+  perspective: 300px;
+  transform-style: preserve-3d;
+}
+
+.atom__ring {
+  transform-style: preserve-3d;
+}
+
+/* ════════════════════════════════════════════
+   BLOQUE DE INFRAESTRUCTURA (DECORATIVO)
+   ════════════════════════════════════════════ */
+
+.eco-infra {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 18px 28px;
+  border-radius: 12px;
+  background: rgba(8, 12, 20, 0.65);
+  border: 1px solid rgba(190, 214, 255, 0.08);
+  backdrop-filter: blur(6px);
+  align-self: flex-end;
+  position: relative;
+  overflow: hidden;
+}
+
+.eco-infra::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(34, 211, 238, 0.03) 100%);
+  pointer-events: none;
+}
+
+.eco-infra__line {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  font-size: clamp(0.72rem, 1.2vw, 0.92rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: rgba(238, 242, 249, 0.6);
+  text-align: right;
+  line-height: 1.6;
+  position: relative;
+}
+
+.eco-infra__line--glow {
+  color: rgba(34, 211, 238, 0.7);
+  text-shadow: 0 0 20px rgba(34, 211, 238, 0.2);
+}
+
+/* Barra lateral tech decorativa */
+.eco-infra__accent {
+  position: absolute;
+  right: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(34, 211, 238, 0.5) 30%,
+    rgba(167, 139, 250, 0.4) 70%,
+    transparent 100%
+  );
+  border-radius: 2px;
+}
+
+/* ════════════════════════════════════════════
+   LAYOUT CONJUNTO MÓDULOS + INFRAESTRUCTURA
+   ════════════════════════════════════════════ */
+
+.eco-bottom-section {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 30px;
+  width: 100%;
+  max-width: 1200px;
+  flex-wrap: wrap;
+}
+
+.eco-bottom-section .eco-modules {
+  flex: 1;
+  min-width: 0;
+}
+
+.eco-bottom-section .eco-infra {
+  align-self: center;
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════
+   PARTÍCULAS FLOTANTES DECORATIVAS
+   ════════════════════════════════════════════ */
+
+.eco-particles {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.eco-particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: rgba(34, 211, 238, 0.4);
+  border-radius: 50%;
+  animation: particleFloat linear infinite;
+}
+
+@keyframes particleFloat {
+  0% {
+    transform: translateY(100vh) translateX(0);
+    opacity: 0;
+  }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% {
+    transform: translateY(-10vh) translateX(40px);
+    opacity: 0;
+  }
+}
+
+/* ════════════════════════════════════════════
+   ANIMACIÓN DE ENTRADA
+   ════════════════════════════════════════════ */
+
+.eco-fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: ecoFadeIn 0.8s ease-out forwards;
+}
+
+@keyframes ecoFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.eco-fade-in--d1 { animation-delay: 0.15s; }
+.eco-fade-in--d2 { animation-delay: 0.3s; }
+.eco-fade-in--d3 { animation-delay: 0.5s; }
+.eco-fade-in--d4 { animation-delay: 0.7s; }
+
+/* ════════════════════════════════════════════
+   RESPONSIVE
+   ════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .eco-modules-row {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .eco-module {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .eco-bottom-section {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .eco-infra {
+    align-self: center;
+    align-items: center;
+  }
+
+  .eco-infra__line {
+    text-align: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .eco-container {
+    padding: 24px 16px;
+  }
+
+  .atom {
+    width: 60px;
+    height: 60px;
+  }
+
+  .atom__core {
+    width: 16px;
+    height: 16px;
+  }
+
+  .atom__ring--1 { width: 54px; height: 22px; margin-top: -11px; margin-left: -27px; }
+  .atom__ring--2 { width: 50px; height: 19px; margin-top: -9.5px; margin-left: -25px; }
+  .atom__ring--3 { width: 46px; height: 16px; margin-top: -8px; margin-left: -23px; }
+}
+
+/* ════════════════════════════════════════════
+   SCANLINE DECORATIVA (EFECTO HUD)
+   ════════════════════════════════════════════ */
+
+.eco-scanline {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(34, 211, 238, 0.008) 3px,
+    rgba(34, 211, 238, 0.008) 4px
+  );
+}

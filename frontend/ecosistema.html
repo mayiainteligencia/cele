@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Cerebro Electoral — Ecosistema completo de inteligencia artificial para ganar la elección.">
+  <title>Cerebro Electoral — Ecosistema de Inteligencia</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/colors.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/ecosistema.css">
+</head>
+<body data-page="ecosistema">
+
+  <!-- ════════════════════════════════════════
+       FONDO — Imagen del centro de datos
+       ════════════════════════════════════════ -->
+  <div class="eco-bg" style="background-image: url('assets/images/background/d669c84b-04a3-4765-a203-88b757d0450b.JPG');" aria-hidden="true"></div>
+
+  <!-- Scanline decorativa HUD -->
+  <div class="eco-scanline" aria-hidden="true"></div>
+
+  <!-- Partículas flotantes -->
+  <div class="eco-particles" aria-hidden="true" id="eco-particles"></div>
+
+  <!-- ════════════════════════════════════════
+       BOTÓN REGRESAR
+       ════════════════════════════════════════ -->
+  <a href="index.html" class="eco-back" aria-label="Volver a Campeche">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    Campeche
+  </a>
+
+  <!-- ════════════════════════════════════════
+       CONTENIDO PRINCIPAL
+       ════════════════════════════════════════ -->
+  <div class="eco-container">
+
+    <!-- Título principal -->
+    <div class="eco-title-block eco-fade-in">
+      <h1 class="eco-title">Cerebro Electoral</h1>
+      <p class="eco-subtitle-small">Ecosistema para</p>
+      <p class="eco-headline">GANAR LA ELECCIÓN</p>
+      <p class="eco-headline-accent">con Inteligencia Artificial</p>
+    </div>
+
+    <!-- Sección inferior: módulos + infraestructura -->
+    <div class="eco-bottom-section eco-fade-in eco-fade-in--d2">
+
+      <!-- Grid de 6 módulos -->
+      <div class="eco-modules">
+        <!-- Fila 1: 4 módulos -->
+        <div class="eco-modules-row">
+
+          <!-- Inteligencia de Partido -->
+          <a href="https://campanaelect.vercel.app/" class="eco-module" target="_blank" rel="noopener" id="mod-partido">
+            <div class="atom">
+              <div class="atom__core"></div>
+              <div class="atom__ring atom__ring--1"></div>
+              <div class="atom__ring atom__ring--2"></div>
+              <div class="atom__ring atom__ring--3"></div>
+            </div>
+            <span class="eco-module__label">Inteligencia<br>de Partido</span>
+          </a>
+
+          <!-- Inteligencia Electoral -->
+          <a href="index.html" class="eco-module" id="mod-electoral">
+            <div class="atom">
+              <div class="atom__core"></div>
+              <div class="atom__ring atom__ring--1"></div>
+              <div class="atom__ring atom__ring--2"></div>
+              <div class="atom__ring atom__ring--3"></div>
+            </div>
+            <span class="eco-module__label">Inteligencia<br>Electoral</span>
+          </a>
+
+          <!-- Inteligencia Candidato -->
+          <a href="https://celemob.vercel.app/" class="eco-module" target="_blank" rel="noopener" id="mod-candidato">
+            <div class="atom">
+              <div class="atom__core"></div>
+              <div class="atom__ring atom__ring--1"></div>
+              <div class="atom__ring atom__ring--2"></div>
+              <div class="atom__ring atom__ring--3"></div>
+            </div>
+            <span class="eco-module__label">Inteligencia<br>Candidato</span>
+          </a>
+
+          <!-- Inteligencia Inversionistas -->
+          <div class="eco-module eco-module--disabled" id="mod-inversionistas">
+            <div class="atom">
+              <div class="atom__core"></div>
+              <div class="atom__ring atom__ring--1"></div>
+              <div class="atom__ring atom__ring--2"></div>
+              <div class="atom__ring atom__ring--3"></div>
+            </div>
+            <span class="eco-module__label">Inteligencia<br>Inversionistas</span>
+          </div>
+
+        </div>
+
+        <!-- Fila 2: 2 módulos -->
+        <div class="eco-modules-row">
+
+          <!-- Inteligencia Día D -->
+          <a href="dia-d.html" class="eco-module" id="mod-dia-d">
+            <div class="atom">
+              <div class="atom__core"></div>
+              <div class="atom__ring atom__ring--1"></div>
+              <div class="atom__ring atom__ring--2"></div>
+              <div class="atom__ring atom__ring--3"></div>
+            </div>
+            <span class="eco-module__label">Inteligencia<br>Día D</span>
+          </a>
+
+          <!-- Tu Gobierno Inteligente -->
+          <div class="eco-module eco-module--disabled" id="mod-gobierno">
+            <div class="atom">
+              <div class="atom__core"></div>
+              <div class="atom__ring atom__ring--1"></div>
+              <div class="atom__ring atom__ring--2"></div>
+              <div class="atom__ring atom__ring--3"></div>
+            </div>
+            <span class="eco-module__label">Tu Gobierno<br>Inteligente</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Bloque decorativo: Infraestructura -->
+      <div class="eco-infra eco-fade-in eco-fade-in--d3">
+        <div class="eco-infra__accent"></div>
+        <span class="eco-infra__line eco-infra__line--glow">Infraestructura</span>
+        <span class="eco-infra__line">Centro de Datos</span>
+        <span class="eco-infra__line">Nube Privada /</span>
+        <span class="eco-infra__line eco-infra__line--glow">Ciberseguridad</span>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════════════
+       SCRIPTS
+       ════════════════════════════════════════ -->
+  <script>
+  /* ── Partículas flotantes decorativas ── */
+  (function initParticles() {
+    const container = document.getElementById('eco-particles');
+    if (!container) return;
+    const COUNT = 25;
+    for (let i = 0; i < COUNT; i++) {
+      const p = document.createElement('div');
+      p.className = 'eco-particle';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = (8 + Math.random() * 12) + 's';
+      p.style.animationDelay = (Math.random() * 10) + 's';
+      p.style.width = p.style.height = (1.5 + Math.random() * 2) + 'px';
+      if (Math.random() > 0.6) {
+        p.style.background = 'rgba(167, 139, 250, 0.35)';
+      }
+      container.appendChild(p);
+    }
+  })();
+
+  /* ── Variación de velocidad en átomos para que no se vean idénticos ── */
+  (function randomizeAtoms() {
+    document.querySelectorAll('.atom').forEach((atom, idx) => {
+      const rings = atom.querySelectorAll('.atom__ring');
+      rings.forEach((ring, ri) => {
+        const base = [3.5, 5, 7][ri];
+        const offset = (idx * 0.7) + (Math.random() * 1.5);
+        ring.style.animationDuration = (base + offset) + 's';
+        // Desplazamiento temporal para que no estén sincronizados
+        ring.style.animationDelay = -(Math.random() * base) + 's';
+      });
+      // Variar la pulsación del núcleo
+      const core = atom.querySelector('.atom__core');
+      if (core) {
+        core.style.animationDelay = -(Math.random() * 2.5) + 's';
+      }
+    });
+  })();
+
+  /* ── Lucide icons ── */
+  if (window.lucide) lucide.createIcons();
+  </script>
+</body>
+</html>

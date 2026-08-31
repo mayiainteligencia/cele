@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Estrategia y Logística Día D — Cerebro Electoral (CE).">
-  <title>Estrategia Día D — Cerebro Electoral (CE)</title>
+  <meta name="description" content="Centro de Operaciones Electorales — Estrategia y Logística Día D — Cerebro Electoral (CE).">
+  <title>Centro de Operaciones Día D — Cerebro Electoral (CE)</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -21,77 +21,861 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/auth.css">
+
+  <style>
+    /* ════════════════════════════════════════════
+       DÍA D — ESTILOS ESPECÍFICOS
+       ════════════════════════════════════════════ */
+
+    /* KPI extendido con barra de progreso */
+    .kpi-card--progress .kpi-progress-bar {
+      width: 100%;
+      height: 4px;
+      background: var(--velo-08);
+      border-radius: 2px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+    .kpi-progress-bar__fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 1.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      width: 0;
+    }
+    .kpi-progress-bar__fill--success { background: var(--status-success); }
+    .kpi-progress-bar__fill--cyan    { background: var(--accent-cyan); }
+    .kpi-progress-bar__fill--gold    { background: var(--accent-warm); }
+
+    /* ── Timeline de Jornada ── */
+    .timeline-jornada {
+      position: relative;
+      padding: 0 0 4px;
+    }
+
+    .timeline-track {
+      display: flex;
+      gap: 0;
+      position: relative;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--velo-08) transparent;
+    }
+
+    .timeline-track::before {
+      content: '';
+      position: absolute;
+      top: 28px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg,
+        var(--accent-cyan) 0%,
+        var(--accent-blue) 40%,
+        var(--velo-08) 100%
+      );
+      z-index: 0;
+    }
+
+    .timeline-hito {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      min-width: 80px;
+      position: relative;
+      z-index: 1;
+      padding: 0 4px;
+    }
+
+    .timeline-hito__dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--glass-border);
+      background: var(--bg-mid);
+      margin-bottom: 10px;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+      position: relative;
+      top: 21px;
+    }
+
+    .timeline-hito--done .timeline-hito__dot {
+      background: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
+    }
+
+    .timeline-hito--active .timeline-hito__dot {
+      background: var(--accent-warm);
+      border-color: var(--accent-warm);
+      box-shadow: 0 0 14px rgba(245, 165, 36, 0.5);
+      animation: dotPulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes dotPulse {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.4); }
+    }
+
+    .timeline-hito__body {
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    .timeline-hito__hora {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .timeline-hito--done .timeline-hito__hora   { color: var(--accent-cyan); }
+    .timeline-hito--active .timeline-hito__hora { color: var(--accent-warm); }
+
+    .timeline-hito__label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      line-height: 1.3;
+      font-weight: 500;
+    }
+
+    .timeline-hito--done .timeline-hito__label   { color: var(--text-body); }
+    .timeline-hito--active .timeline-hito__label { color: var(--text-heading); font-weight: 600; }
+
+    /* ── Tabla de municipios ── */
+    .tabla-cobertura {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .tabla-cobertura thead th {
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--velo-08);
+      white-space: nowrap;
+    }
+
+    .tabla-cobertura tbody tr {
+      border-bottom: 1px solid var(--velo-05);
+      transition: background 0.2s;
+    }
+
+    .tabla-cobertura tbody tr:hover {
+      background: var(--glass-bg-hover);
+    }
+
+    .tabla-cobertura td {
+      padding: 9px 12px;
+      color: var(--text-body);
+      vertical-align: middle;
+    }
+
+    .tabla-cobertura td:first-child {
+      font-weight: 600;
+      color: var(--text-heading);
+    }
+
+    .cobertura-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cobertura-bar__track {
+      flex: 1;
+      height: 5px;
+      background: var(--velo-08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .cobertura-bar__fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 1s ease;
+    }
+
+    .cobertura-bar__pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      min-width: 42px;
+      text-align: right;
+    }
+
+    .estado-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    /* ── Protocolos ── */
+    .protocolo-card {
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      background: var(--panel-fondo-tenue);
+      border: 1px solid var(--glass-border);
+      transition: all 0.3s ease;
+    }
+
+    .protocolo-card:hover {
+      border-color: var(--glass-border-hover);
+      background: var(--glass-bg-hover);
+      transform: translateY(-2px);
+    }
+
+    .protocolo-card__header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .protocolo-card__icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .protocolo-card__title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-heading);
+    }
+
+    .protocolo-card__subtitle {
+      font-size: 0.73rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .protocolo-paso {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--velo-05);
+    }
+
+    .protocolo-paso:last-child { border-bottom: none; }
+
+    .protocolo-paso__num {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .protocolo-paso__texto {
+      font-size: 0.78rem;
+      color: var(--text-body);
+      line-height: 1.45;
+    }
+
+    /* ── Alertas activas ── */
+    .alerta-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border-left: 3px solid;
+      background: var(--panel-fondo-tenue);
+      transition: all 0.2s ease;
+    }
+
+    .alerta-item:hover {
+      transform: translateX(2px);
+    }
+
+    .alerta-item__badge {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 2px;
+    }
+
+    .alerta-item__texto {
+      font-size: 0.77rem;
+      color: var(--text-body);
+      line-height: 1.4;
+    }
+
+    .alerta-item__municipio {
+      font-size: 0.73rem;
+      color: var(--text-heading);
+      font-weight: 600;
+    }
+
+    /* ── Consola agentes mejorada ── */
+    .agent-log-line {
+      display: flex;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.5;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--velo-05);
+      color: var(--text-muted);
+    }
+
+    .agent-log-line:last-child { border-bottom: none; }
+
+    .agent-log-line__ts {
+      color: var(--velo-08);
+      flex-shrink: 0;
+    }
+
+    .agent-log-line__prefix {
+      flex-shrink: 0;
+    }
+
+    /* ── Estado de mesa ── */
+    .mesa-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--glass-border);
+      background: var(--panel-fondo-tenue);
+    }
+
+    .mesa-status__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+  </style>
 </head>
 <body data-page="dia-d">
-
-
 
   <nav class="sidebar" id="sidebar" aria-label="Navegación principal"></nav>
 
   <main class="main" id="main-content" style="padding-top: calc(var(--filter-bar-height) + var(--space-md));">
     <div class="mando-workspace animate-fade-in-up">
 
+      <!-- ══ HEADER ══════════════════════════════════════ -->
       <section class="mando-header">
         <div class="mando-header__title-box">
-          <h1><i data-lucide="check-circle-2" style="color:var(--accent-cyan);"></i> Estrategia & Logística del Día D</h1>
-          <p>Planificación lícita de cobertura de casillas, asignación de representantes generales/de casilla y seguimiento de instalación.</p>
+          <h1>
+            <i data-lucide="check-circle-2" style="color:var(--accent-cyan);"></i>
+            Centro de Operaciones — Día D
+          </h1>
+          <p>
+            Cobertura total de casillas, asignación de representantes generales/de casilla,
+            seguimiento de instalación y gestión de incidencias en tiempo real.
+          </p>
         </div>
-
         <div class="mando-header__pills">
-          <span class="badge badge--success">Logística Lícita Acreditada</span>
+          <span class="badge badge--success" style="display:flex;align-items:center;gap:6px;">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--status-success);display:inline-block;"></span>
+            Logística Lícita Acreditada
+          </span>
           <span class="badge badge--neutral">Sin Vigilancia Individual de Electores</span>
+          <span class="badge" style="background:rgba(91,157,255,0.12);color:var(--accent-blue);border:1px solid rgba(91,157,255,0.25);">
+            Jornada: 6 Jun 2027 · 08:00–18:00 h
+          </span>
         </div>
       </section>
 
-      <section class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-card__label"><span>Cobertura de Representantes</span><i data-lucide="users" class="icon-xs" style="color:var(--status-success);"></i></div>
-          <div class="kpi-card__value" style="color:var(--status-success);">98.4%</div>
-          <div class="kpi-card__sub">Representantes asignados por municipio</div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-card__label"><span>Representantes Generales</span><i data-lucide="user-check" class="icon-xs"></i></div>
-          <div class="kpi-card__value">142</div>
-          <div class="kpi-card__sub">Coordinadores de ruta acreditados</div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-card__label"><span>Reporte de Instalación</span><i data-lucide="clock" class="icon-xs"></i></div>
-          <div class="kpi-card__value">08:00 AM</div>
-          <div class="kpi-card__sub">Horario de apertura de protocolo</div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-card__label"><span>Mesa de Incidencias</span><i data-lucide="shield-check" class="icon-xs"></i></div>
-          <div class="kpi-card__value">Operativa</div>
-          <div class="kpi-card__sub">Enlace directo con equipo jurídico</div>
-        </div>
-      </section>
-
+      <!-- ══ TIMELINE DE JORNADA ═══════════════════════════ -->
       <section class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg);">
-        <h3 class="text-h3" style="margin-bottom:var(--space-sm);">Matriz de Cobertura Logística por Municipio</h3>
-        <p style="font-size:0.85rem; color:var(--text-body);">
-          Supervisión estricta de representación ante casillas básicas, contiguas, extraordinarias y especiales en Campeche.
-        </p>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-md);">
+          <div>
+            <h3 style="font-family:var(--font-heading); font-size:1rem; font-weight:700; color:var(--text-heading); display:flex; align-items:center; gap:8px; margin:0;">
+              <i data-lucide="clock-4" style="color:var(--accent-cyan); width:17px; height:17px;"></i>
+              Cronograma de Jornada Electoral
+            </h3>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-top:3px;">
+              Hitos operativos del Día D — Campeche 2027
+            </p>
+          </div>
+          <div class="mesa-status">
+            <span class="mesa-status__dot animate-pulse" style="background:var(--accent-warm);box-shadow:0 0 8px var(--accent-warm);"></span>
+            <span style="font-size:0.75rem; font-weight:600; color:var(--text-heading);">Fase: Pre-Jornada</span>
+          </div>
+        </div>
+
+        <div class="timeline-track" id="timeline-track">
+          <!-- Se llena por JS -->
+        </div>
+      </section>
+
+      <!-- ══ KPIs ══════════════════════════════════════════ -->
+      <section class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px,1fr));">
+
+        <div class="kpi-card kpi-card--progress">
+          <div class="kpi-card__label">
+            <span>Cobertura de Representantes</span>
+            <i data-lucide="users" class="icon-xs" style="color:var(--status-success);"></i>
+          </div>
+          <div class="kpi-card__value" style="color:var(--status-success);">98.4%</div>
+          <div class="kpi-card__sub">1,208 de 1,230 casillas asignadas</div>
+          <div class="kpi-progress-bar">
+            <div class="kpi-progress-bar__fill kpi-progress-bar__fill--success" data-width="98.4"></div>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-card--progress">
+          <div class="kpi-card__label">
+            <span>Casillas Cubiertas</span>
+            <i data-lucide="vote" class="icon-xs" style="color:var(--accent-cyan);"></i>
+          </div>
+          <div class="kpi-card__value" style="color:var(--accent-cyan);">1,208</div>
+          <div class="kpi-card__sub">de 1,230 casillas esperadas · 22 pendientes</div>
+          <div class="kpi-progress-bar">
+            <div class="kpi-progress-bar__fill kpi-progress-bar__fill--cyan" data-width="98.2"></div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__label">
+            <span>Representantes Generales</span>
+            <i data-lucide="user-check" class="icon-xs" style="color:var(--accent-blue);"></i>
+          </div>
+          <div class="kpi-card__value">142</div>
+          <div class="kpi-card__sub">13 rutas coordinadas · 1 RG por ruta mínimo</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__label">
+            <span>Representantes de Casilla</span>
+            <i data-lucide="users-2" class="icon-xs" style="color:var(--accent-purple);"></i>
+          </div>
+          <div class="kpi-card__value" style="color:var(--accent-purple);">2,416</div>
+          <div class="kpi-card__sub">1 titular + 1 suplente por casilla</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__label">
+            <span>Reporte de Instalación</span>
+            <i data-lucide="clock" class="icon-xs" style="color:var(--accent-warm);"></i>
+          </div>
+          <div class="kpi-card__value" style="color:var(--accent-warm);">08:00</div>
+          <div class="kpi-card__sub">Protocolo de apertura activo · Corte a las 08:30</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__label">
+            <span>Mesa de Incidencias</span>
+            <i data-lucide="shield-check" class="icon-xs" style="color:var(--status-success);"></i>
+          </div>
+          <div class="kpi-card__value" style="color:var(--status-success);">Operativa</div>
+          <div class="kpi-card__sub">Enlace jurídico directo · 0 incidencias abiertas</div>
+        </div>
+
+      </section>
+
+      <!-- ══ TABLA DE MUNICIPIOS + ALERTAS ════════════════ -->
+      <section style="display:grid; grid-template-columns: 1fr 300px; gap:var(--space-md); align-items:start;">
+
+        <!-- Tabla de cobertura -->
+        <div class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg); overflow:hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-md);">
+            <div>
+              <h3 style="font-family:var(--font-heading); font-size:1rem; font-weight:700; color:var(--text-heading); display:flex; align-items:center; gap:8px; margin:0;">
+                <i data-lucide="table-2" style="color:var(--accent-cyan); width:17px; height:17px;"></i>
+                Matriz de Cobertura por Municipio
+              </h3>
+              <p style="font-size:0.75rem; color:var(--text-muted); margin-top:3px;">
+                13 municipios · Casillas básicas, contiguas, extraordinarias y especiales
+              </p>
+            </div>
+            <span class="badge badge--success" style="font-size:0.68rem;">13/13 Municipios</span>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table class="tabla-cobertura" id="tabla-municipios">
+              <thead>
+                <tr>
+                  <th>Municipio</th>
+                  <th>Casillas</th>
+                  <th>Rep. Generales</th>
+                  <th>Rep. Casilla</th>
+                  <th>Cobertura</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-municipios">
+                <!-- Se llena por JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Panel lateral: Alertas + Agentes -->
+        <div style="display:flex; flex-direction:column; gap:var(--space-md);">
+
+          <!-- Alertas activas -->
+          <div class="glass-strong" style="padding:var(--space-md); border-radius:var(--radius-lg);">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+              <i data-lucide="alert-triangle" style="color:var(--sev-critica); width:15px; height:15px;"></i>
+              <strong style="font-size:0.78rem; color:var(--text-heading); text-transform:uppercase; letter-spacing:0.04em;">
+                Alertas Activas
+              </strong>
+              <span style="margin-left:auto; background:var(--sev-critica-bg); color:var(--sev-critica); font-size:0.65rem; font-weight:700; padding:2px 7px; border-radius:4px;">3</span>
+            </div>
+            <div id="lista-alertas" style="display:flex; flex-direction:column; gap:8px;">
+              <!-- Se llena por JS -->
+            </div>
+          </div>
+
+          <!-- Consola de Agentes -->
+          <div class="glass-strong" style="padding:var(--space-md); border-radius:var(--radius-lg);">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+              <span style="display:inline-block;width:7px;height:7px;background:var(--accent-cyan);border-radius:50%;box-shadow:0 0 6px var(--accent-cyan);" class="animate-pulse"></span>
+              <strong style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-heading); font-family:var(--font-heading);">Agentes CE — Monitor Vivo</strong>
+              <i data-lucide="cpu" class="icon-xs" style="color:var(--accent-cyan); margin-left:auto;"></i>
+            </div>
+            <div id="dia-d-agents-feed" style="display:flex; flex-direction:column; gap:0;"></div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ══ PROTOCOLOS DE OPERACIÓN ═══════════════════════ -->
+      <section>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:var(--space-md);">
+          <i data-lucide="book-open" style="color:var(--accent-cyan); width:17px; height:17px;"></i>
+          <h3 style="font-family:var(--font-heading); font-size:1rem; font-weight:700; color:var(--text-heading); margin:0;">
+            Protocolos de Operación
+          </h3>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:var(--space-md);">
+
+          <!-- Protocolo Apertura -->
+          <div class="protocolo-card">
+            <div class="protocolo-card__header">
+              <div class="protocolo-card__icon" style="background:rgba(34,211,238,0.1);">
+                <i data-lucide="door-open" style="color:var(--accent-cyan); width:18px; height:18px;"></i>
+              </div>
+              <div>
+                <div class="protocolo-card__title">Protocolo de Apertura</div>
+                <div class="protocolo-card__subtitle">08:00 h — Representantes de Casilla</div>
+              </div>
+            </div>
+            <div>
+              <div class="protocolo-paso">
+                <div class="protocolo-paso__num" style="background:rgba(34,211,238,0.15);color:var(--accent-cyan);">1</div>
+                <div class="protocolo-paso__texto">Presentarse en casilla a las 07:30 h. Identificarse con credencial acreditada ante el presidente de la Mesa Directiva.</div>
+              </div>
+              <div class="protocolo-paso">
+                <div class="protocolo-paso__num" style="background:rgba(34,211,238,0.15);color:var(--accent-cyan);">2</div>
+                <div class="protocolo-paso__texto">Verificar que los paquetes electorales estén completos y el número de casilla coincida con el acreditamiento.</div>
+              </div>
+              <div class="protocolo-paso">
+                <div class="protocolo-paso__num" style="background:rgba(34,211,238,0.15);color:var(--accent-cyan);">3</div>
+                <div class="protocolo-paso__texto">Reportar vía app CE-Logístico: instalación confirmada o incidencia. Hora límite de reporte: 08:30 h.</div>
+              </div>
+              <div class="protocolo-paso">
+                <div class="protocolo-paso__num" style="background:rgba(34,211,238,0.15);color:var(--accent-cyan);">4</div>
+                <div class="protocolo-paso__texto">En caso de no apertura a las 08:15 h, notificar al Representante General de ruta de inmediato.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Protocolo Incidencias -->
+          <div class="protocolo-card">
+            <div class="protocolo-card__header">
+              <div class="protocolo-card__icon" style="background:rgba(245,165,36,0.1);">
+                <i data-lucide="shield-alert" style="color:var(--accent-warm); width:18px; height:18px;"></i>
+              </div>
+              <div>
+                <div class="protocolo-card__title">Protocolo de Incidencias</div>
+                <div class="protocolo-card__subtitle">Escalamiento Jurídico — Mesa Operativa</div>
+              </div>
+            </div>
+            <div>
+              <div class="protocolo-paso">
+                <div class="protocolo-paso__num" style="background:rgba(245,165,36,0.12);color:var(--accent-warm);">1</div>
+                <div class="protocolo-paso__texto">Documentar la incidencia con hora, número de casilla, sección y descripción detallada. Tomar evidencia fotográfica si aplica.</div>
+              </div>
+              <div class="protocolo-paso">
+                <div class="protocolo-paso__num" style="background:rgba(245,165,36,0.12);color:var(--accent-warm);">2</div>
+                <div class="protocolo-paso__texto">Notificar al Representante General de la ruta. El RG escala a la Mesa de Incidencias CE-Jurídico en menos de 5 minutos.</div>
+              </div>
+              <div class="protocolo-paso">
+                <div class="protocolo-paso__num" style="background:rgba(245,165,36,0.12);color:var(--accent-warm);">3</div>
+                <div class="protocolo-paso__texto">La Mesa CE-Jurídico determina si procede escrito de protesta, queja ante autoridad electoral o acción legal inmediata.</div>
+              </div>
+              <div class="protocolo-paso">
+                <div class="protocolo-paso__num" style="background:rgba(245,165,36,0.12);color:var(--accent-warm);">4</div>
+                <div class="protocolo-paso__texto">Toda incidencia se registra en el sistema CE-Forense para trazabilidad y eventual litigio post-electoral.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Protocolo Cierre -->
+          <div class="protocolo-card">
+            <div class="protocolo-card__header">
+              <div class="protocolo-card__icon" style="background:rgba(52,211,153,0.1);">
+                <i data-lucide="file-check-2" style="color:var(--accent-green); width:18px; height:18px;"></i>
+              </div>
+              <div>
+                <div class="protocolo-card__title">Protocolo de Cierre</div>
+                <div class="protocolo-card__subtitle">18:00 h — Escrutinio y Actas</div>
+              </div>
+            </div>
+            <div>
+              <div class="protocolo-paso">
+                <div class="protocolo-paso__num" style="background:rgba(52,211,153,0.12);color:var(--accent-green);">1</div>
+                <div class="protocolo-paso__texto">A las 18:00 h verificar el cierre de urnas. Permanecer como testigo durante el conteo de votos y escrutinio.</div>
+              </div>
+              <div class="protocolo-paso">
+                <div class="protocolo-paso__num" style="background:rgba(52,211,153,0.12);color:var(--accent-green);">2</div>
+                <div class="protocolo-paso__texto">Revisar que los resultados del acta coincidan con el conteo observado. Solicitar copia del Acta de Cómputo.</div>
+              </div>
+              <div class="protocolo-paso">
+                <div class="protocolo-paso__num" style="background:rgba(52,211,153,0.12);color:var(--accent-green);">3</div>
+                <div class="protocolo-paso__texto">Fotografiar el acta firmada y transmitir al sistema CE-Forense antes del traslado del paquete electoral.</div>
+              </div>
+              <div class="protocolo-paso">
+                <div class="protocolo-paso__num" style="background:rgba(52,211,153,0.12);color:var(--accent-green);">4</div>
+                <div class="protocolo-paso__texto">Reportar resultado al Representante General y al Centro de Operaciones CE a más tardar 20 min después del cierre.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </section>
 
     </div>
-  
-      <!-- Consola de Agentes CE en Vivo -->
-      <section class="glass-strong" style="padding:var(--space-md); border-radius:var(--radius-lg);">
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-          <span style="display:inline-block;width:7px;height:7px;background:var(--accent-cyan);border-radius:50%;box-shadow:0 0 6px var(--accent-cyan);" class="animate-pulse"></span>
-          <strong style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-heading); font-family:var(--font-heading);">Agentes CE — Monitor en Vivo</strong>
-          <i data-lucide="cpu" class="icon-xs" style="color:var(--accent-cyan); margin-left:auto;"></i>
-        </div>
-        <div id="live-agents-feed" style="font-size:0.72rem; font-family:monospace; display:flex; flex-direction:column; gap:5px;"></div>
-      </section>
-
   </main>
 
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
-  <script>lucide.createIcons();</script>
+  <script>
+  /* ════════════════════════════════════════════
+     DÍA D — LÓGICA ESPECÍFICA DE LA PÁGINA
+     ════════════════════════════════════════════ */
+
+  /* Datos de cobertura por municipio.
+     Calculados proporcionalmente sobre 1,230 casillas totales
+     con los escenarios del diagnóstico predictivo de CE. */
+  const COBERTURA_MUN = [
+    { nombre: 'Calkiní',     casillas:  62, rg: 8,  reps: 124, pct: 95.2, escenario: 'riesgo'      },
+    { nombre: 'Campeche',    casillas: 285, rg: 38, reps: 570, pct:100.0, escenario: 'competitivo'  },
+    { nombre: 'Carmen',      casillas: 312, rg: 42, reps: 624, pct: 99.1, escenario: 'competitivo'  },
+    { nombre: 'Champotón',   casillas: 118, rg: 16, reps: 236, pct: 97.5, escenario: 'riesgo'      },
+    { nombre: 'Hecelchakán', casillas:  58, rg: 8,  reps: 116, pct:100.0, escenario: 'favorable'   },
+    { nombre: 'Hopelchén',   casillas:  72, rg: 10, reps: 144, pct:100.0, escenario: 'favorable'   },
+    { nombre: 'Palizada',    casillas:  28, rg: 4,  reps:  56, pct:100.0, escenario: 'favorable'   },
+    { nombre: 'Tenabo',      casillas:  22, rg: 3,  reps:  44, pct:100.0, escenario: 'favorable'   },
+    { nombre: 'Escárcega',   casillas:  95, rg: 13, reps: 190, pct: 98.9, escenario: 'competitivo'  },
+    { nombre: 'Calakmul',    casillas:  41, rg: 6,  reps:  82, pct:100.0, escenario: 'favorable'   },
+    { nombre: 'Candelaria',  casillas:  62, rg: 8,  reps: 124, pct: 96.8, escenario: 'competitivo'  },
+    { nombre: 'Seybaplaya',  casillas:  38, rg: 5,  reps:  76, pct: 94.7, escenario: 'riesgo'      },
+    { nombre: 'Dzitbalché',  casillas:  37, rg: 5,  reps:  74, pct: 97.3, escenario: 'competitivo'  },
+  ];
+
+  const ESC_COLOR = {
+    favorable:   { color: 'var(--status-success)', bg: 'rgba(52,211,153,0.12)', label: 'Favorable'   },
+    competitivo: { color: 'var(--sev-media)',      bg: 'var(--sev-media-bg)',   label: 'Competitivo' },
+    riesgo:      { color: 'var(--sev-critica)',    bg: 'var(--sev-critica-bg)', label: 'Atención'    },
+  };
+
+  /* Timeline de jornada */
+  const HITOS = [
+    { hora: '05:00', label: 'Activación\nterritorial',    estado: 'pendiente' },
+    { hora: '06:00', label: 'Despliegue\nrepresentantes', estado: 'pendiente' },
+    { hora: '07:30', label: 'Llegada\na casillas',        estado: 'pendiente' },
+    { hora: '08:00', label: 'Apertura\nde casillas',      estado: 'pendiente' },
+    { hora: '08:30', label: '1er Reporte\ninstalación',   estado: 'pendiente' },
+    { hora: '12:00', label: 'Corte\nmedio día',           estado: 'pendiente' },
+    { hora: '15:00', label: 'Alerta\n–3 horas',           estado: 'pendiente' },
+    { hora: '18:00', label: 'Cierre\nde casillas',        estado: 'pendiente' },
+    { hora: '20:00', label: 'Conteo\nrápido',             estado: 'pendiente' },
+    { hora: '22:00', label: 'Consolidación\nde actas',    estado: 'pendiente' },
+  ];
+
+  /* Alertas activas */
+  const ALERTAS = [
+    {
+      nivel: 'ALTA',
+      color: 'var(--sev-critica)',
+      bg: 'var(--sev-critica-bg)',
+      municipio: 'Champotón — Sec. 0142',
+      texto: 'Vigilancia especial por participación atípica del 87% registrada en 2024. CE-Forense en monitoreo continuo.',
+    },
+    {
+      nivel: 'ALTA',
+      color: 'var(--sev-critica)',
+      bg: 'var(--sev-critica-bg)',
+      municipio: 'Candelaria',
+      texto: 'Margen menor a 1pp. Brigadas de movilización activadas. RG coordinador asignado con prioridad máxima.',
+    },
+    {
+      nivel: 'MEDIA',
+      color: 'var(--sev-media)',
+      bg: 'var(--sev-media-bg)',
+      municipio: 'Seybaplaya',
+      texto: 'Padrón en consolidación por municipio nuevo. Validar lista nominal antes de la apertura.',
+    },
+  ];
+
+  /* Logs específicos de Día D */
+  const LOGS_DIA_D = [
+    { ts: '02:14', prefix: '[CE-Logístico]',  color: 'var(--accent-cyan)',   text: 'Ruta Carmen-Sur: 42 representantes confirmados en posición.' },
+    { ts: '02:18', prefix: '[CE-Forense]',    color: 'var(--accent-blue)',   text: 'Actas Champotón Sec.0142 en vigilancia especial activa.' },
+    { ts: '02:21', prefix: '[CE-Jurídico]',   color: 'var(--accent-green)',  text: 'Mesa de Incidencias operativa. Nivel verde — 0 casos.' },
+    { ts: '02:23', prefix: '[CE-Sentinel-1]', color: 'var(--accent-cyan)',   text: 'Calkiní: refuerzo de 2 representantes en 8 casillas críticas.' },
+    { ts: '02:25', prefix: '[CE-Logístico]',  color: 'var(--accent-cyan)',   text: 'Campeche: 285/285 casillas asignadas. Cobertura 100%.' },
+    { ts: '02:27', prefix: '[CE-Estratégico]',color: 'var(--accent-purple)', text: 'Candelaria PRIORITARIA: brigada movilización activada.' },
+    { ts: '02:30', prefix: '[CE-Finanzas]',   color: 'var(--accent-warm)',   text: 'Logística Calkiní conciliada. Viáticos validados al 100%.' },
+    { ts: '02:32', prefix: '[CE-Sentinel-2]', color: 'var(--accent-cyan)',   text: 'Seybaplaya: validando padrón nominal con nuevo registro.' },
+  ];
+
+  /* ── Render Timeline ── */
+  function renderTimeline() {
+    const track = document.getElementById('timeline-track');
+    if (!track) return;
+
+    // Calcular estado según hora actual vs jornada (todo pendiente hasta el 6-jun-2027)
+    track.innerHTML = HITOS.map((h, i) => {
+      const cls = h.estado === 'done' ? 'timeline-hito--done'
+                : h.estado === 'active' ? 'timeline-hito--active'
+                : '';
+      return `
+        <div class="timeline-hito ${cls}">
+          <div class="timeline-hito__dot"></div>
+          <div class="timeline-hito__body">
+            <div class="timeline-hito__hora">${h.hora}</div>
+            <div class="timeline-hito__label">${h.label.replace('\n','<br>')}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  /* ── Render Tabla de Municipios ── */
+  function renderTablaMunicipios() {
+    const tbody = document.getElementById('tbody-municipios');
+    if (!tbody) return;
+
+    tbody.innerHTML = COBERTURA_MUN.map(m => {
+      const cfg = ESC_COLOR[m.escenario];
+      const barColor = m.pct >= 99 ? 'var(--status-success)'
+                     : m.pct >= 96 ? 'var(--accent-cyan)'
+                     : 'var(--sev-media)';
+      const textColor = m.pct >= 99 ? 'var(--status-success)'
+                      : m.pct >= 96 ? 'var(--accent-cyan)'
+                      : 'var(--sev-media)';
+
+      return `
+        <tr>
+          <td>${m.nombre}</td>
+          <td style="font-family:'JetBrains Mono',monospace; font-size:0.78rem;">${m.casillas}</td>
+          <td style="font-family:'JetBrains Mono',monospace; font-size:0.78rem;">${m.rg}</td>
+          <td style="font-family:'JetBrains Mono',monospace; font-size:0.78rem;">${m.reps}</td>
+          <td>
+            <div class="cobertura-bar">
+              <div class="cobertura-bar__track">
+                <div class="cobertura-bar__fill" style="width:${m.pct}%; background:${barColor};"></div>
+              </div>
+              <span class="cobertura-bar__pct" style="color:${textColor};">${m.pct}%</span>
+            </div>
+          </td>
+          <td>
+            <span class="estado-pill" style="background:${cfg.bg}; color:${cfg.color};">
+              ${cfg.label}
+            </span>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  /* ── Render Alertas ── */
+  function renderAlertas() {
+    const lista = document.getElementById('lista-alertas');
+    if (!lista) return;
+
+    lista.innerHTML = ALERTAS.map(a => `
+      <div class="alerta-item" style="border-left-color:${a.color};">
+        <div>
+          <div class="alerta-item__badge" style="color:${a.color};">${a.nivel}</div>
+          <div class="alerta-item__municipio">${a.municipio}</div>
+          <div class="alerta-item__texto">${a.texto}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  /* ── Consola de Agentes día D ── */
+  function renderAgentsFeed() {
+    const feed = document.getElementById('dia-d-agents-feed');
+    if (!feed) return;
+
+    feed.innerHTML = LOGS_DIA_D.slice(0, 4).map(l => `
+      <div class="agent-log-line">
+        <span class="agent-log-line__ts">${l.ts}</span>
+        <span class="agent-log-line__prefix" style="color:${l.color};">${l.prefix}</span>
+        <span>${l.text}</span>
+      </div>`).join('');
+
+    // Rotar logs cada 4 segundos
+    let idx = 4;
+    setInterval(() => {
+      const log = LOGS_DIA_D[idx % LOGS_DIA_D.length];
+      const div = document.createElement('div');
+      div.className = 'agent-log-line';
+      div.style.opacity = '0';
+      div.style.transform = 'translateY(8px)';
+      div.style.transition = 'all 0.4s ease';
+      div.innerHTML = `
+        <span class="agent-log-line__ts">${log.ts}</span>
+        <span class="agent-log-line__prefix" style="color:${log.color};">${log.prefix}</span>
+        <span>${log.text}</span>`;
+      feed.appendChild(div);
+      if (feed.children.length > 4) feed.removeChild(feed.firstChild);
+      setTimeout(() => { div.style.opacity = '1'; div.style.transform = 'translateY(0)'; }, 50);
+      idx++;
+    }, 4200);
+  }
+
+  /* ── Animar barras de progreso KPI ── */
+  function animarBarras() {
+    document.querySelectorAll('.kpi-progress-bar__fill[data-width]').forEach(bar => {
+      const target = parseFloat(bar.dataset.width);
+      setTimeout(() => { bar.style.width = target + '%'; }, 400);
+    });
+  }
+
+  /* ── Inicialización ── */
+  document.addEventListener('DOMContentLoaded', () => {
+    renderTimeline();
+    renderTablaMunicipios();
+    renderAlertas();
+    renderAgentsFeed();
+    animarBarras();
+    lucide.createIcons();
+  });
+  </script>
 </body>
 </html>
