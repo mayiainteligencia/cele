@@ -35,7 +35,7 @@ const RecuperableRow: React.FC<{ m: typeof D.recuperables[number] }> = ({ m }) =
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 700, color: colores.exito, flexShrink: 0 }}><Check size={15} /> Activo</span>
       ) : (
         <button onClick={activar}
-          style={{ border: 'none', background: V, color: '#fff', fontSize: 12.5, fontWeight: 700, padding: '7px 15px', borderRadius: 9, cursor: 'pointer', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          style={{ border: 'none', background: V, color: colores.textoClaro, fontSize: 12.5, fontWeight: 700, padding: '7px 15px', borderRadius: 9, cursor: 'pointer', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
           <Zap size={13} /> Activar
         </button>
       )}
@@ -60,7 +60,7 @@ export const AlertasElectoral: React.FC = () => {
           subtitle={`${ULTIMO} · prioridades detectadas sobre la data real. Cada foco es accionable — MAYIA arma el plan.`}
           right={
             <button onClick={() => push({ kind: 'info', title: 'Reporte exportado', msg: 'Focos de atención listos para descarga.' })}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: 'none', background: '#fff', color: colores.textoClaro, fontSize: 13, fontWeight: 700, padding: '10px 16px', borderRadius: 11, cursor: 'pointer' }}>
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: 'none', background: colores.fondoSecundario, color: colores.textoClaro, fontSize: 13, fontWeight: 700, padding: '10px 16px', borderRadius: 11, cursor: 'pointer' }}>
               <Download size={15} /> Exportar reporte
             </button>
           }
@@ -112,8 +112,8 @@ export const AlertasElectoral: React.FC = () => {
         {/* Competencia */}
         <Panel title={`Análisis de competencia · ${ULTIMO}`} icon={<Swords size={17} color={V} />}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', background: PARTIDO_COLOR.PRI, padding: '5px 12px', borderRadius: 999 }}>PRI · {D.ganadosPRI}</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', background: PARTIDO_COLOR[D.segundaFuerza] || colores.textoOscuro, padding: '5px 12px', borderRadius: 999 }}>{D.segundaFuerza} · {D.ganadosSegunda}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: colores.textoClaro, background: PARTIDO_COLOR.PRI, padding: '5px 12px', borderRadius: 999 }}>PRI · {D.ganadosPRI}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: colores.textoClaro, background: PARTIDO_COLOR[D.segundaFuerza] || colores.textoOscuro, padding: '5px 12px', borderRadius: 999 }}>{D.segundaFuerza} · {D.ganadosSegunda}</span>
           </div>
           <div style={{ height: 14, borderRadius: 999, background: colores.fondoTerciario, overflow: 'hidden', display: 'flex' }}>
             <div style={{ width: `${D.ganadosPRI / D.totalMunicipios * 100}%`, background: PARTIDO_COLOR.PRI }} title={`PRI ${D.ganadosPRI}`} />

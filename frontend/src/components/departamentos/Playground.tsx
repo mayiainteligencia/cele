@@ -71,7 +71,7 @@ export const Playground: React.FC = () => {
                   }}
                 />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,140,174,0.95) 0%, rgba(3,140,174,0.7) 40%, transparent 100%)', display: 'flex', alignItems: 'flex-end', padding: '16px', opacity: isHovered ? 1 : 0, transition: 'opacity 0.3s ease' }}>
-                  <p style={{ color: '#fff', fontSize: '12px', margin: 0, lineHeight: '1.5', fontWeight: '600' }}>{card.descripcion}</p>
+                  <p style={{ color: colores.textoClaro, fontSize: '12px', margin: 0, lineHeight: '1.5', fontWeight: '600' }}>{card.descripcion}</p>
                 </div>
               </div>
               <div style={{ padding: '12px 14px', backgroundColor: isHovered ? colores.fondoTerciario : 'transparent', transition: 'background-color 0.3s ease' }}>

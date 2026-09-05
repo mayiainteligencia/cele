@@ -92,7 +92,7 @@ export const Insight: React.FC<{ kind: InsightKind; title: string; children: Rea
         ) : (
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
             <button onClick={activar}
-              style={{ border: 'none', background: V, color: '#fff', fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 10, cursor: 'pointer' }}>
+              style={{ border: 'none', background: V, color: colores.textoClaro, fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 10, cursor: 'pointer' }}>
               Activar plan
             </button>
             <button onClick={() => setState('descartado')}
@@ -111,7 +111,7 @@ export const SectionHero: React.FC<{ eyebrow: string; title: React.ReactNode; su
 ({ eyebrow, title, subtitle, right, insights }) => (
   <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr)', gap: 18, marginBottom: 22 }} className="el-hero">
     <div style={{
-      background: colores.gradientePrimario, borderRadius: 22, padding: 26, color: '#fff', position: 'relative', overflow: 'hidden',
+      background: colores.gradientePrimario, borderRadius: 22, padding: 26, color: colores.textoClaro, position: 'relative', overflow: 'hidden',
     }}>
       <div style={{ position: 'absolute', top: -60, right: -40, width: 240, height: 240, borderRadius: '50%', background: `radial-gradient(circle, ${V}55, transparent 70%)` }} />
       <div style={{ position: 'relative' }}>

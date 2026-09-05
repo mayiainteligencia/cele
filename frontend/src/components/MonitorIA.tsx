@@ -220,7 +220,7 @@ const Delta: React.FC<{ v: number }> = ({ v }) => {
 
 const tooltipStyle = {
   background: colores.secundario, border: 'none', borderRadius: 10,
-  fontSize: 12, color: '#fff', padding: '6px 10px',
+  fontSize: 12, color: colores.textoClaro, padding: '6px 10px',
 } as const;
 
 const MiniViz: React.FC<{ viz: Viz; id: number }> = ({ viz, id }) => {
@@ -430,7 +430,7 @@ export const MonitorIA: React.FC = () => {
             background: `radial-gradient(circle, ${colores.primario}55, transparent 70%)`,
           }} />
           <Badge texto="EN VIVO" color={colores.primario} pulse />
-          <h1 style={{ fontSize: isMobile ? 26 : 38, fontWeight: 300, color: '#fff', margin: '14px 0 6px', letterSpacing: '-0.5px' }}>
+          <h1 style={{ fontSize: isMobile ? 26 : 38, fontWeight: 300, color: colores.textoClaro, margin: '14px 0 6px', letterSpacing: '-0.5px' }}>
             Cerebro <span style={{ fontWeight: 800, color: colores.primario }}>Electoral</span>
           </h1>
           <p style={{ fontSize: isMobile ? 14 : 16, color: 'rgba(255,255,255,0.7)', margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
@@ -452,7 +452,7 @@ export const MonitorIA: React.FC = () => {
                     <Icon size={18} color={colores.primario} />
                     <Delta v={k.delta} />
                   </div>
-                  <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, color: '#fff', marginTop: 10, lineHeight: 1 }}>{k.value}</div>
+                  <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, color: colores.textoClaro, marginTop: 10, lineHeight: 1 }}>{k.value}</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 4 }}>{k.label}</div>
                 </div>
               );

@@ -220,7 +220,7 @@ export const Header: React.FC<HeaderProps> = ({ title, onSectionChange }) => {
 
         {/* ── CENTRO: Logo ── */}
         <div style={{
-          backgroundColor: '#FFFFFF', borderRadius: '14px',
+          backgroundColor: colores.fondoSecundario, borderRadius: '14px',
           padding: '4px 16px', display: 'flex', alignItems: 'center',
           flexShrink: 0, height: '64px', overflow: 'hidden',
         }}>
@@ -282,7 +282,7 @@ export const Header: React.FC<HeaderProps> = ({ title, onSectionChange }) => {
                   minWidth: '17px', height: '17px', borderRadius: '10px',
                   backgroundColor: '#EF4444', border: `2px solid ${colores.fondoSecundario}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '9px', fontWeight: 'bold', color: '#FFFFFF', padding: '0 3px',
+                  fontSize: '9px', fontWeight: 'bold', color: colores.textoClaro, padding: '0 3px',
                 }}>
                   {notificacionesNoLeidas}
                 </span>
@@ -343,7 +343,7 @@ export const Header: React.FC<HeaderProps> = ({ title, onSectionChange }) => {
                           {notif.plan && (
                             <button
                               onClick={e => { e.stopPropagation(); activarPlanNotif(notif); }}
-                              style={{ border: 'none', background: colores.primario, color: '#fff', fontSize: '11px', fontWeight: 700, padding: '5px 11px', borderRadius: 8, cursor: 'pointer', flexShrink: 0 }}
+                              style={{ border: 'none', background: colores.primario, color: colores.textoClaro, fontSize: '11px', fontWeight: 700, padding: '5px 11px', borderRadius: 8, cursor: 'pointer', flexShrink: 0 }}
                             >
                               Activar plan
                             </button>
@@ -367,7 +367,7 @@ export const Header: React.FC<HeaderProps> = ({ title, onSectionChange }) => {
           <button
             style={{
               width: '52px', height: '52px', borderRadius: '50%',
-              backgroundColor: '#FFFFFF', border: `2px solid ${colores.borde}`,
+              backgroundColor: colores.fondoSecundario, border: `2px solid ${colores.borde}`,
               cursor: 'pointer', display: 'flex', alignItems: 'center',
               justifyContent: 'center', overflow: 'hidden', padding: '4px',
               transition: 'transform 0.2s',

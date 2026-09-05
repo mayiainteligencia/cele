@@ -109,7 +109,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange
               height: collapsed ? '48px' : '120px',
               transition: 'height 0.22s ease',
               borderRadius: '12px',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: colores.fondoSecundario,
               padding: '6px',
               display: 'flex',
               alignItems: 'center',

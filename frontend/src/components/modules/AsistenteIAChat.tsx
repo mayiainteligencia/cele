@@ -86,7 +86,7 @@ export const AsistenteIAChat = forwardRef<AsistenteIAChatHandle>((_, ref) => {
         <div
           style={{
             width: 36, height: 36, borderRadius: '50%',
-            backgroundColor: colores.primario, color: '#fff',
+            backgroundColor: colores.primario, color: colores.textoClaro,
             fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
         >
@@ -117,7 +117,7 @@ export const AsistenteIAChat = forwardRef<AsistenteIAChatHandle>((_, ref) => {
             {m.role === 'assistant' && (
               <div style={{
                 width: 28, height: 28, borderRadius: '50%',
-                backgroundColor: colores.primario, color: '#fff',
+                backgroundColor: colores.primario, color: colores.textoClaro,
                 fontSize: 13, fontWeight: 'bold',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
@@ -150,7 +150,7 @@ export const AsistenteIAChat = forwardRef<AsistenteIAChatHandle>((_, ref) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: colores.textoMedio, fontSize: 13 }}>
             <div style={{
               width: 28, height: 28, borderRadius: '50%',
-              backgroundColor: colores.primario, color: '#fff',
+              backgroundColor: colores.primario, color: colores.textoClaro,
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold',
             }}>
               AI
@@ -183,7 +183,7 @@ export const AsistenteIAChat = forwardRef<AsistenteIAChatHandle>((_, ref) => {
           disabled={loading}
           style={{
             padding: '0 22px', borderRadius: 999, border: 'none',
-            backgroundColor: colores.primario, color: '#fff',
+            backgroundColor: colores.primario, color: colores.textoClaro,
             fontWeight: 500, cursor: 'pointer', opacity: loading ? 0.6 : 1,
           }}
         >

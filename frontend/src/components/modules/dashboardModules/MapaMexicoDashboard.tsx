@@ -164,7 +164,7 @@ export const MapaMexicoDashboard: React.FC = () => {
 
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={async () => { if (await confirmar({ titulo: `Plan · ${sel.label}`, descripcion: s.prediccion })) push({ kind: 'success', title: `Plan activado · ${sel.label}`, msg: s.prediccion }); }}
-            style={{ border: 'none', background: V, color: '#fff', fontSize: 13, fontWeight: 700, padding: '9px 16px', borderRadius: 10, cursor: 'pointer' }}>
+            style={{ border: 'none', background: V, color: colores.textoClaro, fontSize: 13, fontWeight: 700, padding: '9px 16px', borderRadius: 10, cursor: 'pointer' }}>
             Activar plan
           </button>
           <button onClick={() => push({ kind: 'info', title: `Otras opciones · ${sel.label}`, msg: 'MAYIA generará 2 alternativas de estrategia para este estado.' })}

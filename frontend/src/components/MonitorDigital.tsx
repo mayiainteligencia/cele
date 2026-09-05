@@ -40,7 +40,7 @@ interface Plataforma {
 
 const PLATAFORMAS: Plataforma[] = [
   {
-    id: 'tiktok', nombre: 'TikTok', icon: Music2, color: '#000000', ambito: 'in-app',
+    id: 'tiktok', nombre: 'TikTok', icon: Music2, color: colores.textoClaro, ambito: 'in-app',
     placeholder: '@tu_cuenta',
     feedback: {
       seguidores: '48.2K', alcanceMes: '1.9M', engagement: '7.4%', impresionesInApp: '2.3M',
@@ -162,7 +162,7 @@ const Delta: React.FC<{ v: number }> = ({ v }) => {
 
 const tooltipStyle = {
   background: colores.secundario, border: 'none', borderRadius: 10,
-  fontSize: 12, color: '#fff', padding: '6px 10px',
+  fontSize: 12, color: colores.textoClaro, padding: '6px 10px',
 } as const;
 
 const serie = (vals: number[]) => vals.map((v, i) => ({ x: `${i}`, v }));
@@ -236,7 +236,7 @@ const PlataformaCard: React.FC<{
         <button className="md-btn" onClick={() => onConnect(p)} style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           padding: '10px 14px', borderRadius: 12, border: 'none',
-          background: colores.gradientePrimario, color: '#fff', fontWeight: 700, fontSize: 13,
+          background: colores.gradientePrimario, color: colores.textoClaro, fontWeight: 700, fontSize: 13,
           cursor: 'pointer', transition: 'transform .15s ease, box-shadow .15s ease',
         }}>
           <Plus size={16} /> Conectar cuenta
@@ -402,13 +402,13 @@ const ConexionModal: React.FC<{
           }}><X size={16} color="#fff" /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
-              width: 48, height: 48, borderRadius: 14, background: '#fff',
+              width: 48, height: 48, borderRadius: 14, background: colores.fondoSecundario,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <Icon size={24} color={p.color === '#000000' ? colores.textoClaro : p.color} />
             </div>
             <div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#fff' }}>Conectar {p.nombre}</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: colores.textoClaro }}>Conectar {p.nombre}</div>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Autoriza el acceso para leer tus métricas</div>
             </div>
           </div>
@@ -463,7 +463,7 @@ const ConexionModal: React.FC<{
 
               <button type="submit" className="md-btn" style={{
                 padding: '12px', borderRadius: 12, border: 'none', background: colores.gradientePrimario,
-                color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                color: colores.textoClaro, fontWeight: 700, fontSize: 14, cursor: 'pointer',
                 opacity: user && pass ? 1 : 0.55,
               }}>Conectar y sincronizar</button>
             </form>
@@ -533,7 +533,7 @@ export const MonitorDigital: React.FC = () => {
           }}>
             <span className="md-pulse" style={{ width: 7, height: 7, borderRadius: 999, background: colores.primario }} /> Monitoreo digital
           </span>
-          <h1 style={{ fontSize: isMobile ? 26 : 38, fontWeight: 300, color: '#fff', margin: '14px 0 6px', letterSpacing: '-0.5px' }}>
+          <h1 style={{ fontSize: isMobile ? 26 : 38, fontWeight: 300, color: colores.textoClaro, margin: '14px 0 6px', letterSpacing: '-0.5px' }}>
             Monitor <span style={{ fontWeight: 800, color: colores.primario }}>Digital</span> · In-App / Open Web
           </h1>
           <p style={{ fontSize: isMobile ? 14 : 16, color: 'rgba(255,255,255,0.7)', margin: 0, maxWidth: 640, lineHeight: 1.5 }}>
@@ -558,7 +558,7 @@ export const MonitorDigital: React.FC = () => {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Icon size={18} color={b.c} />
-                    <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{b.t}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: colores.textoClaro }}>{b.t}</span>
                   </div>
                   <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', margin: '8px 0 0', lineHeight: 1.45 }}>{b.d}</p>
                 </div>
@@ -609,7 +609,7 @@ export const MonitorDigital: React.FC = () => {
             display: 'flex', flexDirection: 'column', justifyContent: 'center',
           }}>
             <Activity size={22} color={colores.primario} />
-            <div style={{ fontSize: 40, fontWeight: 800, color: '#fff', marginTop: 10, lineHeight: 1 }}>
+            <div style={{ fontSize: 40, fontWeight: 800, color: colores.textoClaro, marginTop: 10, lineHeight: 1 }}>
               {conectadas.length}<span style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)' }}>/{PLATAFORMAS.length}</span>
             </div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 6 }}>cuentas conectadas y sincronizando feedback</div>

@@ -139,7 +139,7 @@ export const ResultadosElectorales: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {D.topPRI.map((m, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, background: colores.fondoSecundario, border: `1px solid ${colores.borde}`, borderRadius: 11, padding: '10px 12px' }}>
-                  <span style={{ width: 24, height: 24, borderRadius: 7, background: colores.textoClaro, color: '#fff', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+                  <span style={{ width: 24, height: 24, borderRadius: 7, background: colores.textoClaro, color: colores.textoClaro, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: colores.textoClaro, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.municipio}</div>
                     <div style={{ fontSize: 11.5, color: colores.textoOscuro }}>{fmt(m.votosPRI)} votos PRI</div>

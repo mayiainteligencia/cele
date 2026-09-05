@@ -135,7 +135,7 @@ export const OfertasCard: React.FC = () => {
                 top: '12px',
                 right: '12px',
                 background: oferta.color,
-                color: 'white',
+                color: colores.textoClaro,
                 padding: '6px 12px',
                 borderRadius: '8px',
                 fontSize: '14px',

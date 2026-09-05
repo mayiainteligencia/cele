@@ -127,16 +127,16 @@ export const Academia: React.FC = () => {
                 />
                 {/* Badges */}
                 <div style={{ position: 'absolute', top: '8px', left: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ padding: '3px 7px', borderRadius: '6px', backgroundColor: getNivelColor(card.nivel), color: '#fff', fontSize: '8px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                  <span style={{ padding: '3px 7px', borderRadius: '6px', backgroundColor: getNivelColor(card.nivel), color: colores.textoClaro, fontSize: '8px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
                     {card.nivel}
                   </span>
-                  <span style={{ padding: '3px 7px', borderRadius: '6px', backgroundColor: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: '8px', fontWeight: 'bold' }}>
+                  <span style={{ padding: '3px 7px', borderRadius: '6px', backgroundColor: 'rgba(0,0,0,0.7)', color: colores.textoClaro, fontSize: '8px', fontWeight: 'bold' }}>
                     {card.duracion}
                   </span>
                 </div>
                 {/* Overlay hover */}
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,140,174,0.95) 0%, rgba(3,140,174,0.7) 40%, transparent 100%)', display: 'flex', alignItems: 'flex-end', padding: '12px', opacity: isHovered ? 1 : 0, transition: 'opacity 0.3s ease' }}>
-                  <p style={{ color: '#fff', fontSize: '10px', margin: 0, lineHeight: '1.4', fontWeight: '600' }}>{card.descripcion}</p>
+                  <p style={{ color: colores.textoClaro, fontSize: '10px', margin: 0, lineHeight: '1.4', fontWeight: '600' }}>{card.descripcion}</p>
                 </div>
               </div>
 

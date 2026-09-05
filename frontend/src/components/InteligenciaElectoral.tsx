@@ -626,7 +626,7 @@ const MonitoreoDiscurso: React.FC = () => {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
-                    <span style={{ background: pc, color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 999 }}>
+                    <span style={{ background: pc, color: colores.textoClaro, fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 999 }}>
                       {f.partido}
                     </span>
                     <span style={{ fontSize: 11, color: MUT }}>{f.estacion}</span>

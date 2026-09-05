@@ -54,7 +54,7 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '0 20px 20px' }}>
               <button onClick={() => cerrar(false)} style={{ border: `1px solid ${colores.borde}`, background: 'transparent', color: colores.textoMedio, fontSize: 13.5, fontWeight: 600, padding: '10px 18px', borderRadius: 11, cursor: 'pointer' }}>Cancelar</button>
-              <button onClick={() => cerrar(true)} style={{ border: 'none', background: V, color: '#fff', fontSize: 13.5, fontWeight: 700, padding: '10px 18px', borderRadius: 11, cursor: 'pointer' }}>{opts.confirmLabel || 'Sí, activar plan'}</button>
+              <button onClick={() => cerrar(true)} style={{ border: 'none', background: V, color: colores.textoClaro, fontSize: 13.5, fontWeight: 700, padding: '10px 18px', borderRadius: 11, cursor: 'pointer' }}>{opts.confirmLabel || 'Sí, activar plan'}</button>
             </div>
           </div>
         </div>

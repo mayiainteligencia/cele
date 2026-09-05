@@ -158,7 +158,7 @@ export const MapaCalorEstados: React.FC = () => {
                 left: tooltip.x + 10,
                 top: tooltip.y - 30,
                 background: '#1a1a2e',
-                color: '#fff',
+                color: colores.textoClaro,
                 padding: '6px 10px',
                 borderRadius: '8px',
                 fontSize: '12px',
@@ -327,7 +327,7 @@ export const MapaCalorEstados: React.FC = () => {
                           width: '18px', height: '18px', borderRadius: '5px',
                           background: getColor(e.casos, maxCasos, false, false),
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '9px', fontWeight: '800', color: '#fff', flexShrink: 0,
+                          fontSize: '9px', fontWeight: '800', color: colores.textoClaro, flexShrink: 0,
                         }}
                       >
                         {i + 1}

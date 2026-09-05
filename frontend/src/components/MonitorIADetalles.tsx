@@ -372,7 +372,7 @@ const DetalleBrandPortal: React.FC<{ isMobile: boolean }> = ({ isMobile }) => (
       {/* contenido cliente */}
       <div style={{ padding: 16, background: colores.fondoClaro }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-          <div style={{ width: 38, height: 38, borderRadius: 10, background: '#E61A27', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 13 }}>CC</div>
+          <div style={{ width: 38, height: 38, borderRadius: 10, background: '#E61A27', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colores.textoClaro, fontWeight: 800, fontSize: 13 }}>CC</div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 800, color: TXT }}>Coca-Cola México</div>
             <div style={{ fontSize: 11, color: MUT }}>Panel del anunciante</div>
