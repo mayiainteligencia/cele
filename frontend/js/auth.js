@@ -22,6 +22,10 @@
    Trece iconos sueltos no caben en 80 px sin volverse una sopa. */
 const NAV = [
   {
+    page: 'campana', icon: 'pie-chart', label: 'Inteligencia de campaña',
+    href: 'campana.html',
+  },
+  {
     page: 'mando', icon: 'layout-dashboard', label: 'Centro de mando',
     href: 'mando.html',
   },

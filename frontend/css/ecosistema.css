@@ -19,9 +19,17 @@ body[data-page="ecosistema"] {
   position: fixed;
   inset: 0;
   z-index: 0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  overflow: hidden;
+  background: #080c14;
+}
+
+.eco-bg__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(3px);
+  opacity: 0.65;
+  transform: scale(1.02); /* previene bordes transparentes por el blur */
 }
 
 .eco-bg::after {
@@ -30,10 +38,10 @@ body[data-page="ecosistema"] {
   inset: 0;
   background:
     linear-gradient(180deg,
-      rgba(8, 12, 20, 0.75) 0%,
+      rgba(8, 12, 20, 0.85) 0%,
       rgba(8, 12, 20, 0.45) 35%,
       rgba(8, 12, 20, 0.55) 65%,
-      rgba(8, 12, 20, 0.85) 100%
+      rgba(8, 12, 20, 0.90) 100%
     );
 }
 
@@ -94,18 +102,14 @@ body[data-page="ecosistema"] {
 }
 
 .eco-title {
-  font-family: 'Georgia', 'Times New Roman', serif;
-  font-style: italic;
-  font-size: clamp(2.4rem, 5.5vw, 4.2rem);
-  font-weight: 700;
-  color: transparent;
-  background: linear-gradient(135deg, #d4a820 0%, #f5e06b 40%, #c49a1a 70%, #f5d442 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-hero, #ffffff);
   margin: 0;
   line-height: 1.1;
-  text-shadow: none;
-  filter: drop-shadow(0 2px 12px rgba(212, 168, 32, 0.35));
+  text-shadow: var(--text-hero-shadow, 0 2px 40px rgba(0, 0, 0, 0.55));
 }
 
 .eco-subtitle-small {
@@ -114,31 +118,25 @@ body[data-page="ecosistema"] {
   font-weight: 600;
   letter-spacing: 0.25em;
   text-transform: uppercase;
-  color: #d4a820;
+  color: var(--accent-cyan, #22d3ee);
   margin: 6px 0 2px;
 }
 
 .eco-headline {
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   font-size: clamp(1.6rem, 4vw, 3rem);
-  font-weight: 800;
-  color: #eef2f9;
+  font-weight: 700;
+  color: var(--text-heading, #eef2f9);
   margin: 0;
   line-height: 1.15;
-  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.5);
 }
 
 .eco-headline-accent {
-  font-family: 'Georgia', 'Times New Roman', serif;
-  font-style: italic;
+  font-family: 'Inter', sans-serif;
   font-size: clamp(1.3rem, 3.2vw, 2.4rem);
   font-weight: 400;
-  color: transparent;
-  background: linear-gradient(135deg, #d4a820 0%, #f5e06b 50%, #c49a1a 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
+  color: var(--accent-blue, #5b9dff);
   margin: 0;
-  filter: drop-shadow(0 2px 8px rgba(212, 168, 32, 0.3));
 }
 
 /* ════════════════════════════════════════════
@@ -229,14 +227,14 @@ body[data-page="ecosistema"] {
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: radial-gradient(circle at 35% 35%,
-    #ccff33 0%,
-    #7fff00 45%,
-    #a0ff00 100%
+    var(--accent-cyan) 0%,
+    var(--accent-blue) 45%,
+    var(--accent-navy) 100%
   );
   box-shadow:
-    0 0 14px rgba(160, 255, 0, 0.7),
-    0 0 32px rgba(127, 255, 0, 0.45),
-    0 0 55px rgba(160, 255, 0, 0.2);
+    0 0 14px rgba(34, 211, 238, 0.7),
+    0 0 32px rgba(91, 157, 255, 0.45),
+    0 0 55px rgba(34, 211, 238, 0.2);
   animation: atomPulse 2.5s ease-in-out infinite;
 }
 
@@ -244,16 +242,16 @@ body[data-page="ecosistema"] {
   0%, 100% {
     transform: translate(-50%, -50%) scale(1);
     box-shadow:
-      0 0 14px rgba(160, 255, 0, 0.7),
-      0 0 32px rgba(127, 255, 0, 0.45),
-      0 0 55px rgba(160, 255, 0, 0.2);
+      0 0 14px rgba(34, 211, 238, 0.7),
+      0 0 32px rgba(91, 157, 255, 0.45),
+      0 0 55px rgba(34, 211, 238, 0.2);
   }
   50% {
     transform: translate(-50%, -50%) scale(1.2);
     box-shadow:
-      0 0 22px rgba(160, 255, 0, 0.9),
-      0 0 45px rgba(127, 255, 0, 0.65),
-      0 0 70px rgba(160, 255, 0, 0.35);
+      0 0 22px rgba(34, 211, 238, 0.9),
+      0 0 45px rgba(91, 157, 255, 0.65),
+      0 0 70px rgba(34, 211, 238, 0.35);
   }
 }
 
@@ -284,12 +282,12 @@ body[data-page="ecosistema"] {
   height: 30px;
   margin-top: -15px;
   margin-left: -37px;
-  border-color: rgba(160, 255, 0, 0.5);
+  border-color: rgba(34, 211, 238, 0.5);
   animation: atomOrbit1 3.5s linear infinite;
 }
 .atom__ring--1::after {
-  background: #a0ff00;
-  box-shadow: 0 0 8px #a0ff00, 0 0 16px rgba(160, 255, 0, 0.5);
+  background: var(--accent-cyan);
+  box-shadow: 0 0 8px var(--accent-cyan), 0 0 16px rgba(34, 211, 238, 0.5);
 }
 
 /* Órbita 2 — inclinada 60° */
@@ -298,13 +296,13 @@ body[data-page="ecosistema"] {
   height: 26px;
   margin-top: -13px;
   margin-left: -35px;
-  border-color: rgba(127, 255, 0, 0.45);
+  border-color: rgba(91, 157, 255, 0.45);
   transform: rotate(60deg);
   animation: atomOrbit2 5s linear infinite;
 }
 .atom__ring--2::after {
-  background: #7fff00;
-  box-shadow: 0 0 8px #7fff00, 0 0 16px rgba(127, 255, 0, 0.5);
+  background: var(--accent-blue);
+  box-shadow: 0 0 8px var(--accent-blue), 0 0 16px rgba(91, 157, 255, 0.5);
 }
 
 /* Órbita 3 — inclinada -60° */
@@ -313,13 +311,13 @@ body[data-page="ecosistema"] {
   height: 22px;
   margin-top: -11px;
   margin-left: -33px;
-  border-color: rgba(204, 255, 51, 0.4);
+  border-color: rgba(167, 139, 250, 0.4);
   transform: rotate(-60deg);
   animation: atomOrbit3 7s linear infinite;
 }
 .atom__ring--3::after {
-  background: #ccff33;
-  box-shadow: 0 0 8px #ccff33, 0 0 16px rgba(204, 255, 51, 0.5);
+  background: var(--accent-purple);
+  box-shadow: 0 0 8px var(--accent-purple), 0 0 16px rgba(167, 139, 250, 0.5);
 }
 
 /* Keyframes: cada órbita rota en su propio plano 3D */

@@ -1,0 +1,299 @@
+/* ============================================
+   INTELIGENCIA DE CAMPAÑA — DASHBOARD
+   ============================================
+   Grilla 3x3 para el tablero principal
+   ============================================ */
+
+.campana-main {
+  padding: var(--space-md) var(--space-lg);
+  margin-left: calc(var(--sidebar-width) + var(--space-md));
+  max-width: calc(100vw - var(--sidebar-width) - var(--space-md) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.campana-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xs);
+}
+
+.campana-title {
+  color: var(--text-heading);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.campana-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+.campana-card {
+  background: var(--panel-fondo-tenue);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.campana-card:hover {
+  border-color: var(--accent-blue);
+  transform: translateY(-2px);
+}
+
+/* El bloque central destaca más */
+.campana-card--center {
+  background: var(--panel-fondo-alto);
+  border-color: var(--accent-cyan);
+  box-shadow: inset 0 0 40px rgba(34, 211, 238, 0.05), 0 8px 30px rgba(0, 0, 0, 0.4);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.campana-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.campana-card__num {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.campana-card__title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.campana-card__subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  color: var(--accent-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: -8px;
+  margin-bottom: 12px;
+  margin-left: 20px;
+}
+
+.campana-card__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+}
+
+/* Gráficos genéricos (dona) */
+.donut-chart {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: 0 auto;
+}
+.donut-chart::after {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  background: var(--panel-fondo-tenue);
+  border-radius: 50%;
+}
+.donut-chart__value {
+  position: relative;
+  z-index: 1;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-heading);
+  text-align: center;
+  line-height: 1.1;
+}
+.donut-chart__label {
+  display: block;
+  font-size: 0.55rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* Listas de stats */
+.stat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+}
+.stat-label {
+  color: var(--text-body);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stat-val {
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+/* Botón "Ver detalle" flotante abajo a la derecha */
+.btn-detalle {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  font-size: 0.7rem;
+  background: rgba(148, 178, 230, 0.08);
+  padding: 4px 10px;
+  border-radius: 4px;
+  color: var(--text-body);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-detalle:hover {
+  background: var(--accent-blue-light);
+  color: var(--text-heading);
+}
+
+/* ── Centro: Inteligencia de Campaña ── */
+.center-block__title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-heading);
+  letter-spacing: 0.02em;
+  margin-top: 10px;
+}
+.center-block__subtitle {
+  font-size: 0.9rem;
+  color: var(--accent-cyan);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  margin-bottom: 24px;
+}
+.center-block__icons {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  margin-bottom: 24px;
+}
+.center-icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-blue);
+}
+.center-icon-item span {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  letter-spacing: 0.05em;
+}
+.center-block__footer {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ── Módulo 3: Comunicación (Bar chart) ── */
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 80px;
+  margin-top: 10px;
+}
+.bar-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+}
+.bar-wrapper {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+.bar-fill {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+}
+.bar-icon {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* ── Líneas y marcadores ── */
+.trend-indicator {
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.trend-up { color: var(--status-success); }
+.trend-down { color: var(--status-error); }
+
+/* Custom Colors for modules based on image */
+.color-coord { color: var(--accent-blue); }
+.color-img-pos { color: var(--status-success); }
+.color-img-neu { color: var(--text-muted); }
+.color-img-neg { color: var(--status-error); }
+.color-op { color: var(--status-success); }
+.color-med { color: var(--accent-cyan); }
+
+/* Responsive basics */
+@media (max-width: 1200px) {
+  .campana-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto;
+    overflow-y: auto;
+  }
+}
+@media (max-width: 768px) {
+  .campana-grid {
+    grid-template-columns: 1fr;
+  }
+}
