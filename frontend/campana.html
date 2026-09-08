@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Inteligencia de Campaña — Cerebro Electoral (CE)">
+  <meta name="description" content="Inteligencia de Campaña — Cerebro Electoral (CE). Dashboard dinámico con desglose por redes sociales, datos en vivo y escenarios electorales.">
   <title>Inteligencia de Campaña — Cerebro Electoral</title>
 
   <!-- Google Fonts -->
@@ -38,15 +38,24 @@
       <h1 class="campana-title">
         <i data-lucide="pie-chart" style="color:var(--accent-cyan);"></i>
         Inteligencia de Campaña
+        <span class="campana-agents-badge">
+          <span class="live-dot"></span>
+          8 Agentes Activos
+        </span>
       </h1>
-      <div id="auth-slot"></div>
+      <div style="display:flex; align-items:center; gap:16px;">
+        <span class="campana-timestamp" id="last-update">Actualizado hace 2 min</span>
+        <div id="auth-slot"></div>
+      </div>
     </div>
 
     <!-- Grid 3x3 -->
     <div class="campana-grid">
 
-      <!-- Módulo 1: Inteligencia de Coordinación -->
-      <div class="campana-card animate-fade-in-up delay-1">
+      <!-- ═══════════════════════════════════════
+           Módulo 1: Inteligencia de Coordinación
+           ═══════════════════════════════════════ -->
+      <div class="campana-card animate-fade-in-up delay-1" id="card-coordinacion">
         <div class="campana-card__header">
           <span class="campana-card__num">1.</span>
           <span class="campana-card__title">Inteligencia de Coordinación</span>
@@ -55,29 +64,35 @@
         
         <div class="campana-card__content" style="display:flex; flex-direction:row; align-items:center; gap:16px;">
           <div style="flex:1;">
-            <!-- Placeholder for map silhouette -->
             <img src="assets/images/earth.png" alt="Mapa territorio" style="width:100%; opacity:0.6; filter:hue-rotate(180deg) brightness(1.5);">
           </div>
           <div class="stat-list" style="flex:1;">
             <div class="stat-row">
               <span class="stat-label">Equipos activos</span>
-              <span class="stat-val">128</span>
+              <span class="stat-val counter-animate" data-target="128" data-duration="1000">0</span>
             </div>
             <div class="stat-row">
               <span class="stat-label">Coordinaciones</span>
-              <span class="stat-val">32</span>
+              <span class="stat-val counter-animate" data-target="32" data-duration="800">0</span>
             </div>
-            <div class="stat-row">
-              <span class="stat-label">Cobertura</span>
-              <span class="stat-val">87%</span>
+            <div class="stat-with-bar">
+              <div class="stat-row">
+                <span class="stat-label">Cobertura</span>
+                <span class="stat-val">87%</span>
+              </div>
+              <div class="progress-bar-animated">
+                <div class="progress-bar-animated__fill" data-width="87%" style="background:var(--accent-blue);"></div>
+              </div>
             </div>
           </div>
         </div>
         <a href="#" class="btn-detalle">Ver detalle <i data-lucide="arrow-right" class="icon-xs"></i></a>
       </div>
 
-      <!-- Módulo 2: Inteligencia de Imagen -->
-      <div class="campana-card animate-fade-in-up delay-1">
+      <!-- ═══════════════════════════════════════
+           Módulo 2: Inteligencia de Imagen
+           ═══════════════════════════════════════ -->
+      <div class="campana-card animate-fade-in-up delay-1" id="card-imagen">
         <div class="campana-card__header">
           <span class="campana-card__num">2.</span>
           <span class="campana-card__title">Inteligencia de Imagen</span>
@@ -86,80 +101,116 @@
         
         <div class="campana-card__content" style="display:flex; flex-direction:row; align-items:center; gap:16px;">
           <div style="flex:0 0 auto;">
-            <div class="donut-chart" style="background: conic-gradient(var(--status-success) 0% 68%, var(--panel-fondo-tenue) 68% 100%); width:90px; height:90px;">
-              <div class="donut-chart__value" style="font-size:1.2rem;">68%</div>
+            <div class="donut-chart" 
+                 data-gradient="var(--status-success) 0% 68%, var(--accent-warm) 68% 90%, var(--status-error) 90% 100%"
+                 style="background: conic-gradient(var(--panel-fondo-tenue) 0% 100%); width:90px; height:90px;">
+              <div class="donut-chart__value" style="font-size:1.2rem;">
+                <span class="counter-animate" data-target="68" data-suffix="%" data-duration="1400">0%</span>
+              </div>
             </div>
             <div style="text-align:center; font-size:0.6rem; color:var(--text-muted); margin-top:8px;">
               <span class="trend-indicator trend-up"><i data-lucide="arrow-up" class="icon-xs"></i> 4%</span>
             </div>
           </div>
           <div style="flex:1;">
-            <!-- Simulation of a line chart with pure CSS for visual representation -->
-            <div style="font-size:0.65rem; color:var(--text-muted); display:flex; justify-content:flex-end; gap:8px; margin-bottom:8px;">
+            <!-- Sentimiento por plataforma -->
+            <div style="font-size:0.6rem; color:var(--text-muted); display:flex; justify-content:flex-end; gap:8px; margin-bottom:8px;">
               <span style="color:var(--status-success);">● Positiva</span>
               <span style="color:var(--text-muted);">● Neutra</span>
               <span style="color:var(--status-error);">● Negativa</span>
             </div>
-            <div style="height:60px; border-left:1px solid var(--border-medium); border-bottom:1px solid var(--border-medium); display:flex; flex-direction:column; justify-content:space-between; padding-left:4px; font-size:0.5rem; color:var(--text-muted);">
-              <span>80%</span><span>40%</span><span>0%</span>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+              <!-- Facebook -->
+              <div style="display:flex; align-items:center; gap:6px; font-size:0.6rem;">
+                <span style="color:#1877f2; width:14px; display:flex; align-items:center;"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></span>
+                <div style="flex:1; height:4px; background:var(--panel-fondo-alto); border-radius:2px; display:flex; overflow:hidden;">
+                  <div style="width:72%; background:var(--status-success); transition:width 1s;"></div>
+                  <div style="width:20%; background:var(--text-muted); opacity:0.4;"></div>
+                  <div style="width:8%; background:var(--status-error);"></div>
+                </div>
+                <span style="color:var(--status-success); font-weight:600; min-width:22px;">72%</span>
+              </div>
+              <!-- TikTok -->
+              <div style="display:flex; align-items:center; gap:6px; font-size:0.6rem;">
+                <span style="color:#ff0050; width:14px; display:flex; align-items:center;"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.43v-7.15a8.16 8.16 0 005.58 2.17v-3.4a4.85 4.85 0 01-3-.56h3v0z"/></svg></span>
+                <div style="flex:1; height:4px; background:var(--panel-fondo-alto); border-radius:2px; display:flex; overflow:hidden;">
+                  <div style="width:65%; background:var(--status-success); transition:width 1s;"></div>
+                  <div style="width:20%; background:var(--text-muted); opacity:0.4;"></div>
+                  <div style="width:15%; background:var(--status-error);"></div>
+                </div>
+                <span style="color:var(--status-success); font-weight:600; min-width:22px;">65%</span>
+              </div>
+              <!-- Instagram -->
+              <div style="display:flex; align-items:center; gap:6px; font-size:0.6rem;">
+                <span style="color:#e1306c; width:14px; display:flex; align-items:center;"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></span>
+                <div style="flex:1; height:4px; background:var(--panel-fondo-alto); border-radius:2px; display:flex; overflow:hidden;">
+                  <div style="width:74%; background:var(--status-success); transition:width 1s;"></div>
+                  <div style="width:18%; background:var(--text-muted); opacity:0.4;"></div>
+                  <div style="width:8%; background:var(--status-error);"></div>
+                </div>
+                <span style="color:var(--status-success); font-weight:600; min-width:22px;">74%</span>
+              </div>
+              <!-- X/Twitter -->
+              <div style="display:flex; align-items:center; gap:6px; font-size:0.6rem;">
+                <span style="color:#a8b3c0; width:14px; display:flex; align-items:center;"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
+                <div style="flex:1; height:4px; background:var(--panel-fondo-alto); border-radius:2px; display:flex; overflow:hidden;">
+                  <div style="width:58%; background:var(--status-success); transition:width 1s;"></div>
+                  <div style="width:25%; background:var(--text-muted); opacity:0.4;"></div>
+                  <div style="width:17%; background:var(--status-error);"></div>
+                </div>
+                <span style="color:var(--accent-warm); font-weight:600; min-width:22px;">58%</span>
+              </div>
             </div>
           </div>
         </div>
         <a href="#" class="btn-detalle">Ver detalle <i data-lucide="arrow-right" class="icon-xs"></i></a>
       </div>
 
-      <!-- Módulo 3: Inteligencia de Comunicación -->
-      <div class="campana-card animate-fade-in-up delay-1">
-        <div class="campana-card__header">
+      <!-- ═══════════════════════════════════════
+           Módulo 3: Inteligencia de Comunicación
+           REDISEÑO COMPLETO — Redes sociales
+           ═══════════════════════════════════════ -->
+      <div class="campana-card animate-fade-in-up delay-1" id="card-comunicacion">
+        <div class="campana-card__header" style="margin-bottom:2px;">
           <span class="campana-card__num">3.</span>
           <span class="campana-card__title">Inteligencia de Comunicación</span>
         </div>
-        <div class="campana-card__subtitle">Mensaje correcto, en el momento preciso</div>
         
-        <div class="campana-card__content" style="display:flex; flex-direction:row; gap:16px;">
-          <div class="stat-list" style="flex:1;">
-            <div>
-              <div class="stat-label" style="font-size:0.65rem;">Alcance total</div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span class="stat-val" style="font-size:1.1rem;">4.2 M</span>
-                <span class="trend-indicator trend-up"><i data-lucide="arrow-up" class="icon-xs"></i> 12%</span>
+        <div class="campana-card__content" style="gap:6px;">
+          <!-- Totales -->
+          <div style="display:flex; gap:12px;">
+            <div style="flex:1;">
+              <div class="stat-label" style="font-size:0.55rem;">Alcance total</div>
+              <div style="display:flex; align-items:center; gap:4px;">
+                <span class="stat-val counter-animate" style="font-size:0.88rem;" data-target="4200000" data-duration="1600">0</span>
+                <span class="trend-indicator trend-up" style="font-size:0.6rem;"><i data-lucide="arrow-up" class="icon-xs"></i> 12%</span>
               </div>
             </div>
-            <div>
-              <div class="stat-label" style="font-size:0.65rem;">Interacciones</div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span class="stat-val" style="font-size:1.1rem;">730 mil</span>
-                <span class="trend-indicator trend-up"><i data-lucide="arrow-up" class="icon-xs"></i> 18%</span>
+            <div style="flex:1;">
+              <div class="stat-label" style="font-size:0.55rem;">Interacciones</div>
+              <div style="display:flex; align-items:center; gap:4px;">
+                <span class="stat-val counter-animate" style="font-size:0.88rem;" data-target="730000" data-duration="1600">0</span>
+                <span class="trend-indicator trend-up" style="font-size:0.6rem;"><i data-lucide="arrow-up" class="icon-xs"></i> 18%</span>
               </div>
             </div>
           </div>
-          <div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end;">
-            <div style="font-size:0.6rem; color:var(--text-muted); text-align:center; margin-bottom:4px;">Rendimiento por canal</div>
-            <div class="bar-chart">
-              <div class="bar-col">
-                <div class="bar-wrapper"><div class="bar-fill" style="height:100%; background:#1877f2;"></div></div>
-                <i data-lucide="facebook" class="bar-icon" style="color:#1877f2;"></i>
-              </div>
-              <div class="bar-col">
-                <div class="bar-wrapper"><div class="bar-fill" style="height:70%; background:#e1306c;"></div></div>
-                <i data-lucide="instagram" class="bar-icon" style="color:#e1306c;"></i>
-              </div>
-              <div class="bar-col">
-                <div class="bar-wrapper"><div class="bar-fill" style="height:40%; background:#1da1f2;"></div></div>
-                <i data-lucide="twitter" class="bar-icon" style="color:#1da1f2;"></i>
-              </div>
-              <div class="bar-col">
-                <div class="bar-wrapper"><div class="bar-fill" style="height:85%; background:#ff0000;"></div></div>
-                <i data-lucide="youtube" class="bar-icon" style="color:#ff0000;"></i>
-              </div>
-            </div>
+
+          <!-- Social Grid — Generado por JS -->
+          <div id="social-grid" class="social-grid"></div>
+
+          <!-- Sparkline 24h -->
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:0.5rem; color:var(--text-muted); white-space:nowrap;">24h</span>
+            <div id="sparkline-24h" class="sparkline" style="flex:1;"></div>
           </div>
         </div>
         <a href="#" class="btn-detalle">Ver detalle <i data-lucide="arrow-right" class="icon-xs"></i></a>
       </div>
 
-      <!-- Módulo 4: Inteligencia de Operación -->
-      <div class="campana-card animate-fade-in-up delay-2">
+      <!-- ═══════════════════════════════════════
+           Módulo 4: Inteligencia de Operación
+           ═══════════════════════════════════════ -->
+      <div class="campana-card animate-fade-in-up delay-2" id="card-operacion">
         <div class="campana-card__header">
           <span class="campana-card__num">4.</span>
           <span class="campana-card__title">Inteligencia de Operación</span>
@@ -168,58 +219,93 @@
         
         <div class="campana-card__content" style="display:flex; flex-direction:row; align-items:center; gap:20px;">
           <div style="flex:0 0 auto;">
-            <div class="donut-chart" style="background: conic-gradient(var(--status-success) 0% 92%, var(--panel-fondo-tenue) 92% 100%);">
-              <div class="donut-chart__value">92%</div>
+            <div class="donut-chart" 
+                 data-gradient="var(--status-success) 0% 92%, var(--panel-fondo-tenue) 92% 100%"
+                 style="background: conic-gradient(var(--panel-fondo-tenue) 0% 100%);">
+              <div class="donut-chart__value">
+                <span class="counter-animate" data-target="92" data-suffix="%" data-duration="1400">0%</span>
+              </div>
             </div>
             <div style="text-align:center; font-size:0.6rem; color:var(--text-muted); margin-top:8px;">Actividades<br>en tiempo</div>
           </div>
-          <div class="stat-list" style="flex:1;">
-            <div class="stat-row">
-              <span class="stat-label"><i data-lucide="check-circle-2" class="icon-xs" style="color:var(--status-success);"></i> Eventos</span>
-              <span class="stat-val">124 / 130</span>
+          <div class="stat-list" style="flex:1; gap:10px;">
+            <div class="stat-with-bar">
+              <div class="stat-row">
+                <span class="stat-label"><i data-lucide="check-circle-2" class="icon-xs" style="color:var(--status-success);"></i> Eventos</span>
+                <span class="stat-val">124 / 130</span>
+              </div>
+              <div class="progress-bar-animated">
+                <div class="progress-bar-animated__fill" data-width="95.4%" style="background:var(--status-success);"></div>
+              </div>
             </div>
-            <div class="stat-row">
-              <span class="stat-label"><i data-lucide="check-circle-2" class="icon-xs" style="color:var(--status-success);"></i> Brigadas</span>
-              <span class="stat-val">980 / 1,000</span>
+            <div class="stat-with-bar">
+              <div class="stat-row">
+                <span class="stat-label"><i data-lucide="check-circle-2" class="icon-xs" style="color:var(--status-success);"></i> Brigadas</span>
+                <span class="stat-val">980 / 1,000</span>
+              </div>
+              <div class="progress-bar-animated">
+                <div class="progress-bar-animated__fill" data-width="98%" style="background:var(--status-success);"></div>
+              </div>
             </div>
-            <div class="stat-row">
-              <span class="stat-label"><i data-lucide="check-circle-2" class="icon-xs" style="color:var(--status-success);"></i> Entregas</span>
-              <span class="stat-val">95%</span>
+            <div class="stat-with-bar">
+              <div class="stat-row">
+                <span class="stat-label"><i data-lucide="check-circle-2" class="icon-xs" style="color:var(--status-success);"></i> Entregas</span>
+                <span class="stat-val">95%</span>
+              </div>
+              <div class="progress-bar-animated">
+                <div class="progress-bar-animated__fill" data-width="95%" style="background:var(--accent-cyan);"></div>
+              </div>
             </div>
           </div>
         </div>
         <a href="#" class="btn-detalle">Ver detalle <i data-lucide="arrow-right" class="icon-xs"></i></a>
       </div>
 
-      <!-- CENTRAL: Inteligencia de Campaña -->
-      <div class="campana-card campana-card--center animate-fade-in-up delay-2">
-        <i data-lucide="bar-chart-2" style="width:48px; height:48px; color:var(--accent-cyan); margin-bottom:12px;"></i>
-        <div class="center-block__title">INTELIGENCIA DE CAMPAÑA</div>
-        <div class="center-block__subtitle">PREDICTIBILIDAD AL DÍA</div>
+      <!-- ═══════════════════════════════════════
+           CENTRAL: Hub en vivo
+           ═══════════════════════════════════════ -->
+      <div class="campana-card campana-card--center animate-fade-in-up delay-2" id="card-center">
+        <i data-lucide="bar-chart-2" style="width:32px; height:32px; color:var(--accent-cyan); margin-bottom:4px;"></i>
         
-        <div class="center-block__icons">
+        <!-- Reloj en vivo -->
+        <div class="center-block__clock" id="center-clock">--:--:--</div>
+        <div class="center-block__date" id="center-date"></div>
+        
+        <div class="center-block__title" style="font-size:1.2rem; margin-top:4px;">INTELIGENCIA DE CAMPAÑA</div>
+        <div class="center-block__subtitle" style="font-size:0.8rem; margin-bottom:10px;">PREDICTIBILIDAD AL DÍA</div>
+        
+        <div class="center-block__icons" style="margin-bottom:10px;">
           <div class="center-icon-item">
-            <i data-lucide="target"></i>
+            <i data-lucide="target" style="width:20px; height:20px;"></i>
             <span>ANALIZA</span>
           </div>
           <div class="center-icon-item">
-            <i data-lucide="lightbulb"></i>
+            <i data-lucide="lightbulb" style="width:20px; height:20px;"></i>
             <span>ANTICIPA</span>
           </div>
           <div class="center-icon-item">
-            <i data-lucide="users"></i>
+            <i data-lucide="users" style="width:20px; height:20px;"></i>
             <span>DECIDE</span>
           </div>
           <div class="center-icon-item">
-            <i data-lucide="award"></i>
+            <i data-lucide="award" style="width:20px; height:20px;"></i>
             <span>GANA</span>
           </div>
         </div>
-        <div class="center-block__footer">DATOS HOY, VICTORIAS MAÑANA</div>
+
+        <!-- Feed de actividad en vivo -->
+        <div style="width:100%; border-top:1px solid var(--border-light); padding-top:6px;">
+          <div style="font-size:0.5rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:3px; display:flex; align-items:center; gap:4px;">
+            <span class="live-dot" style="width:5px; height:5px;"></span> Actividad en vivo
+          </div>
+          <div class="feed-container" id="feed-container"></div>
+        </div>
       </div>
 
-      <!-- Módulo 5: Inteligencia de Logística -->
-      <div class="campana-card animate-fade-in-up delay-2">
+      <!-- ═══════════════════════════════════════
+           Módulo 5: Inteligencia de Logística
+           ═══════════════════════════════════════ -->
+      <div class="campana-card animate-fade-in-up delay-2" id="card-logistica">
         <div class="campana-card__header">
           <span class="campana-card__num">5.</span>
           <span class="campana-card__title">Inteligencia de Logística</span>
@@ -227,32 +313,64 @@
         <div class="campana-card__subtitle">Todo en el lugar, a tiempo</div>
         
         <div class="campana-card__content" style="display:flex; flex-direction:row; align-items:center; gap:16px;">
-          <div class="stat-list" style="flex:1.2;">
-            <div class="stat-row">
-              <span class="stat-label"><i data-lucide="box" class="icon-xs"></i> Distribución</span>
-              <span class="stat-val">52 / 55</span>
+          <div class="stat-list" style="flex:1.2; gap:10px;">
+            <div class="stat-with-bar">
+              <div class="stat-row">
+                <span class="stat-label"><i data-lucide="box" class="icon-xs"></i> Distribución</span>
+                <span class="stat-val">52 / 55</span>
+              </div>
+              <div class="progress-bar-animated">
+                <div class="progress-bar-animated__fill" data-width="94.5%" style="background:var(--accent-blue);"></div>
+              </div>
             </div>
-            <div class="stat-row">
-              <span class="stat-label"><i data-lucide="truck" class="icon-xs"></i> En tránsito</span>
-              <span class="stat-val">78%</span>
+            <div class="stat-with-bar">
+              <div class="stat-row">
+                <span class="stat-label"><i data-lucide="truck" class="icon-xs"></i> En tránsito</span>
+                <span class="stat-val">78%</span>
+              </div>
+              <div class="progress-bar-animated">
+                <div class="progress-bar-animated__fill" data-width="78%" style="background:var(--accent-warm);"></div>
+              </div>
             </div>
-            <div class="stat-row">
-              <span class="stat-label"><i data-lucide="shield-check" class="icon-xs"></i> Cobertura</span>
-              <span class="stat-val">96%</span>
+            <div class="stat-with-bar">
+              <div class="stat-row">
+                <span class="stat-label"><i data-lucide="shield-check" class="icon-xs"></i> Cobertura</span>
+                <span class="stat-val">96%</span>
+              </div>
+              <div class="progress-bar-animated">
+                <div class="progress-bar-animated__fill" data-width="96%" style="background:var(--status-success);"></div>
+              </div>
             </div>
           </div>
           <div style="flex:1;">
-            <!-- Placeholder for small dots map -->
-            <div style="width:100%; height:90px; background:var(--panel-fondo-tenue); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:0.7rem; border:1px solid var(--border-medium);">
-              [ Mapa logístico ]
+            <!-- Zonas con indicadores -->
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; text-align:center; margin-bottom:2px;">Zonas</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+                <div style="background:var(--proc-recomendacion-bg); border-radius:4px; padding:4px 6px; text-align:center; font-size:0.6rem;">
+                  <span style="color:var(--status-success);">●</span> Norte
+                </div>
+                <div style="background:var(--proc-recomendacion-bg); border-radius:4px; padding:4px 6px; text-align:center; font-size:0.6rem;">
+                  <span style="color:var(--status-success);">●</span> Centro
+                </div>
+                <div style="background:var(--sev-media-bg); border-radius:4px; padding:4px 6px; text-align:center; font-size:0.6rem;">
+                  <span style="color:var(--sev-media);">●</span> Sur
+                  <div style="font-size:0.5rem; color:var(--sev-media);">en tránsito</div>
+                </div>
+                <div style="background:var(--proc-recomendacion-bg); border-radius:4px; padding:4px 6px; text-align:center; font-size:0.6rem;">
+                  <span style="color:var(--status-success);">●</span> Costa
+                </div>
+              </div>
             </div>
           </div>
         </div>
         <a href="#" class="btn-detalle">Ver detalle <i data-lucide="arrow-right" class="icon-xs"></i></a>
       </div>
 
-      <!-- Módulo 6: Inteligencia de Medios -->
-      <div class="campana-card animate-fade-in-up delay-3">
+      <!-- ═══════════════════════════════════════
+           Módulo 6: Inteligencia de Medios
+           ═══════════════════════════════════════ -->
+      <div class="campana-card animate-fade-in-up delay-3" id="card-medios">
         <div class="campana-card__header">
           <span class="campana-card__num">6.</span>
           <span class="campana-card__title">Inteligencia de Medios</span>
@@ -261,87 +379,62 @@
         
         <div class="campana-card__content" style="display:flex; flex-direction:row; align-items:center; gap:16px;">
           <div style="flex:0 0 auto;">
-            <div class="donut-chart" style="background: conic-gradient(var(--accent-cyan) 0% 68%, var(--status-error) 68% 78%, var(--text-muted) 78% 100%); width:90px; height:90px;">
-              <div class="donut-chart__value" style="font-size:1.2rem;">68%</div>
+            <div class="donut-chart" 
+                 data-gradient="var(--accent-cyan) 0% 68%, var(--status-error) 68% 78%, var(--text-muted) 78% 100%"
+                 style="background: conic-gradient(var(--panel-fondo-tenue) 0% 100%); width:90px; height:90px;">
+              <div class="donut-chart__value" style="font-size:1.2rem;">
+                <span class="counter-animate" data-target="68" data-suffix="%" data-duration="1400">0%</span>
+              </div>
             </div>
           </div>
-          <div class="stat-list" style="flex:1;">
-            <div style="font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Temas más mencionados</div>
-            <div class="stat-row">
-              <span class="stat-label">1. Propuestas</span>
-              <span class="stat-val">28%</span>
+          <div style="flex:1;">
+            <div style="font-size:0.55rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:flex; align-items:center; gap:4px;">
+              Temas más mencionados
+              <span style="font-size:0.5rem; opacity:0.6;">📻📰📱</span>
             </div>
-            <div class="stat-row">
-              <span class="stat-label">2. Liderazgo</span>
-              <span class="stat-val">24%</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">3. Resultados</span>
-              <span class="stat-val">18%</span>
-            </div>
+            <!-- Generado por JS -->
+            <div id="media-temas" style="display:flex; flex-direction:column; gap:6px;"></div>
           </div>
         </div>
         <a href="#" class="btn-detalle">Ver detalle <i data-lucide="arrow-right" class="icon-xs"></i></a>
       </div>
 
-      <!-- Escenarios Electorales -->
-      <div class="campana-card animate-fade-in-up delay-3">
+      <!-- ═══════════════════════════════════════
+           Escenarios Electorales — Datos reales
+           ═══════════════════════════════════════ -->
+      <div class="campana-card animate-fade-in-up delay-3" id="card-escenarios">
         <div class="campana-card__title" style="margin-bottom:4px;">Escenarios Electorales</div>
-        <div class="campana-card__subtitle" style="margin-left:0;">Simulaciones y tendencias</div>
+        <div class="campana-card__subtitle" style="margin-left:0;">Simulaciones Monte Carlo · 100K iteraciones</div>
         
         <div class="campana-card__content" style="display:flex; flex-direction:row; gap:16px;">
-          <div style="flex:1; border-left:1px solid var(--border-medium); border-bottom:1px solid var(--border-medium); position:relative;">
-             <!-- Chart placeholder -->
-             <div style="position:absolute; bottom:0; left:0; width:100%; height:100%; display:flex; align-items:flex-end; padding:8px;">
-               <div style="width:100%; height:2px; background:var(--accent-blue); transform:rotate(-15deg); transform-origin:left bottom;"></div>
-             </div>
+          <div style="flex:1;">
+            <!-- Barras generadas por JS -->
+            <div id="escenarios-bars" style="display:flex; flex-direction:column; gap:4px;"></div>
+            
+            <div style="margin-top:10px; padding-top:8px; border-top:1px solid var(--border-light);">
+              <div id="escenario-prob" style="display:flex; flex-direction:column; align-items:center; gap:2px;"></div>
+            </div>
           </div>
-          <div class="stat-list" style="flex:0.8;">
-            <div class="stat-row">
-              <span class="stat-label"><span style="color:var(--accent-blue);">●</span> Partido</span>
-              <span class="stat-val">42%</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label"><span style="color:var(--status-error);">●</span> Opositor A</span>
-              <span class="stat-val">28%</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label"><span style="color:var(--accent-warm);">●</span> Opositor B</span>
-              <span class="stat-val">18%</span>
+          <div style="flex:0.6; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:4px;">
+            <div style="font-size:0.55rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Gubernatura 2027</div>
+            <div style="font-size:0.55rem; color:var(--text-muted);">σ = 4.5pp</div>
+            <div style="font-size:0.5rem; color:var(--text-muted); opacity:0.6; text-align:center; margin-top:4px;">
+              Fuente: Cómputos IEEC 2024 + tracking Demoscopia
             </div>
           </div>
         </div>
         <a href="#" class="btn-detalle">Ver detalle <i data-lucide="arrow-right" class="icon-xs"></i></a>
       </div>
 
-      <!-- Alertas y Oportunidades -->
-      <div class="campana-card animate-fade-in-up delay-3">
+      <!-- ═══════════════════════════════════════
+           Alertas y Oportunidades — Con datos reales
+           ═══════════════════════════════════════ -->
+      <div class="campana-card animate-fade-in-up delay-3" id="card-alertas">
         <div class="campana-card__title" style="margin-bottom:4px;">Alertas y Oportunidades</div>
         <div class="campana-card__subtitle" style="margin-left:0;">Lo importante, al momento</div>
         
-        <div class="campana-card__content stat-list" style="gap:16px;">
-          <div style="display:flex; gap:10px;">
-            <i data-lucide="alert-triangle" style="color:var(--status-error); width:18px; flex-shrink:0;"></i>
-            <div>
-              <div style="font-size:0.75rem; font-weight:700; color:var(--text-heading);">Riesgo en 3 municipios clave</div>
-              <div style="font-size:0.65rem; color:var(--status-error);">Atención inmediata</div>
-            </div>
-          </div>
-          <div style="display:flex; gap:10px;">
-            <i data-lucide="alert-circle" style="color:var(--accent-warm); width:18px; flex-shrink:0;"></i>
-            <div>
-              <div style="font-size:0.75rem; font-weight:700; color:var(--text-heading);">Aumento de sentimiento negativo</div>
-              <div style="font-size:0.65rem; color:var(--accent-warm);">Monitoreo activo</div>
-            </div>
-          </div>
-          <div style="display:flex; gap:10px;">
-            <i data-lucide="info" style="color:var(--accent-blue); width:18px; flex-shrink:0;"></i>
-            <div>
-              <div style="font-size:0.75rem; font-weight:700; color:var(--text-heading);">Oportunidad de crecimiento</div>
-              <div style="font-size:0.65rem; color:var(--accent-blue);">Estrategia sugerida</div>
-            </div>
-          </div>
-        </div>
+        <!-- Generado por JS -->
+        <div class="campana-card__content" id="alertas-container" style="gap:6px; overflow-y:auto;"></div>
         <a href="#" class="btn-detalle">Ver todas <i data-lucide="arrow-right" class="icon-xs"></i></a>
       </div>
 
@@ -351,10 +444,20 @@
   <!-- Scripts -->
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/campana.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (window.lucide) lucide.createIcons();
+      
+      // Update timestamp periodically
+      let minutes = 2;
+      const tsEl = document.getElementById('last-update');
+      setInterval(() => {
+        minutes++;
+        if (tsEl) tsEl.textContent = `Actualizado hace ${minutes} min`;
+      }, 60000);
     });
   </script>
+
 </body>
 </html>
