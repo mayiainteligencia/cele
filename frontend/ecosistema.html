@@ -23,19 +23,10 @@
 <body data-page="ecosistema">
 
   <!-- ════════════════════════════════════════
-       FONDO — Video
+       FONDO — Imagen
        ════════════════════════════════════════ -->
   <div class="eco-bg" aria-hidden="true">
-    <video
-      class="eco-bg__video"
-      src="assets/images/DCElect-boomerang.mp4"
-      autoplay
-      muted
-      loop
-      playsinline
-      preload="auto"
-    ></video>
-    <img class="eco-bg__img" id="eco-bg-img" alt="" style="display:none; width:100%; height:100%; object-fit:cover;">
+    <img class="eco-bg__img" src="assets/images/background/dc2.jpeg" alt="" style="width:100%; height:100%; object-fit:cover;">
   </div>
 
   <!-- Scanline decorativa HUD -->
@@ -59,7 +50,7 @@
 
     <!-- Título principal -->
     <div class="eco-title-block eco-fade-in">
-      <h1 class="eco-title" id="eco-title-trigger" style="cursor:pointer;">Cerebro Electoral</h1>
+      <h1 class="eco-title">Cerebro Electoral</h1>
       <p class="eco-subtitle-small">Ecosistema para</p>
       <p class="eco-headline">GANAR LA ELECCIÓN</p>
       <p class="eco-headline-accent">con Inteligencia Artificial</p>
@@ -74,7 +65,7 @@
         <div class="eco-modules-row">
 
           <!-- Inteligencia de Partido -->
-          <a href="https://cerebroelectoral.vercel.app/" class="eco-module" target="_blank" rel="noopener" id="mod-partido">
+          <a href="https://panelect.vercel.app/login" class="eco-module" target="_blank" rel="noopener" id="mod-partido">
             <div class="atom">
               <div class="atom__core"></div>
               <div class="atom__ring atom__ring--1"></div>
@@ -198,34 +189,6 @@
       const core = atom.querySelector('.atom__core');
       if (core) {
         core.style.animationDelay = -(Math.random() * 2.5) + 's';
-      }
-    });
-  })();
-
-  /* ── Ciclo de fondo al hacer click en el título ── */
-  (function bgCycle() {
-    const title = document.getElementById('eco-title-trigger');
-    const video = document.querySelector('.eco-bg__video');
-    const img = document.getElementById('eco-bg-img');
-    if (!title || !video || !img) return;
-    const images = [
-      'assets/images/background/dc1.jpeg',
-      'assets/images/background/dc2.jpeg',
-      'assets/images/background/dc3.jpeg',
-      'assets/images/background/dc4.jpeg',
-    ];
-    let step = 0; // 0 = video, 1-4 = imagen
-    title.addEventListener('click', () => {
-      step = (step + 1) % (images.length + 1);
-      if (step === 0) {
-        img.style.display = 'none';
-        video.style.display = '';
-        video.play();
-      } else {
-        video.pause();
-        video.style.display = 'none';
-        img.src = images[step - 1];
-        img.style.display = '';
       }
     });
   })();
