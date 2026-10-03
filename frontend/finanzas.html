@@ -33,38 +33,38 @@
 
       <section class="mando-header">
         <div class="mando-header__title-box">
-          <h1><i data-lucide="dollar-sign" style="color:var(--accent-cyan);"></i> Copiloto Financiero y Fiscalización INE</h1>
-          <p>Control estricto del presupuesto de campaña, alertas de topes de gasto por municipio y auditoría preventiva de fiscalización.</p>
+          <h1><i data-lucide="dollar-sign" style="color:var(--accent-cyan);"></i> <span data-i18n="fin.titulo">Copiloto Financiero y Fiscalización INE</span></h1>
+          <p><span data-i18n="fin.desc">Control estricto del presupuesto de campaña, alertas de topes de gasto por municipio y auditoría preventiva de fiscalización.</span></p>
         </div>
 
         <div class="mando-header__pills">
-          <span class="badge badge--success">Semáforo de Cumplimiento INE</span>
-          <span class="badge badge--neutral">Fiscalización Lícita</span>
+          <span class="badge badge--success"><span data-i18n="fin.cumplimiento">Semáforo de Cumplimiento INE</span></span>
+          <span class="badge badge--neutral"><span data-i18n="fin.licita">Fiscalización Lícita</span></span>
         </div>
       </section>
 
       <section class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-card__label"><span>Tope Autorizado INE</span><i data-lucide="shield" class="icon-xs"></i></div>
+          <div class="kpi-card__label"><span><span data-i18n="fin.tope">Tope Autorizado INE</span></span><i data-lucide="shield" class="icon-xs"></i></div>
           <div class="kpi-card__value" style="font-size:1.5rem;">$ 14,250,000</div>
           <div class="kpi-card__sub">Límite oficial para la contienda gubernamental</div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-card__label"><span>Gasto Ejercido</span><i data-lucide="trending-up" class="icon-xs" style="color:var(--accent-cyan);"></i></div>
+          <div class="kpi-card__label"><span><span data-i18n="fin.gasto">Gasto Ejercido</span></span><i data-lucide="trending-up" class="icon-xs" style="color:var(--accent-cyan);"></i></div>
           <div class="kpi-card__value" style="font-size:1.5rem; color:var(--accent-cyan);">$ 5,120,400</div>
           <div class="kpi-card__sub">35.9% del tope ejercido</div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-card__label"><span>Margen Disponible</span><i data-lucide="wallet" class="icon-xs" style="color:var(--status-success);"></i></div>
+          <div class="kpi-card__label"><span><span data-i18n="fin.margen">Margen Disponible</span></span><i data-lucide="wallet" class="icon-xs" style="color:var(--status-success);"></i></div>
           <div class="kpi-card__value" style="font-size:1.5rem; color:var(--status-success);">$ 9,129,600</div>
           <div class="kpi-card__sub">Sin riesgo de sobrepaso</div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-card__label"><span>Alertas de Comprobación</span><i data-lucide="check-circle" class="icon-xs" style="color:var(--status-success);"></i></div>
-          <div class="kpi-card__value" style="color:var(--status-success);">100% al Día</div>
+          <div class="kpi-card__label"><span><span data-i18n="fin.alertas">Alertas de Comprobación</span></span><i data-lucide="check-circle" class="icon-xs" style="color:var(--status-success);"></i></div>
+          <div class="kpi-card__value" style="color:var(--status-success);"><span data-i18n="fin.alertas_val">100% al Día</span></div>
           <div class="kpi-card__sub">Facturas y comprobantes validados SAT/INE</div>
         </div>
       </section>
@@ -90,6 +90,7 @@
 
   </main>
 
+  <script src="js/i18n.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
   <script>lucide.createIcons();</script>

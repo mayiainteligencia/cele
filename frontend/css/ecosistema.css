@@ -556,3 +556,13 @@ body[data-page="ecosistema"] {
     rgba(34, 211, 238, 0.008) 4px
   );
 }
+
+/* ── Botón de idioma (components.css no se carga aquí) ── */
+.lang-toggle--floating {
+  position: fixed; top: 16px; right: 16px; z-index: 1000;
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;
+  border: 1px solid rgba(255,255,255,.18); border-radius: 999px;
+  background: rgba(8,12,20,.6); backdrop-filter: blur(16px);
+  color: #fff; font: 700 .78rem/1 inherit; letter-spacing: .04em; cursor: pointer;
+}
+.lang-toggle--floating:hover { border-color: #22d3ee; color: #22d3ee; }

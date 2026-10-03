@@ -40,7 +40,7 @@
        ════════════════════════════════════════ -->
   <a href="index.html" class="eco-back" aria-label="Volver a Campeche">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-    Campeche
+    <span data-i18n="eco.volver">Campeche</span>
   </a>
 
   <!-- ════════════════════════════════════════
@@ -50,10 +50,10 @@
 
     <!-- Título principal -->
     <div class="eco-title-block eco-fade-in">
-      <h1 class="eco-title">Cerebro Electoral</h1>
-      <p class="eco-subtitle-small">Ecosistema para</p>
-      <p class="eco-headline">GANAR LA ELECCIÓN</p>
-      <p class="eco-headline-accent">con Inteligencia Artificial</p>
+      <h1 class="eco-title" data-i18n="eco.titulo">Cerebro Electoral</h1>
+      <p class="eco-subtitle-small" data-i18n="eco.para">Ecosistema para</p>
+      <p class="eco-headline" data-i18n="eco.ganar">GANAR LA ELECCIÓN</p>
+      <p class="eco-headline-accent" data-i18n="eco.con_ia">con Inteligencia Artificial</p>
     </div>
 
     <!-- Sección inferior: módulos + infraestructura -->
@@ -72,7 +72,7 @@
               <div class="atom__ring atom__ring--2"></div>
               <div class="atom__ring atom__ring--3"></div>
             </div>
-            <span class="eco-module__label">Inteligencia<br>de Partido</span>
+            <span class="eco-module__label" data-i18n="eco.partido">Inteligencia<br>de Partido</span>
           </a>
 
           <!-- Inteligencia Electoral -->
@@ -83,7 +83,7 @@
               <div class="atom__ring atom__ring--2"></div>
               <div class="atom__ring atom__ring--3"></div>
             </div>
-            <span class="eco-module__label">Inteligencia electoral<br>war Room cordinaciom</span>
+            <span class="eco-module__label" data-i18n="eco.electoral">Inteligencia electoral<br>war Room cordinaciom</span>
           </a>
 
           <!-- Inteligencia Candidato -->
@@ -94,7 +94,7 @@
               <div class="atom__ring atom__ring--2"></div>
               <div class="atom__ring atom__ring--3"></div>
             </div>
-            <span class="eco-module__label">Inteligencia<br>Candidato</span>
+            <span class="eco-module__label" data-i18n="eco.candidato">Inteligencia<br>Candidato</span>
           </a>
 
           <!-- Inteligencia Inversionistas -->
@@ -105,7 +105,7 @@
               <div class="atom__ring atom__ring--2"></div>
               <div class="atom__ring atom__ring--3"></div>
             </div>
-            <span class="eco-module__label">Inteligencia<br>Inversionistas</span>
+            <span class="eco-module__label" data-i18n="eco.inversionistas">Inteligencia<br>Inversionistas</span>
           </div>
 
         </div>
@@ -121,7 +121,7 @@
               <div class="atom__ring atom__ring--2"></div>
               <div class="atom__ring atom__ring--3"></div>
             </div>
-            <span class="eco-module__label">Inteligencia<br>Día D</span>
+            <span class="eco-module__label" data-i18n="eco.dia_d">Inteligencia<br>Día D</span>
           </a>
 
           <!-- Tu Gobierno Inteligente -->
@@ -132,7 +132,7 @@
               <div class="atom__ring atom__ring--2"></div>
               <div class="atom__ring atom__ring--3"></div>
             </div>
-            <span class="eco-module__label">Tu Gobierno<br>Inteligente</span>
+            <span class="eco-module__label" data-i18n="eco.gobierno">Tu Gobierno<br>Inteligente</span>
           </div>
 
         </div>
@@ -141,10 +141,10 @@
       <!-- Bloque decorativo: Infraestructura -->
       <div class="eco-infra eco-fade-in eco-fade-in--d3">
         <div class="eco-infra__accent"></div>
-        <span class="eco-infra__line eco-infra__line--glow">Infraestructura</span>
-        <span class="eco-infra__line">Centro de Datos</span>
-        <span class="eco-infra__line">Nube Privada /</span>
-        <span class="eco-infra__line eco-infra__line--glow">Ciberseguridad</span>
+        <span class="eco-infra__line eco-infra__line--glow" data-i18n="eco.infra">Infraestructura</span>
+        <span class="eco-infra__line" data-i18n="eco.centro_datos">Centro de Datos</span>
+        <span class="eco-infra__line" data-i18n="eco.nube">Nube Privada /</span>
+        <span class="eco-infra__line eco-infra__line--glow" data-i18n="eco.ciber">Ciberseguridad</span>
       </div>
 
     </div>
@@ -154,6 +154,7 @@
   <!-- ════════════════════════════════════════
        SCRIPTS
        ════════════════════════════════════════ -->
+  <script src="js/i18n.js"></script>
   <script>
   /* ── Partículas flotantes decorativas ── */
   (function initParticles() {
@@ -195,6 +196,17 @@
 
   /* ── Lucide icons ── */
   if (window.lucide) lucide.createIcons();
+
+  /* ── i18n: floating toggle (ecosistema has no sidebar) ── */
+  if (typeof CEi18n !== 'undefined') {
+    const toggleBtn = CEi18n.renderToggleButton();
+    toggleBtn.classList.add('lang-toggle--floating');
+    document.body.appendChild(toggleBtn);
+    CEi18n.aplicar();
+  }
+  document.addEventListener('ce:lang-change', () => {
+    if (typeof CEi18n !== 'undefined') CEi18n.aplicar();
+  });
   </script>
 </body>
 </html>

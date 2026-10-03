@@ -40,8 +40,8 @@
 
       <section class="mando-header">
         <div class="mando-header__title-box">
-          <h1><i data-lucide="map" style="color:var(--accent-cyan);"></i> Cartografía Maestro y Visor Multicapa — Campeche</h1>
-          <p>Exploración interactiva de capas vectoriales INEGI 2024, AGEBs urbanas/rurales, localidades y catálogo educativo SEP CCT.</p>
+          <h1><i data-lucide="map" style="color:var(--accent-cyan);"></i> <span data-i18n="carto.titulo">Cartografía Maestro y Visor Multicapa — Campeche</span></h1>
+          <p><span data-i18n="carto.desc">Exploración interactiva de capas vectoriales INEGI 2024, AGEBs urbanas/rurales, localidades y catálogo educativo SEP CCT.</span></p>
         </div>
 
         <div class="mando-header__pills" id="carto-pills"></div>
@@ -50,13 +50,13 @@
       <!-- Coloreado municipal: los botones que antes se enganchaban
            desde JS a IDs que no existían en el HTML. -->
       <section class="carto-controles">
-        <span class="text-label">Colorear municipios por</span>
+        <span class="text-label"><span data-i18n="carto.colorear">Colorear municipios por</span></span>
         <div class="subnav-bar" role="group" aria-label="Variable de coloreado">
           <button class="subnav-btn subnav-btn--active" data-colorear="">
-            <i data-lucide="circle-slash"></i><span>Sin coloreado</span>
+            <i data-lucide="circle-slash"></i><span><span data-i18n="carto.sin">Sin coloreado</span></span>
           </button>
           <button class="subnav-btn" data-colorear="escuelas_por_municipio">
-            <i data-lucide="school"></i><span>Escuelas CCT</span>
+            <i data-lucide="school"></i><span><span data-i18n="carto.escuelas">Escuelas CCT</span></span>
           </button>
           <button class="subnav-btn" data-colorear="alumnado">
             <i data-lucide="users-round"></i><span>Alumnado</span>
@@ -138,6 +138,7 @@
   <script src="js/electoral.js"></script>
   <script src="js/censo.js"></script>
   <script src="js/procedencia.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
   <script>

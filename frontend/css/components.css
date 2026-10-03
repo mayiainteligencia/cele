@@ -1624,3 +1624,63 @@
   .revelable { transition: none; transform: none; }
   #enlaces.fluye line { animation: none; }
 }
+
+/* ════════════════════════════════════════════
+   LANGUAGE TOGGLE — ES ↔ EN
+   ════════════════════════════════════════════ */
+
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  background: var(--superficie);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  color: var(--text-heading);
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px -4px var(--sombra-negra);
+  position: relative;
+  text-transform: uppercase;
+}
+
+.lang-toggle:hover {
+  background: var(--superficie-hover);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px -4px var(--sombra-negra-alta);
+}
+
+.lang-toggle:active {
+  transform: translateY(0);
+}
+
+.lang-toggle svg {
+  flex-shrink: 0;
+  color: var(--accent-cyan);
+  transition: transform 0.3s ease;
+}
+
+.lang-toggle:hover svg {
+  transform: rotate(20deg);
+}
+
+.lang-toggle__label {
+  line-height: 1;
+}
+
+/* Placement in sidebar — for ecosistema.html which has no topbar */
+.lang-toggle--floating {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+}
