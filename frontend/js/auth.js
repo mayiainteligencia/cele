@@ -51,6 +51,7 @@ const NAV = [
       { href: 'medios.html',       page: 'medios',       label: 'Medios',       icon: 'radio',        i18n: 'sub.medios' },
       { href: 'riesgos.html',      page: 'riesgos',      label: 'Grafo y riesgos', icon: 'network',   i18n: 'sub.grafo_riesgos' },
       { href: 'encuestas.html',    page: 'encuestas',    label: 'Encuestas',    icon: 'bar-chart-3',  i18n: 'sub.encuestas' },
+      { href: 'discursos.html',    page: 'discursos',    label: 'Discursos',    icon: 'message-square-text', i18n: 'sub.discursos' },
     ],
   },
   {

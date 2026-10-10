@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Análisis de discursos: qué tanto cubre cada discurso los temas de la conversación pública, contrastados con ENVIPE — Cerebro Electoral (CE).">
+  <title>Análisis de discursos — Cerebro Electoral (CE)</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/colors.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <style>
+    .disc-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--space-md); }
+    .disc-campo { display: flex; flex-direction: column; gap: 6px; font-size: 0.78rem; color: var(--text-muted); }
+    .disc-campo input[type="text"], .disc-campo textarea {
+      width: 100%; padding: 8px 10px; border-radius: var(--radius-sm);
+      background: var(--velo-05); border: 1px solid var(--glass-border);
+      color: var(--text-body); font-size: 0.85rem; font-family: inherit;
+    }
+    .disc-campo textarea { min-height: 150px; resize: vertical; line-height: 1.5; }
+    .disc-campo input:focus-visible, .disc-campo textarea:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 1px; }
+    .disc-campo input[type="file"] { font-size: 0.75rem; color: var(--text-muted); }
+    .disc-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); margin-top: var(--space-md); }
+    .disc-acciones .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .disc-error { color: var(--status-error); font-size: 0.8rem; }
+
+    .etapas { display: flex; flex-wrap: wrap; gap: var(--space-sm); list-style: none; padding: 0; margin: 0; }
+    .etapa { flex: 1 1 170px; display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px;
+      border-radius: var(--radius-md); background: var(--card-bg-raised); border: 1px solid var(--card-border); font-size: 0.8rem; }
+    .etapa__icono { width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px; border-radius: 50%;
+      display: grid; place-items: center; border: 2px solid var(--text-muted); color: transparent; }
+    .etapa__estado { display: block; font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+    .etapa--curso { border-color: var(--accent-cyan); }
+    .etapa--curso .etapa__icono { border-color: var(--accent-cyan) transparent var(--accent-cyan) var(--accent-cyan); animation: spin 0.8s linear infinite; }
+    .etapa--listo .etapa__icono { background: var(--status-success); border-color: var(--status-success); color: #04130d; }
+    .etapa--listo .etapa__icono svg { width: 11px; height: 11px; }
+    .etapa--error { border-color: var(--status-error); }
+    .etapa--error .etapa__icono { background: var(--status-error); border-color: var(--status-error); color: #fff; }
+    .etapa--error .etapa__icono svg { width: 11px; height: 11px; }
+
+    .grafo-grid { display: grid; grid-template-columns: 1fr 320px; gap: var(--space-md); align-items: stretch; }
+    @media (max-width: 1024px) { .grafo-grid { grid-template-columns: 1fr; } }
+    .grafo-caja { position: relative; height: 540px; border-radius: var(--radius-md); overflow: hidden;
+      background: var(--card-bg-raised); border: 1px solid var(--card-border); }
+    @media (max-width: 600px) { .grafo-caja { height: 420px; } }
+    .grafo-col { position: relative; min-width: 0; }
+    .grafo-vacio { position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
+      padding: var(--space-lg); color: var(--text-muted); font-size: 0.85rem; pointer-events: none; }
+    .grafo-vacio[hidden] { display: none; }
+    .grafo-leyenda { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: var(--space-sm); font-size: 0.75rem; color: var(--text-body); }
+    .leyenda-item { display: inline-flex; align-items: center; gap: 6px; }
+    .leyenda-punto { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+    .leyenda-punto--anillo { background: transparent; border: 2px dashed var(--sev-media); }
+    .grafo-detalle { padding: var(--space-md); border-radius: var(--radius-md); background: var(--card-bg-raised);
+      border: 1px solid var(--card-border); font-size: 0.82rem; line-height: 1.5; overflow-y: auto; max-height: 540px; }
+    .grafo-detalle h4 { color: var(--text-heading); font-size: 0.95rem; margin: 6px 0 8px; }
+    .grafo-detalle ul { margin: 6px 0 10px; padding-left: 18px; }
+    .grafo-detalle .dato { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--velo-05); }
+    .grafo-detalle .dato span:first-child { color: var(--text-muted); }
+    .grafo-detalle .nota { color: var(--text-muted); font-size: 0.72rem; margin-top: 8px; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tabla-disc td, .tabla-disc th { vertical-align: top; }
+    .metrica { display: flex; flex-direction: column; gap: 4px; min-width: 130px; }
+    .metrica strong { font-size: 1.05rem; color: var(--text-heading); }
+  </style>
+</head>
+<body data-page="discursos">
+
+  <nav class="sidebar" id="sidebar" aria-label="Navegación principal"></nav>
+
+  <main class="main" id="main-content" style="padding-top: calc(var(--filter-bar-height) + var(--space-md));">
+    <div class="mando-workspace animate-fade-in-up">
+
+      <section class="mando-header">
+        <div class="mando-header__title-box">
+          <h1><i data-lucide="message-square-text" style="color:var(--accent-cyan);"></i> <span>Análisis de discursos</span></h1>
+          <p>Contrasta qué temas toca cada discurso con lo que dicen las noticias y lo que dice la gente (ENVIPE). Compara hasta tres versiones.</p>
+        </div>
+        <div class="mando-header__pills" id="cabecera-pills"></div>
+      </section>
+
+      <div class="aviso-simulado">
+        <i data-lucide="flask-conical"></i>
+        <span><strong>Datos simulados.</strong> La evaluación todavía no está conectada al backend: los discursos que pegues no se analizan,
+        el resultado es una demostración con los temas reales de Campeche del 10 de octubre de 2026 y discursos de ejemplo.</span>
+      </div>
+
+      <section class="panel" id="panel-form">
+        <h3 class="text-h3 panel__titulo"><i data-lucide="file-pen-line"></i> Discursos a evaluar</h3>
+        <form id="form-discursos" novalidate>
+          <label class="disc-campo" style="max-width:260px; margin-bottom:var(--space-md);">
+            Entidad
+            <select id="entidad" class="filtro__select" style="max-width:none;">
+              <option value="Campeche">Campeche</option>
+            </select>
+          </label>
+          <div class="disc-form" id="disc-form"></div>
+          <div class="disc-acciones">
+            <button type="submit" class="btn-primary" id="btn-evaluar"><i data-lucide="play"></i> Evaluar discursos</button>
+            <button type="button" class="btn-glass" id="btn-ejemplo"><i data-lucide="wand-sparkles"></i> Cargar ejemplo</button>
+            <span class="disc-error" id="form-error" role="alert"></span>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel" id="panel-etapas" hidden>
+        <h3 class="text-h3 panel__titulo"><i data-lucide="list-checks"></i> Proceso</h3>
+        <ol class="etapas" id="etapas" aria-live="polite"></ol>
+        <p class="disc-error" id="proceso-error" role="alert" style="margin-top:var(--space-sm);"></p>
+      </section>
+
+      <section class="panel" id="panel-grafo" hidden>
+        <h3 class="text-h3 panel__titulo"><i data-lucide="network"></i> Mapa de temas, ENVIPE y discursos</h3>
+        <div class="grafo-leyenda" id="leyenda"></div>
+        <div class="grafo-grid">
+          <div class="grafo-col">
+            <div class="grafo-caja" id="grafo-caja" role="img" aria-label="Mapa interactivo de temas de noticias, categorías de ENVIPE y discursos"></div>
+            <div class="grafo-vacio" id="grafo-vacio">El mapa se arma a medida que avanza el proceso.</div>
+          </div>
+          <aside class="grafo-detalle" id="detalle" aria-live="polite">
+            <p class="text-small">Haz clic en un nodo para ver su detalle. Arrastra para moverlo; rueda o pellizco para acercar.</p>
+          </aside>
+        </div>
+        <p class="panel__nota">Tamaño del tema = número de notas. Tamaño de la categoría = % de ENVIPE (cada persona puede mencionar varios problemas, por eso no suman 100 %).
+        Flecha de discurso a tema = el discurso toca ese tema.</p>
+      </section>
+
+      <section class="panel" id="panel-tabla" hidden></section>
+
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/force-graph@1"></script>
+  <script src="js/procedencia.js"></script>
+  <script src="js/territorio.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/vistas/discursos.mock.js"></script>
+  <script src="js/vistas/discursos.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

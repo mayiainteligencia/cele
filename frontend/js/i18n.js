@@ -50,6 +50,7 @@ const CEi18n = (() => {
       'sub.medios': 'Medios',
       'sub.grafo_riesgos': 'Grafo y riesgos',
       'sub.encuestas': 'Encuestas',
+      'sub.discursos': 'Discursos',
       'sub.finanzas': 'Finanzas',
       'sub.dia_d': 'Día D',
       'sub.roles': 'Roles y permisos',
@@ -282,6 +283,7 @@ const CEi18n = (() => {
       'sub.medios': 'Media',
       'sub.grafo_riesgos': 'Graph & Risks',
       'sub.encuestas': 'Polls',
+      'sub.discursos': 'Speeches',
       'sub.finanzas': 'Finances',
       'sub.dia_d': 'D-Day',
       'sub.roles': 'Roles & Permissions',
@@ -559,21 +561,32 @@ const CEi18n = (() => {
      renderiza después (tablas, tarjetas, datos de los JSON).
      El original se guarda para volver a español. */
 
-  let PH = {}, RX = [], FRAG_RX = null, LC = {};
+  let PH = {}, RX = [], FRAG_RX = null;
   const ATTRS = ['placeholder', 'title', 'aria-label', 'alt', 'data-tooltip'];
   const norm = (s) => s.replace(/\s+/g, ' ').trim();
   const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
   /** Lo llama js/i18n-phrases.js. ph: {es: en}; rx: [[RegExp, 'reemplazo $1'], ...] */
   function frases(ph, rx) {
-    PH = ph; RX = rx || [];
+    PH = { ...ph }; RX = rx || [];
+    // "casillas" también debe cubrir "Casillas" sin volver el reemplazo insensible a mayúsculas
+    // (eso convertiría el "Media" inglés en "medium" por culpa de "MEDIA").
+    const SOLO_EXACTO = new Set(['media']);   // también es palabra en inglés: sólo coincide si el nodo es exactamente eso
+    for (const k of Object.keys(ph)) {
+      const K = k[0].toUpperCase() + k.slice(1);
+      if (k !== K && !SOLO_EXACTO.has(k) && !(K in PH)) PH[K] = ph[k][0].toUpperCase() + ph[k].slice(1);
+      const l = k[0].toLowerCase() + k.slice(1);   // y al revés, para palabras sueltas: "Cobertura" -> "cobertura"
+      if (/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{5,}$/.test(k) && !(l in PH) && /^[A-Z][a-z]/.test(ph[k])) PH[l] = ph[k][0].toLowerCase() + ph[k].slice(1);
+    }
     // Fragmentos largos: sustitución dentro de textos mezclados con variables.
-    const frag = Object.keys(PH).filter((k) => k.length >= 5).sort((a, b) => b.length - a.length);
+    const frag = Object.keys(PH).filter((k) => k.length >= 5 && !SOLO_EXACTO.has(k)).sort((a, b) => b.length - a.length);
     const L = /[\p{L}\d]/u;   // el límite de palabra sólo se exige donde el fragmento empieza/termina en letra
     const alt = (k) => (L.test(k[0]) ? '(?<![\\p{L}\\d_])' : '') + esc(k) + (L.test(k.slice(-1)) ? '(?![\\p{L}\\d_])' : '');
-    FRAG_RX = frag.length ? new RegExp(frag.map(alt).join('|'), 'giu') : null;
-    LC = {}; for (const k of Object.keys(PH)) LC[k.toLowerCase()] = k;
+    FRAG_RX = frag.length ? new RegExp(frag.map(alt).join('|'), 'gu') : null;
   }
+  /** Suma frases al diccionario ya cargado. */
+  function agregar(ph) { frases({ ...PH, ...ph }, RX); }
+
   const originales = new WeakMap();   // nodo|elemento → {orig, out} | {attr: {orig,out}}
   let _observer = null;
 
@@ -589,11 +602,7 @@ const CEi18n = (() => {
       if (full) out = PH[full].slice(0, Math.round(pre.length * PH[full].length / full.length)).trimEnd() + (k.endsWith('…') ? '…' : '');
     }
     if (out === undefined && FRAG_RX) {
-      let r = k.replace(FRAG_RX, (m) => {
-        const e = PH[m] ?? PH[LC[m.toLowerCase()]];
-        // el texto original en minúscula conserva la minúscula (salvo siglas/nombres propios)
-        return m[0] === m[0].toLowerCase() && m[0] !== m[0].toUpperCase() && /^[A-Z][a-z]/.test(e) ? e[0].toLowerCase() + e.slice(1) : e;
-      });
+      let r = k.replace(FRAG_RX, (m) => PH[m]);
       for (const [re, rep] of RX) if (re.global) r = r.replace(re, rep);   // patrones sueltos (fechas, años…)
       if (r !== k) out = r;
     }
@@ -663,6 +672,9 @@ const CEi18n = (() => {
     _observer.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
   }
 
+  /** Traduce un texto suelto (p. ej. lo que se dibuja en un canvas, que el recorrido del DOM no ve). */
+  function tr(txt) { return _lang === 'en' ? enEn(txt) : txt; }
+
   /** Cambia el idioma */
   function setLang(nuevoIdioma) {
     _lang = nuevoIdioma;
@@ -712,5 +724,5 @@ const CEi18n = (() => {
   else setTimeout(iniciar, 0);
 
   // API pública
-  return { lang, t, frases, aplicar, setLang, toggle, renderToggleButton, DICT };
+  return { lang, t, tr, frases, agregar, aplicar, setLang, toggle, renderToggleButton, DICT };
 })();
