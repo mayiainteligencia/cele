@@ -13,67 +13,72 @@
    versión clara: el resto del CSS no se tocó.
    ============================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 :root {
+  /* Acentos de tablero: violeta y lima son la firma; el blanco remata cifras y títulos. */
+  --accent-lime:        #b6f03c;
+  --tab-h:              32px;
   /* ── Fondo de página (Oscuro uniforme constante) ── */
-  --bg-start:           #080c14;
-  --bg-mid:             #0a0f1d;
-  --bg-end:             #080c14;
-  --bg-gradient:        linear-gradient(180deg, #080c14 0%, #0a0f1d 50%, #080c14 100%);
+  --bg-start:           #03050b;
+  --bg-mid:             #060913;
+  --bg-end:             #03050b;
+  --bg-gradient:        linear-gradient(180deg, #03050b 0%, #060913 50%, #03050b 100%);
 
   /* ── Glassmorphism ──
      En oscuro el vidrio es luz añadida, no blanco
      bajado: superficies muy tenues sobre el fondo
      y un borde apenas visible que define el canto. */
-  --glass-bg:           rgba(148, 178, 230, 0.06);
-  --glass-bg-hover:     rgba(148, 178, 230, 0.10);
-  --glass-bg-active:    rgba(148, 178, 230, 0.14);
-  --glass-border:       rgba(190, 214, 255, 0.12);
-  --glass-border-hover: rgba(190, 214, 255, 0.22);
-  --glass-shadow:       0 8px 32px rgba(0, 0, 0, 0.45);
-  --glass-shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.60);
+  --glass-bg:           rgba(255, 255, 255, 0.035);
+  --glass-bg-hover:     rgba(255, 255, 255, 0.065);
+  --glass-bg-active:    rgba(255, 255, 255, 0.09);
+  --glass-border:       rgba(255, 255, 255, 0.09);
+  --glass-border-hover: rgba(255, 255, 255, 0.22);
+  --glass-shadow:       0 10px 30px rgba(0, 0, 0, 0.55);
+  --glass-shadow-hover: 0 16px 44px rgba(0, 0, 0, 0.70);
 
   /* ── Texto ── */
-  --text-heading:       #eef2f9;    /* Titulares y cifras */
-  --text-body:          #b6c2d4;    /* Cuerpo */
-  --text-muted:         #74839a;    /* Labels, metadatos, fuentes */
+  --text-heading:       #ffffff;    /* Titulares y cifras */
+  --text-body:          #c3cad8;    /* Cuerpo */
+  --text-muted:         #7d889e;    /* Labels, metadatos, fuentes */
   --text-hero:          #ffffff;
   --text-hero-shadow:   0 2px 40px rgba(0, 0, 0, 0.55);
-  --text-on-accent:     #0a0e17;    /* Sobre acentos claros va texto oscuro */
+  --text-on-accent:     #06080f;    /* Sobre acentos claros va texto oscuro */
 
   /* ── Acentos ── */
-  --accent-coral:       #ff5c72;    /* Riesgo, crítico */
-  --accent-coral-hover: #ff7285;
-  --accent-blue:        #5b9dff;    /* Highlights, foco, selección */
-  --accent-blue-light:  rgba(91, 157, 255, 0.16);
-  --accent-navy:        #4361ee;    /* Botón principal, activo */
-  --accent-navy-light:  #5a76f5;
-  --accent-purple:      #a78bfa;
-  --accent-warm:        #f5a524;
-  --accent-cyan:        #22d3ee;    /* Actividad de agentes, tiempo real */
-  --accent-green:       #34d399;
+  --accent-coral:       #ff3d6e;    /* Riesgo, crítico */
+  --accent-coral-hover: #ff6489;
+  --accent-blue:        #5b86ff;    /* Highlights, foco, selección */
+  --accent-blue-light:  rgba(91, 134, 255, 0.16);
+  --accent-navy:        #2a38c4;    /* Botón principal, activo */
+  --accent-navy-light:  #3a4be0;
+  --accent-purple:      #8b5cf6;
+  --accent-warm:        #ffb020;
+  --accent-cyan:        #22e0ff;    /* Actividad de agentes, tiempo real */
+  --accent-green:       #4ade80;
 
   /* ── Sidebar ── */
-  --sidebar-bg:         rgba(11, 17, 32, 0.82);
-  --sidebar-icon:       #74839a;
+  --sidebar-bg:         rgba(4, 7, 14, 0.94);
+  --sidebar-icon:       #7d889e;
   --sidebar-icon-active: #ffffff;
-  --sidebar-icon-bg-active: var(--accent-navy);
+  --sidebar-icon-bg-active: #6d4cf0;
 
   /* ── Superficies elevadas ──
      Barras, píldoras, botones circulares: piezas que
      flotan sobre el fondo y necesitan cuerpo propio.
      En la versión clara esto eran blancos al 75–94 %. */
-  --superficie:         rgba(22, 32, 53, 0.86);
-  --superficie-hover:   rgba(33, 46, 74, 0.96);
+  --superficie:         rgba(10, 15, 28, 0.94);
+  --superficie-hover:   rgba(20, 28, 50, 0.98);
 
   /* ── Cards ── */
-  --card-bg:            rgba(148, 178, 230, 0.055);
-  --card-border:        rgba(190, 214, 255, 0.11);
-  --card-shadow:        0 4px 24px rgba(0, 0, 0, 0.40);
-  --card-bg-raised:     rgba(148, 178, 230, 0.09);   /* Card dentro de card */
+  --card-bg:            rgba(255, 255, 255, 0.03);
+  --card-border:        rgba(255, 255, 255, 0.09);
+  --card-shadow:        0 6px 22px rgba(0, 0, 0, 0.50);
+  --card-bg-raised:     rgba(255, 255, 255, 0.055);   /* Card dentro de card */
 
   /* ── Filtros / Pills ── */
-  --pill-bg:            rgba(148, 178, 230, 0.09);
-  --pill-border:        rgba(190, 214, 255, 0.14);
+  --pill-bg:            rgba(255, 255, 255, 0.06);
+  --pill-border:        rgba(255, 255, 255, 0.13);
   --pill-text:          var(--text-heading);
   --pill-label:         var(--text-muted);
 
@@ -86,24 +91,24 @@
   --btn-glass-text:     var(--text-heading);
 
   /* ── Blobs / Decoración ── */
-  --blob-primary:       rgba(67, 97, 238, 0.20);
-  --blob-secondary:     rgba(167, 139, 250, 0.14);
-  --blob-warm:          rgba(34, 211, 238, 0.10);
+  --blob-primary:       rgba(109, 76, 240, 0.10);
+  --blob-secondary:     rgba(34, 224, 255, 0.06);
+  --blob-warm:          rgba(182, 240, 60, 0.04);
 
   /* ── Blur para contenido restringido por rol ── */
   --blur-overlay:       rgba(10, 14, 23, 0.62);
   --blur-amount:        blur(8px);
 
   /* ── Status genéricos ── */
-  --status-success:     #34d399;
-  --status-pending:     #f5a524;
-  --status-rejected:    #ff5c72;
-  --status-error:       #ff5c72;
+  --status-success:     #4ade80;
+  --status-pending:     #ffb020;
+  --status-rejected:    #ff3d6e;
+  --status-error:       #ff3d6e;
   --status-meeting:     var(--accent-purple);
 
   /* ── Bordes ── */
-  --border-light:       rgba(190, 214, 255, 0.08);
-  --border-medium:      rgba(190, 214, 255, 0.15);
+  --border-light:       rgba(255, 255, 255, 0.07);
+  --border-medium:      rgba(255, 255, 255, 0.15);
 
 
   /* ════════════════════════════════════════════
@@ -141,38 +146,38 @@
      estos cinco. Es el sistema visual que distingue
      un hecho de una interpretación.
      ════════════════════════════════════════════ */
-  --proc-dato:            #22d3ee;   /* Viene de una fuente */
+  --proc-dato:            #22e0ff;   /* Viene de una fuente */
   --proc-dato-bg:         rgba(34, 211, 238, 0.13);
-  --proc-calculo:         #a78bfa;   /* Resultado de fórmula */
+  --proc-calculo:         #8b5cf6;   /* Resultado de fórmula */
   --proc-calculo-bg:      rgba(167, 139, 250, 0.13);
-  --proc-estimacion:      #f5a524;   /* Resultado de modelo */
+  --proc-estimacion:      #ffb020;   /* Resultado de modelo */
   --proc-estimacion-bg:   rgba(245, 165, 36, 0.13);
-  --proc-inferencia:      #f472b6;   /* Interpretación analítica */
+  --proc-inferencia:      #ff3d81;   /* Interpretación analítica */
   --proc-inferencia-bg:   rgba(244, 114, 182, 0.13);
-  --proc-recomendacion:   #34d399;   /* Sujeta a autorización humana */
-  --proc-recomendacion-bg: rgba(52, 211, 153, 0.13);
+  --proc-recomendacion:   #b6f03c;   /* Sujeta a autorización humana */
+  --proc-recomendacion-bg: rgba(182, 240, 60, 0.12);
 
 
   /* ════════════════════════════════════════════
      MAPA
      ════════════════════════════════════════════ */
-  --mapa-bg:            #060a12;
-  --mapa-limite:        #5b9dff;
-  --mapa-limite-fill:   rgba(91, 157, 255, 0.05);
-  --mapa-punto:         #22d3ee;   /* Escuela: ubicación potencial */
-  --mapa-casilla:       #f5a524;   /* Casilla instalada en 2024 */
+  --mapa-bg:            #03060d;
+  --mapa-limite:        #8b5cf6;
+  --mapa-limite-fill:   rgba(139, 92, 246, 0.06);
+  --mapa-punto:         #22e0ff;   /* Escuela: ubicación potencial */
+  --mapa-casilla:       #ffb020;   /* Casilla instalada en 2024 */
   --mapa-punto-borde:   rgba(6, 10, 18, 0.85);
-  --mapa-seleccion:     #f5c518;
+  --mapa-seleccion:     #b6f03c;
   --mapa-pendiente:     #4a5568;   /* Capa sin insumo */
 
   /* Escala secuencial del choropleth: baja → alta.
      Perceptualmente ordenada y legible en oscuro. */
-  --escala-1:           #14304d;
-  --escala-2:           #1c4f70;
-  --escala-3:           #217391;
-  --escala-4:           #2699a9;
-  --escala-5:           #45c0b0;
-  --escala-6:           #8ee0ae;
+  --escala-1:           #1a1446;
+  --escala-2:           #3a1f7a;
+  --escala-3:           #6b2d9e;
+  --escala-4:           #a1308f;
+  --escala-5:           #d9457a;
+  --escala-6:           #ff8a4c;
 
   /* Escala divergente para márgenes y comparaciones. */
   --div-neg-fuerte:     #ff4757;
@@ -187,13 +192,13 @@
      Serie categórica. No la uses para representar
      partidos: para eso hay colores institucionales.
      ════════════════════════════════════════════ */
-  --serie-1:            #5b9dff;
-  --serie-2:            #22d3ee;
-  --serie-3:            #a78bfa;
-  --serie-4:            #f5a524;
-  --serie-5:            #34d399;
-  --serie-6:            #f472b6;
-  --serie-7:            #8b97ab;
+  --serie-1:            #8b5cf6;
+  --serie-2:            #22e0ff;
+  --serie-3:            #b6f03c;
+  --serie-4:            #ffb020;
+  --serie-5:            #ff3d81;
+  --serie-6:            #3b82f6;
+  --serie-7:            #8a94a8;
 
   /* ════════════════════════════════════════════
      PARTIDOS Y COALICIONES — colores institucionales
@@ -221,9 +226,9 @@
   --bloque-pri-prd:     #1f9d55;
   --bloque-shh:         #a8332e;   /* PT-PVEM-Morena */
 
-  --grafica-grid:       rgba(190, 214, 255, 0.07);
-  --grafica-eje:        rgba(190, 214, 255, 0.20);
-  --grafica-tooltip-bg: rgba(14, 21, 36, 0.96);
+  --grafica-grid:       rgba(255, 255, 255, 0.06);
+  --grafica-eje:        rgba(255, 255, 255, 0.22);
+  --grafica-tooltip-bg: rgba(7, 11, 21, 0.97);
 
   /* ════════════════════════════════════════════
      TINTES Y SUPERFICIES
@@ -235,9 +240,9 @@
      ════════════════════════════════════════════ */
 
   /* Fondo de tarjeta dentro de un panel. Era rgba(15,23,42,·) suelto. */
-  --panel-fondo:        rgba(15, 23, 42, 0.50);
-  --panel-fondo-tenue:  rgba(15, 23, 42, 0.40);
-  --panel-fondo-alto:   rgba(15, 23, 42, 0.80);
+  --panel-fondo:        rgba(8, 12, 22, 0.72);
+  --panel-fondo-tenue:  rgba(8, 12, 22, 0.55);
+  --panel-fondo-alto:   rgba(8, 12, 22, 0.90);
 
   /* Superficies muy oscuras: popups, barras fijas, overlays. */
   --superficie-honda:   rgba(11, 17, 32, 0.92);

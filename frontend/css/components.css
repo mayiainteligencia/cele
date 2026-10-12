@@ -1684,3 +1684,188 @@
   right: 16px;
   z-index: 1000;
 }
+
+
+/* ════════════════════════════════════════════════════════════
+   TABLERO — capa de diseño
+   ════════════════════════════════════════════════════════════
+   Referencia: paneles redondos y planos sobre casi negro, cifras
+   blancas grandes, color vivo sólo en el dato (violeta, lima, cian,
+   magenta, ámbar), encabezados tipo pestaña HUD y barras rayadas.
+
+   Va al final a propósito: reemplaza el vidrio translúcido sin tocar
+   cada componente. Quitar este bloque devuelve el diseño anterior.
+   ════════════════════════════════════════════════════════════ */
+
+/* Sin vidrio: superficies planas con borde fino. El desenfoque era lo que
+   hacía que todo se leyera "genérico". */
+.glass, .glass-strong, .panel, .mando-header, .kpi-card, .tarjeta,
+.mando-rail-card, .mando-map-card, .decision-card, .stats-card, .service-card {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.panel, .mando-header, .glass-strong, .mando-rail-card {
+  background: #090e1a;
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  box-shadow: none;
+}
+.tarjeta, .kpi-card, .decision-card {
+  background: #0d1424;
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: none;
+}
+.glass { background: #0b101d; box-shadow: none; }
+
+/* ── Encabezado de panel: pestaña angulada + línea hasta una terminal ── */
+.panel { position: relative; }
+.panel:has(> .panel__titulo:first-child)::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--space-lg) + var(--tab-h) / 2);
+  left: var(--space-lg);
+  right: calc(var(--space-lg) + 14px);
+  height: 1px;
+  background: var(--grafica-eje);
+  opacity: 0.55;
+}
+.panel:has(> .panel__titulo:first-child)::after {
+  content: '';
+  position: absolute;
+  top: calc(var(--space-lg) + var(--tab-h) / 2 - 4px);
+  right: var(--space-lg);
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--grafica-eje);
+  border-radius: 2px;
+}
+.panel__titulo {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--tab-h);
+  margin-bottom: var(--space-md);
+  padding: 0 28px 0 14px;
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(90deg, rgba(109, 76, 240, 0.55), rgba(109, 76, 240, 0.18));
+  border-left: 3px solid var(--serie-1);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+}
+.panel__titulo svg { color: var(--serie-2); width: 16px; height: 16px; }
+
+/* ── Cabecera de página ── */
+.mando-header { border-radius: 26px; }
+.mando-header__title-box h1 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.mando-header__title-box p { color: var(--text-muted); }
+
+/* ── Cifras: blancas, grandes, números de ancho fijo ── */
+.kpi-card { position: relative; overflow: hidden; --kpi-acento: var(--serie-1); }
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 18px;
+  width: 34px; height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--kpi-acento);
+}
+.kpi-card:nth-child(4n+2) { --kpi-acento: var(--serie-2); }
+.kpi-card:nth-child(4n+3) { --kpi-acento: var(--serie-3); }
+.kpi-card:nth-child(4n+4) { --kpi-acento: var(--serie-4); }
+.kpi-card:hover { transform: none; border-color: var(--kpi-acento); }
+.kpi-card__label { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.08em; }
+.kpi-card__value, .cifra__valor, .text-stat {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.kpi-card__value { font-size: clamp(1.8rem, 3vw, 2.6rem); letter-spacing: -0.03em; }
+.cifra__etiqueta { font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.08em; }
+
+/* ── Barras rayadas: el relleno es la serie, la marca blanca el valor ── */
+.barra {
+  display: block;
+  height: 18px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+}
+.barra__relleno {
+  opacity: 1;
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0 1.5px, transparent 1.5px 5px),
+    color-mix(in srgb, var(--serie-1) 70%, #0a0f1c);
+}
+.barra__relleno::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 2px;
+  background: #fff;
+}
+/* La cifra va en una ficha oscura para leerse sobre las rayas. */
+.barra__txt {
+  display: inline-block;
+  margin: 2px 0 0 3px;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: rgba(3, 5, 11, 0.82);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  line-height: 14px;
+}
+/* Una serie por fila: violeta, cian, lima, ámbar, magenta. */
+tr:nth-child(5n+2) .barra__relleno { --serie-1: var(--serie-2); }
+tr:nth-child(5n+3) .barra__relleno { --serie-1: var(--serie-3); }
+tr:nth-child(5n+4) .barra__relleno { --serie-1: var(--serie-4); }
+tr:nth-child(5n+5) .barra__relleno { --serie-1: var(--serie-5); }
+.cinta { height: 24px; border-radius: 4px; }
+.cinta__seg { color: #05070d; font-family: var(--font-mono); }
+
+/* ── Tablas ── */
+.tabla-caja { border-radius: 14px; background: #080c17; }
+.tabla thead th {
+  background: #0d1424;
+  backdrop-filter: none;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--grafica-eje);
+}
+.tabla td.num, .tabla td strong { font-family: var(--font-mono); }
+.tabla tbody tr:hover { background: rgba(139, 92, 246, 0.08); }
+
+/* ── Botones: sin crecer al pasar el cursor ── */
+.btn-primary {
+  background: linear-gradient(180deg, #4a38d6, #2a38c4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  font-family: var(--font-display);
+}
+.btn-primary:hover { transform: translateY(-1px); background: linear-gradient(180deg, #5a48e6, #3544d6); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+.btn-glass { background: transparent; border-color: var(--border-medium); backdrop-filter: none; }
+.btn-glass:hover { transform: translateY(-1px); border-color: #fff; background: var(--glass-bg-hover); }
+
+/* ── Navegación ── */
+.subnav-bar { background: #090e1a; border-color: var(--glass-border); }
+.subnav-btn { font-family: var(--font-display); }
+.subnav-btn--active { color: #fff; background: rgba(109, 76, 240, 0.35); box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.7); }
+.sidebar__icon--active, .sidebar__icon--active:hover { background: #6d4cf0; }
+
+/* ── Insignias: fichas planas ── */
+.badge { font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.03em; border-radius: 6px; }
+.aviso-simulado { border-radius: 14px; background: rgba(255, 176, 32, 0.07); }

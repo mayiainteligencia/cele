@@ -62,6 +62,7 @@ const NAV = [
       { href: 'dia-d.html',    page: 'dia-d',    label: 'Día D',    icon: 'check-circle-2', i18n: 'sub.dia_d' },
     ],
   },
+  { page: 'conocimiento', icon: 'book-user', label: 'Conocimiento', href: 'conocimiento.html', i18n: 'nav.conocimiento' },
   { page: 'decisiones', icon: 'gavel', label: 'Sala de decisiones', href: 'decisiones.html', i18n: 'nav.decisiones' },
   { page: 'alertas',    icon: 'bell',  label: 'Alertas',            href: 'alertas.html',    i18n: 'nav.alertas' },
   {

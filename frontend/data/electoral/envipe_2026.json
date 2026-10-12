@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "procedencia": "dato",
+    "fuente": "ENVIPE 2026, INEGI (estatal Campeche)",
+    "fuente_url": "https://www.inegi.org.mx/contenidos/programas/envipe/2026/doc/envipe2026_camp.pdf",
+    "fecha_corte": "2026",
+    "que_es": "Principal problema percibido por la población, Encuesta Nacional de Victimización y Percepción sobre Seguridad Pública (ENVIPE) 2026, nivel estatal. La pregunta admite varias respuestas por persona, así que los porcentajes no suman 100.",
+    "nivel": "estatal",
+    "pendiente_municipal": "El INEGI no publica este desglose por municipio. No se inventa: lo que varía por municipio en esta plataforma es un indicador cualitativo derivado de la tipología socioeconómica ya declarada en contexto_campeche.json, nunca un porcentaje."
+  },
+  "categorias": [
+    { "categoria": "Inseguridad", "porcentaje": 51.7 },
+    { "categoria": "Salud", "porcentaje": 44.3 },
+    { "categoria": "Desempleo", "porcentaje": 41.7 },
+    { "categoria": "Aumento de precios", "porcentaje": 37.6 },
+    { "categoria": "Corrupción", "porcentaje": 19.7 },
+    { "categoria": "Narcotráfico", "porcentaje": 19.7 },
+    { "categoria": "Pobreza", "porcentaje": 17.8 },
+    { "categoria": "Escasez de agua", "porcentaje": 16.5 },
+    { "categoria": "Falta de castigo a delincuentes", "porcentaje": 15.2 },
+    { "categoria": "Educación", "porcentaje": 10.7 }
+  ]
+}

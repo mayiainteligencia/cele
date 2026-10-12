@@ -56,7 +56,7 @@
 
     alProgreso({ etapa: 'noticias', estado: 'curso' });
     await pausa();
-    alProgreso({ etapa: 'noticias', estado: 'listo', datos: { notas: R.totalNotas, fecha: R.fechaNotas } });
+    alProgreso({ etapa: 'noticias', estado: 'listo', datos: { notas: R.totalNotas, fecha: R.fechaNotas, municipios: R.municipios } });
 
     alProgreso({ etapa: 'temas', estado: 'curso' });
     await pausa();
@@ -100,26 +100,38 @@
         <label class="disc-campo">Texto
           <textarea id="texto-${i}" placeholder="Pega aquí el discurso…"></textarea>
         </label>
-        <label class="disc-campo">…o sube un archivo .txt
-          <input type="file" id="archivo-${i}" accept=".txt,text/plain">
-        </label>
+        <div class="disc-campo">…o sube un archivo .txt
+          <label class="disc-drop" id="drop-${i}" tabindex="0">
+            <input type="file" id="archivo-${i}" accept=".txt,text/plain" hidden>
+            <i data-lucide="upload"></i>
+            <span class="disc-drop__txt" id="drop-txt-${i}"><strong>Elegir archivo</strong> o arrastrarlo aquí</span>
+          </label>
+        </div>
       </div>`).join('');
 
     LETRAS.forEach((_, i) => {
-      $(`archivo-${i}`).addEventListener('change', async (ev) => {
-        const f = ev.target.files[0];
-        if (!f) return;
-        if (!/\.txt$/i.test(f.name) && f.type !== 'text/plain') return errorForm(`"${f.name}" no es un .txt.`);
-        if (f.size > MAX_TXT) return errorForm(`"${f.name}" pesa más de ${MAX_TXT / 1024} KB; un discurso no debería.`);
-        try {
-          $(`texto-${i}`).value = await f.text();
-          if ($(`nombre-${i}`).value.startsWith('Discurso ')) $(`nombre-${i}`).value = f.name.replace(/\.txt$/i, '');
-          errorForm('');
-        } catch (err) {
-          errorForm(`No se pudo leer "${f.name}".`);
-        }
-      });
+      const zona = $(`drop-${i}`);
+      $(`archivo-${i}`).addEventListener('change', (ev) => leerArchivo(i, ev.target.files[0]));
+      zona.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); $(`archivo-${i}`).click(); } });
+      ['dragenter', 'dragover'].forEach((t) => zona.addEventListener(t, (ev) => { ev.preventDefault(); zona.classList.add('disc-drop--sobre'); }));
+      ['dragleave', 'drop'].forEach((t) => zona.addEventListener(t, (ev) => { ev.preventDefault(); zona.classList.remove('disc-drop--sobre'); }));
+      zona.addEventListener('drop', (ev) => leerArchivo(i, ev.dataTransfer.files[0]));
     });
+  }
+
+  async function leerArchivo(i, f) {
+    if (!f) return;
+    if (!/\.txt$/i.test(f.name) && f.type !== 'text/plain') return errorForm(`"${f.name}" no es un .txt.`);
+    if (f.size > MAX_TXT) return errorForm(`"${f.name}" pesa más de ${MAX_TXT / 1024} KB; un discurso no debería.`);
+    try {
+      $(`texto-${i}`).value = await f.text();
+      if ($(`nombre-${i}`).value.startsWith('Discurso ')) $(`nombre-${i}`).value = f.name.replace(/\.txt$/i, '');
+      $(`drop-txt-${i}`).innerHTML = `<strong>${esc(f.name)}</strong> · ${Math.max(1, Math.round(f.size / 1024))} KB`;
+      $(`drop-${i}`).classList.add('disc-drop--listo');
+      errorForm('');
+    } catch (err) {
+      errorForm(`No se pudo leer "${f.name}".`);
+    }
   }
 
   function errorForm(msg) { $('form-error').textContent = msg; }
@@ -163,34 +175,134 @@
   let nodos = [];
   let enlaces = [];
   let seleccion = null;
-  let ajuste = null;
-  let datos = { temas: [], categorias: [], discursos: [], totalNotas: 0, pesoEncuesta: 0.7 };
+  let hover = null;
+  let analizando = false;     // mientras corre el proceso, una banda de barrido recorre el mapa
+  let mapaNacio = 0;
+  let mapa = null;            // contornos de los municipios en coordenadas del grafo
+  let datos = { temas: [], categorias: [], discursos: [], municipios: [], totalNotas: 0, pesoEncuesta: 0.7 };
   const colores = {};
+  const prueba = document.createElement('canvas').getContext('2d');   // para saber en qué municipio se hizo clic
 
   function leerColores() {
     const css = getComputedStyle(document.documentElement);
     const v = (n, d) => css.getPropertyValue(n).trim() || d;
-    colores.tema = v('--serie-1', '#5b9dff');
-    colores.envipe = v('--serie-4', '#f5a524');
-    colores.discurso = v('--serie-3', '#a78bfa');
+    colores.tema = v('--serie-1', '#8b5cf6');
+    colores.envipe = v('--serie-4', '#ffb020');
+    colores.discurso = v('--serie-3', '#b6f03c');
+    colores.municipio = '#ffffff';
     colores.aviso = v('--sev-media', '#f5c518');
-    colores.texto = v('--text-body', '#c8d0e0');
-    colores.enlace = v('--glass-border-hover', 'rgba(255,255,255,.25)');
+    colores.texto = '#e8ecf5';
   }
 
-  const radio = (n) => (n.tipo === 'tema' ? 4 + Math.sqrt(n.notas) * 2.2
-    : n.tipo === 'envipe' ? 4 + Math.sqrt(n.pct) * 1.6 : 13);
+  /* ── Mapa de Campeche: el mismo municipios.geojson del mapa maestro, en líneas blancas ── */
+  function cargarMapa() {
+    if (mapa) return Promise.resolve(mapa);
+    return fetch('data/geo/municipios.geojson').then((r) => {
+      if (!r.ok) throw new Error(`${r.status} al cargar el mapa de municipios`);
+      return r.json();
+    }).then((g) => {
+      const anillos = (f) => (f.geometry.type === 'Polygon' ? [f.geometry.coordinates[0]] : f.geometry.coordinates.map((p) => p[0]));
+      let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+      g.features.forEach((f) => anillos(f).forEach((r) => r.forEach(([x, y]) => {
+        minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+      })));
+      const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+      const ANCHO = 1000;                                   // el estado mide 1000 unidades de ancho: los nodos, mucho menos
+      const kx = ANCHO / ((maxX - minX) * Math.cos(cy * Math.PI / 180));
+      const proy = ([lon, lat]) => [(lon - cx) * Math.cos(cy * Math.PI / 180) * kx, -(lat - cy) * kx];
+      const todo = new Path2D();
+      const munis = new Map();
+      g.features.forEach((f) => {
+        const path = new Path2D();
+        let mejor = { area: -1 };
+        anillos(f).forEach((ring) => {
+          const paso = Math.max(1, Math.ceil(ring.length / 350));             // el contorno costero trae miles de puntos
+          const pts = ring.filter((_, i) => i % paso === 0 || i === ring.length - 1).map(proy);
+          pts.forEach(([x, y], i) => { (i ? path.lineTo(x, y) : path.moveTo(x, y)); });
+          path.closePath();
+          let A = 0, X = 0, Y = 0;                                               // centroide del anillo (fórmula del polígono)
+          for (let i = 0; i < pts.length - 1; i++) {
+            const [x0, y0] = pts[i], [x1, y1] = pts[i + 1], c = x0 * y1 - x1 * y0;
+            A += c; X += (x0 + x1) * c; Y += (y0 + y1) * c;
+          }
+          if (Math.abs(A) > mejor.area) mejor = { area: Math.abs(A), x: X / (3 * A), y: Y / (3 * A) };
+        });
+        todo.addPath(path);
+        munis.set(f.properties.cve_mun, { cve: f.properties.cve_mun, nombre: f.properties.nombre, path, x: mejor.x, y: mejor.y });
+      });
+      mapa = { munis, todo, ancho: ANCHO, alto: (maxY - minY) * kx, izq: -ANCHO / 2 };
+      return mapa;
+    });
+  }
+
+  const nodoPorId = (id) => nodos.find((n) => n.id === id);
+  // Bolitas chicas: se pueden acercar y elegir una por una.
+  const radio = (n) => (n.tipo === 'tema' ? 2.5 + Math.sqrt(n.notas) * 1.3
+    : n.tipo === 'envipe' ? 2.5 + Math.sqrt(n.pct) * 0.95
+    : n.tipo === 'municipio' ? 3.5 + Math.sqrt(n.total) * 0.9 : 8);
+
+  /** Fondo: municipios en líneas blancas, con relleno según cuánto se dispara en cada uno. */
+  function dibujarMapa(ctx, escala) {
+    if (!mapa) return;
+    const ahora = performance.now();
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, (ahora - mapaNacio) / 800);
+    mapa.munis.forEach((m) => {
+      const nodo = nodoPorId('m' + m.cve);
+      const act = nodo ? Math.min(1, nodo.total / 14) : 0;
+      ctx.fillStyle = seleccion === 'm' + m.cve ? 'rgba(182, 240, 60, 0.20)' : `rgba(139, 92, 246, ${0.03 + 0.20 * act})`;
+      ctx.fill(m.path);
+    });
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 0.8 / escala;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.30)';
+    mapa.munis.forEach((m) => ctx.stroke(m.path));
+    if (analizando) {                                       // barrido: "analizando" el estado
+      ctx.save();
+      ctx.clip(mapa.todo);
+      const x = mapa.izq + (((ahora / 2400) % 1.3) - 0.15) * mapa.ancho;
+      const g = ctx.createLinearGradient(x - 70, 0, x + 70, 0);
+      g.addColorStop(0, 'rgba(34, 224, 255, 0)');
+      g.addColorStop(0.5, 'rgba(34, 224, 255, 0.34)');
+      g.addColorStop(1, 'rgba(34, 224, 255, 0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(x - 70, -400, 140, 800);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
 
   function dibujar(n, ctx, escala) {
-    const t = Math.min(1, (performance.now() - n.nacio) / 450);
+    const ahora = performance.now();
+    const t = Math.max(0, Math.min(1, (ahora - n.nacio) / 450));
     const k = 1 - Math.pow(1 - t, 3);                      // aparece creciendo
     const r = radio(n) * k;
     const atenuado = seleccion && !vecino(n.id);
-    ctx.globalAlpha = (atenuado ? 0.22 : 1) * k;
+    ctx.globalAlpha = (atenuado ? 0.45 : 1) * k;
     ctx.beginPath();
     ctx.arc(n.x, n.y, r, 0, 2 * Math.PI);
-    ctx.fillStyle = colores[n.tipo];
-    ctx.fill();
+    if (n.tipo === 'municipio') {                          // anillo blanco con punto: "sensor" del municipio
+      ctx.fillStyle = '#000';
+      ctx.fill();
+      ctx.lineWidth = 1.8 / escala;
+      ctx.strokeStyle = '#fff';
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, Math.max(1.5, r * 0.4), 0, 2 * Math.PI);
+      ctx.fillStyle = n.total ? '#fff' : 'rgba(255,255,255,0.35)';
+      ctx.fill();
+    } else {
+      ctx.fillStyle = colores[n.tipo];
+      ctx.fill();
+    }
+    if (n.pulso && ahora >= n.pulso && ahora - n.pulso < 1000) {               // un tema se dispara en este municipio
+      const p = (ahora - n.pulso) / 1000;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r + p * 26, 0, 2 * Math.PI);
+      ctx.lineWidth = 2 / escala;
+      ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 * (1 - p)})`;
+      ctx.stroke();
+    }
     if (n.marca) {                                          // sin contraste / no cubierto por medios
       ctx.beginPath();
       ctx.setLineDash([3 / escala, 3 / escala]);
@@ -204,24 +316,76 @@
       ctx.beginPath();
       ctx.lineWidth = 2 / escala;
       ctx.strokeStyle = '#fff';
-      ctx.arc(n.x, n.y, r + (n.marca ? 7 : 3), 0, 2 * Math.PI);
+      ctx.arc(n.x, n.y, r + (n.marca ? 7 : 3.5), 0, 2 * Math.PI);
       ctx.stroke();
     }
+    // Etiquetas: municipios siempre; el resto al acercar, al pasar el cursor o al elegir el nodo o sus vecinos;
+    // los temas grandes también, para orientarse.
+    const verEtiqueta = n.tipo === 'municipio' || escala > 1.5 || hover === n.id || seleccion === n.id
+      || (seleccion && vecino(n.id)) || (n.tipo === 'tema' && n.notas >= 10) || n.tipo === 'discurso';
+    if (!verEtiqueta) { ctx.globalAlpha = 1; return; }
     const completo = window.CEi18n ? CEi18n.tr(n.nombre) : n.nombre;
-    const nombre = completo.length > 26 ? completo.slice(0, 24) + '…' : completo;
-    ctx.font = `${11 / escala}px Inter, sans-serif`;
+    const lim = n.tipo === 'municipio' ? 20 : (seleccion === n.id || hover === n.id) ? 44 : 22;   // los nombres largos sólo completos al elegirlos
+    const nombre = completo.length > lim ? completo.slice(0, lim - 1) + '…' : completo;
+    ctx.font = `${n.tipo === 'municipio' ? '600 ' : ''}${(n.tipo === 'municipio' ? 9 : 10) / escala}px Inter, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillStyle = colores.texto;
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 3.5 / escala;                           // contorno negro: se lee sobre las líneas blancas
+    ctx.strokeStyle = '#000';
+    ctx.strokeText(nombre, n.x, n.y + r + (n.marca ? 7 : 3));
+    ctx.fillStyle = n.tipo === 'municipio' ? '#fff' : colores.texto;
     ctx.fillText(nombre, n.x, n.y + r + (n.marca ? 7 : 3));
     ctx.globalAlpha = 1;
   }
 
-  function vecino(id) {
-    return id === seleccion || enlaces.some((l) => {
-      const a = l.de, b = l.a;
-      return (a === seleccion && b === id) || (b === seleccion && a === id);
-    });
+  /* Foco: al elegir un nodo se enciende lo suyo y el resto queda tenue.
+     n1 = vecinos directos. n2 = (sólo si es un municipio) lo que sigue de sus temas: discursos y categorías ENVIPE,
+     para leer la historia municipio → tema → discurso en un clic. */
+  let foco = { n1: new Set(), n2: new Set() };
+
+  function fijar(id) {
+    seleccion = id;
+    foco = { n1: new Set(), n2: new Set() };
+    if (!id) return;
+    enlaces.forEach((l) => { if (l.de === id) foco.n1.add(l.a); if (l.a === id) foco.n1.add(l.de); });
+    const sel = nodoPorId(id);
+    if (sel && sel.tipo === 'municipio') {
+      enlaces.forEach((l) => {
+        if (foco.n1.has(l.de) || foco.n1.has(l.a)) [l.de, l.a].forEach((x) => { if (x !== id && !foco.n1.has(x)) foco.n2.add(x); });
+      });
+    }
+  }
+
+  const vecino = (id) => id === seleccion || foco.n1.has(id) || foco.n2.has(id);
+
+  /** 2 = conexión del nodo elegido, 1 = segundo nivel del municipio elegido, 0 = el resto. */
+  function nivel(l) {
+    if (!seleccion) return 0;
+    if (l.de === seleccion || l.a === seleccion) return 2;
+    return foco.n2.size && ((foco.n1.has(l.de) && foco.n2.has(l.a)) || (foco.n1.has(l.a) && foco.n2.has(l.de))) ? 1 : 0;
+  }
+
+  const RGB = { toca: '182, 240, 60', cruce: '255, 176, 32', real: '255, 255, 255', sim: '80, 220, 255' };
+  const clave = (l) => (l.tipo === 'toca' ? 'toca' : l.tipo === 'dispara' ? (l.real ? 'real' : 'sim') : 'cruce');
+  function colorEnlace(l) {
+    const v = nivel(l);
+    // Sin elección el mapa queda en calma; mientras corre el proceso se ve cómo se van encendiendo las conexiones.
+    const alfa = v === 2 ? 1 : v === 1 ? 0.7 : (seleccion ? 0.26 : analizando ? 0.5 : 0.34);   // el resto sigue visible; lo elegido destaca
+    return `rgba(${RGB[clave(l)]}, ${alfa})`;
+  }
+
+  function elegir(n) {
+    fijar(n.id);
+    $('detalle').innerHTML = detalle(n);
+    if (window.lucide) lucide.createIcons();
+  }
+
+  /** Todo el estado a la vista y centrado, con aire alrededor. Después la vista es del usuario: no se re-encuadra sola. */
+  function vistaInicial() {
+    const caja = $('grafo-caja');
+    const k = Math.min(caja.clientWidth / (mapa.ancho * 1.12), caja.clientHeight / (mapa.alto * 1.12));
+    grafo.width(caja.clientWidth).height(caja.clientHeight).centerAt(0, 0, 0).zoom(k, 0);
   }
 
   function crearGrafo() {
@@ -229,55 +393,75 @@
     leerColores();
     grafo = ForceGraph()(caja)
       .width(caja.clientWidth).height(caja.clientHeight)
-      .backgroundColor('rgba(0,0,0,0)')
+      .backgroundColor('#000')
       .nodeId('id')
-      .autoPauseRedraw(false)                               // la animación de aparición necesita redibujar
+      .autoPauseRedraw(false)                               // aparición, barrido y pulsos necesitan redibujar
+      .onRenderFramePre(dibujarMapa)
       .nodeCanvasObject(dibujar)
       .nodePointerAreaPaint((n, color, ctx) => {
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(n.x, n.y, radio(n) + 4, 0, 2 * Math.PI);
+        ctx.arc(n.x, n.y, Math.max(radio(n) + 4, 9), 0, 2 * Math.PI);   // zona de clic más grande que la bolita
         ctx.fill();
       })
-      .linkColor((l) => (l.tipo === 'toca' ? colores.discurso : colores.enlace))
-      .linkWidth((l) => (l.tipo === 'toca' ? 1.6 : 1))
-      .linkDirectionalArrowLength((l) => (l.tipo === 'toca' ? 6 : 0))
+      .onNodeHover((n) => { hover = n ? n.id : null; $('grafo-caja').style.cursor = n ? 'pointer' : ''; })
+      .linkColor(colorEnlace)
+      .linkWidth((l) => {
+        const base = l.tipo === 'toca' ? 1.6 : l.tipo === 'dispara' ? 0.9 + Math.min(2.2, Math.sqrt(l.n) * 0.7) : 0.9;
+        return nivel(l) === 2 ? base + 1.2 : base * 0.7;
+      })
+      .linkLineDash((l) => (l.tipo === 'dispara' && !l.real ? [4, 3] : null))   // punteada = simulado
+      .linkDirectionalArrowLength((l) => (l.tipo === 'toca' && (!seleccion || nivel(l) > 0) ? 4.5 : 0))
       .linkDirectionalArrowRelPos(1)
-      .onNodeClick((n) => { seleccion = n.id; $('detalle').innerHTML = detalle(n); if (window.lucide) lucide.createIcons(); })
-      .onBackgroundClick(() => { seleccion = null; });
-    grafo.d3Force('charge').strength(-220).distanceMax(240);   // alcance corto: los nodos sin aristas no salen despedidos
-    grafo.d3Force('link').distance((l) => (l.tipo === 'toca' ? 100 : 70));
-    grafo.onEngineStop(() => grafo.zoomToFit(400, 50));
+      .onNodeClick(elegir)
+      .onBackgroundClick((ev) => {
+        const { x, y } = grafo.screen2GraphCoords(ev.offsetX, ev.offsetY);
+        const dentro = mapa && [...mapa.munis.values()].find((m) => prueba.isPointInPath(m.path, x, y));
+        const n = dentro && nodoPorId('m' + dentro.cve);
+        if (n) elegir(n); else fijar(null);
+      });
+    grafo.d3Force('charge').strength(-520).distanceMax(520);   // alcance corto: los nodos sin aristas no salen despedidos
+    // Gravedad suave hacia el centro del estado: los nodos libres (p. ej. categorías ENVIPE sin tema) no se van lejos del mapa.
+    grafo.d3Force('gravedad', (alfa) => nodos.forEach((n) => { if (n.fx == null) { n.vx -= n.x * 0.02 * alfa; n.vy -= n.y * 0.02 * alfa; } }));
+    grafo.d3Force('link').distance((l) => (l.tipo === 'toca' ? 170 : l.tipo === 'dispara' ? 110 : 100));
     if (window.ResizeObserver) {
       new ResizeObserver(() => grafo.width(caja.clientWidth).height(caja.clientHeight)).observe(caja);
     }
   }
 
   function limpiarGrafo() {
-    nodos = []; enlaces = []; seleccion = null;
-    datos = { temas: [], categorias: [], discursos: [], totalNotas: 0, pesoEncuesta: 0.7 };
+    nodos = []; enlaces = []; fijar(null);
+    datos = { temas: [], categorias: [], discursos: [], municipios: [], totalNotas: 0, pesoEncuesta: 0.7 };
     if (grafo) grafo.graphData({ nodes: [], links: [] });
     $('grafo-vacio').hidden = false;
-    $('detalle').innerHTML = '<p class="text-small">Haz clic en un nodo para ver su detalle. Arrastra para moverlo; rueda o pellizco para acercar.</p>';
+    $('detalle').innerHTML = '<p class="text-small">Haz clic en un nodo o en un municipio para ver su detalle. Arrastra para mover; rueda o pellizco para acercar.</p>';
   }
 
-  /** Agrega un nodo (y sus aristas) si no existe aún. Los ya presentes no se tocan: conservan su posición. */
-  function agregar(nodo, aristas = []) {
+  /** Agrega un nodo (y sus aristas) si no existe aún. Los ya presentes no se tocan: conservan su posición.
+      `retraso` escalona la aparición sin retrasar el alta, para que las aristas siempre encuentren su extremo. */
+  function agregar(nodo, aristas = [], retraso = 0) {
     if (nodos.some((n) => n.id === nodo.id)) return;
-    nodos.push({ ...nodo, nacio: performance.now() });
-    aristas.forEach((a) => { if (!enlaces.some((l) => l.de === a.de && l.a === a.a)) enlaces.push({ ...a, source: a.de, target: a.a }); });
+    const ahora = performance.now();
+    nodos.push({ ...nodo, nacio: ahora + retraso });
+    aristas.forEach((a) => {
+      if (enlaces.some((l) => l.de === a.de && l.a === a.a)) return;
+      enlaces.push({ ...a, source: a.de, target: a.a });
+      if (a.tipo === 'dispara') { const m = nodoPorId(a.a); if (m) m.pulso = ahora + retraso; }
+    });
     $('grafo-vacio').hidden = true;
     grafo.graphData({ nodes: nodos, links: enlaces });
-    clearTimeout(ajuste);
-    ajuste = setTimeout(() => grafo.zoomToFit(500, 50), 700);   // mantiene todo el mapa a la vista
   }
 
-  /** Mete los nodos de uno en uno para que se vea cómo se arma el mapa. */
-  function escalonado(items, ms = 140) {
-    items.forEach((fn, i) => setTimeout(fn, i * ms));
-  }
+  const escalonado = (items, ms = 140) => items.forEach((fn, i) => fn(i * ms));
 
+  const total = (m) => m.dispara.reduce((a, d) => a + d.n, 0);
+  const nodoMun = (m) => {
+    const g = mapa.munis.get(m.cve);
+    return { id: m.id, tipo: 'municipio', nombre: m.nombre, total: total(m), fx: g.x, fy: g.y, x: g.x, y: g.y };
+  };
   const nodoTema = (t) => ({ id: t.id, tipo: 'tema', nombre: t.nombre, notas: t.notas, marca: t.lectura === 'sin_contraste' ? 'sin_contraste' : null });
+  const aristasTema = (t) => datos.municipios.flatMap((m) => m.dispara.filter((d) => d.tema === t.id)
+    .map((d) => ({ de: t.id, a: m.id, tipo: 'dispara', n: d.n, real: d.real })));
   const nodoCat = (c) => ({ id: c.id, tipo: 'envipe', nombre: c.nombre, pct: c.pct, marca: c.temas.length ? null : 'no_cubierto' });
   const aristasCat = (c) => c.temas.map((tid) => ({ de: tid, a: c.id, tipo: 'cruce' }));
   const nodoDisc = (d, i) => ({ id: `d${i}`, tipo: 'discurso', nombre: d.nombre });
@@ -292,7 +476,29 @@
   const lista = (items) => (items.length ? `<ul>${items.map((x) => `<li>${x}</li>`).join('')}</ul>` : '');
   const dato = (k, v) => `<div class="dato"><span>${k}</span><span>${v}</span></div>`;
 
+  function detalleMunicipio(n) {
+    const m = datos.municipios.find((x) => x.id === n.id);
+    const filas = m.dispara.map((d) => `${esc(tema(d.tema).nombre)} — ${d.n} ${d.real ? (d.n === 1 ? 'titular' : 'titulares') : (d.n === 1 ? 'nota' : 'notas')}`);
+    const porDiscurso = datos.discursos.map((d) => {
+      const dis = m.dispara.filter((x) => d.toca.includes(x.tema));
+      const faltan = m.dispara.filter((x) => !d.toca.includes(x.tema)).map((x) => esc(tema(x.tema).nombre));
+      return `<li><strong>${esc(d.nombre)}</strong>: toca ${dis.length} de ${m.dispara.length}${faltan.length ? '. Le falta: ' + faltan.join('; ') : ''}</li>`;
+    });
+    return `<span class="badge" style="background:#fff; color:#000;">Municipio</span>
+      <h4>${esc(m.nombre)}</h4>
+      ${dato('Lista nominal 2024', T.num(m.listaNominal))}
+      ${dato('Ganó en 2024', esc(m.ganador2024))}
+      ${dato('Margen 2024', `${m.margen2024} pp`)}
+      ${dato('Participación 2024', `${m.participacion2024} %`)}
+      <strong>Titulares de la semana que lo nombran (${m.titulares.length})</strong>
+      ${m.titulares.length ? lista(m.titulares.map((x) => `<a href="${esc(x.link)}" target="_blank" rel="noopener">${esc(x.titulo)}</a>`)) : '<p>Ninguno: casi todas las notas dicen “Campeche” por el estado.</p>'}
+      <strong>Temas que se disparan aquí</strong>${lista(filas)}
+      <strong>Qué cubre cada discurso aquí</strong>${porDiscurso.length ? `<ul>${porDiscurso.join('')}</ul>` : '<p>Aún sin discursos evaluados.</p>'}
+      <p class="nota">Datos electorales: IEEC, cómputos distritales 2024. Notas: monitoreo de medios de la semana.</p>`;
+  }
+
   function detalle(n) {
+    if (n.tipo === 'municipio') return detalleMunicipio(n);
     if (n.tipo === 'tema') {
       const t = tema(n.id);
       const cats = t.categorias.map((id) => `${esc(cat(id).nombre)} · ${cat(id).pct} %`);
@@ -339,7 +545,7 @@
   function pintarTabla(res) {
     const corto = (id) => esc(tema(id).nombre.split(',')[0].split(' y ')[0]);
     $('panel-tabla').innerHTML = `
-      <h3 class="text-h3 panel__titulo"><i data-lucide="columns-3"></i> Comparación de discursos ${P.badge('simulado')}</h3>
+      <h3 class="text-h3 panel__titulo"><i data-lucide="columns-3"></i> Comparación de discursos</h3>
       <div class="tabla-caja">
         <table class="tabla tabla-disc">
           <thead><tr>
@@ -373,17 +579,21 @@
 
   function alProgreso({ etapa, estado, datos: d }) {
     if (etapa === 'noticias') {
+      if (d && d.municipios) {
+        datos.municipios = d.municipios;
+        escalonado(d.municipios.map((m) => (ms) => agregar(nodoMun(m), [], ms)), 110);
+      }
       poner(etapa, estado, d && `${d.notas} notas del ${d.fecha}`);
     } else if (etapa === 'temas') {
       if (d) {
         datos.temas = d.temas;
-        escalonado(d.temas.map((t) => () => agregar(nodoTema(t))));
+        escalonado(d.temas.map((t) => (ms) => agregar(nodoTema(t), aristasTema(t), ms)));
       }
       poner(etapa, estado, d && `${d.temas.length} temas`);
     } else if (etapa === 'envipe') {
       if (d) {
         datos.categorias = d.categorias;
-        escalonado(d.categorias.map((c) => () => agregar(nodoCat(c), aristasCat(c))));
+        escalonado(d.categorias.map((c) => (ms) => agregar(nodoCat(c), aristasCat(c), ms)));
       }
       poner(etapa, estado, d && `${d.categorias.length} categorías`);
     } else if (etapa === 'evaluar') {
@@ -399,8 +609,9 @@
 
   /** Cierra lo que no llegó por eventos (p. ej. un backend sin progreso) con el resultado final. */
   function reconciliar(res) {
-    datos = { temas: res.temas, categorias: res.categorias, discursos: res.discursos, totalNotas: res.totalNotas, pesoEncuesta: res.pesoEncuesta };
-    res.temas.forEach((t) => agregar(nodoTema(t)));
+    datos = { temas: res.temas, categorias: res.categorias, discursos: res.discursos, municipios: res.municipios, totalNotas: res.totalNotas, pesoEncuesta: res.pesoEncuesta };
+    res.municipios.forEach((m) => agregar(nodoMun(m)));
+    res.temas.forEach((t) => agregar(nodoTema(t), aristasTema(t)));
     res.categorias.forEach((c) => agregar(nodoCat(c), aristasCat(c)));
     res.discursos.forEach((d, i) => agregar(nodoDisc(d, i), aristasDisc(d, i)));
     ETAPAS.forEach((e) => { if ((estadoEtapa[e.id] || {}).estado !== 'listo') poner(e.id, 'listo'); });
@@ -422,6 +633,11 @@
     $('panel-etapas').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     try {
+      await cargarMapa();
+      mapaNacio = performance.now();
+      analizando = true;
+      $('grafo-vacio').hidden = true;
+      vistaInicial();
       const res = await window.evaluarDiscursos(entidad, discursos, alProgreso);
       reconciliar(res);
       pintarTabla(res);
@@ -431,6 +647,7 @@
       if (enCurso) poner(enCurso.id, 'error');
       $('proceso-error').textContent = `No se pudo completar la evaluación: ${err.message || 'error desconocido'}. Puedes intentarlo de nuevo.`;
     } finally {
+      analizando = false;
       corriendo = false;
       btn.disabled = false;
       btn.innerHTML = '<i data-lucide="play"></i> Evaluar discursos';
@@ -440,10 +657,12 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     pintarForm();
-    $('cabecera-pills').innerHTML = P.badge('simulado');
+    $('cabecera-pills').innerHTML = P.badge('dato', { fuente: 'Monitoreo de medios + ENVIPE 2026', detalle: 'Campeche' });
     $('leyenda').innerHTML = [
-      ['var(--serie-1)', 'Tema de noticias', ''], ['var(--serie-4)', 'Categoría ENVIPE', ''], ['var(--serie-3)', 'Discurso', ''],
+      ['#fff', 'Municipio (líneas blancas = límites del estado)', 'leyenda-punto--blanco'], ['var(--serie-1)', 'Tema de noticias', ''],
+      ['var(--serie-4)', 'Categoría ENVIPE', ''], ['var(--serie-3)', 'Discurso', ''],
       ['', 'Anillo punteado: tema sin contraste en ENVIPE, o categoría no cubierta por medios', 'leyenda-punto--anillo'],
+      ['', 'Línea blanca: titulares que nombran el municipio · cian punteada: tema que se dispara en el municipio · ámbar: cruce con ENVIPE · verde con flecha: el discurso toca el tema', 'leyenda-punto--linea'],
     ].map(([c, t, k]) => `<span class="leyenda-item"><span class="leyenda-punto ${k}" ${c ? `style="background:${c}"` : ''}></span>${t}</span>`).join('');
     $('btn-ejemplo').addEventListener('click', () => {
       LETRAS.forEach((_, i) => { $(`texto-${i}`).value = EJEMPLOS[i]; });

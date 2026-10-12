@@ -52,8 +52,8 @@
 
     .grafo-grid { display: grid; grid-template-columns: 1fr 320px; gap: var(--space-md); align-items: stretch; }
     @media (max-width: 1024px) { .grafo-grid { grid-template-columns: 1fr; } }
-    .grafo-caja { position: relative; height: 540px; border-radius: var(--radius-md); overflow: hidden;
-      background: var(--card-bg-raised); border: 1px solid var(--card-border); }
+    .grafo-caja { position: relative; height: 560px; border-radius: var(--radius-md); overflow: hidden;
+      background: #000; border: 1px solid rgba(255, 255, 255, 0.28); }
     @media (max-width: 600px) { .grafo-caja { height: 420px; } }
     .grafo-col { position: relative; min-width: 0; }
     .grafo-vacio { position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
@@ -62,15 +62,26 @@
     .grafo-leyenda { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: var(--space-sm); font-size: 0.75rem; color: var(--text-body); }
     .leyenda-item { display: inline-flex; align-items: center; gap: 6px; }
     .leyenda-punto { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+    .leyenda-punto--blanco { border: 2px solid #fff; background: #000 !important; }
+    .leyenda-punto--linea { width: 18px; height: 0; border-radius: 0; border-top: 2px dashed #fff; background: transparent !important; }
     .leyenda-punto--anillo { background: transparent; border: 2px dashed var(--sev-media); }
     .grafo-detalle { padding: var(--space-md); border-radius: var(--radius-md); background: var(--card-bg-raised);
-      border: 1px solid var(--card-border); font-size: 0.82rem; line-height: 1.5; overflow-y: auto; max-height: 540px; }
+      border: 1px solid var(--card-border); font-size: 0.82rem; line-height: 1.5; overflow-y: auto; max-height: 560px; }
     .grafo-detalle h4 { color: var(--text-heading); font-size: 0.95rem; margin: 6px 0 8px; }
     .grafo-detalle ul { margin: 6px 0 10px; padding-left: 18px; }
     .grafo-detalle .dato { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--velo-05); }
     .grafo-detalle .dato span:first-child { color: var(--text-muted); }
     .grafo-detalle .nota { color: var(--text-muted); font-size: 0.72rem; margin-top: 8px; }
 
+    /* Zona para subir un .txt: reemplaza el botón nativo del navegador. */
+    .disc-drop { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 10px 14px; cursor: pointer;
+      border: 1.5px dashed var(--border-medium); border-radius: 14px; background: rgba(255, 255, 255, 0.025);
+      color: var(--text-body); font-size: 0.8rem; transition: border-color var(--transition-fast), background var(--transition-fast); }
+    .disc-drop svg { width: 18px; height: 18px; flex: 0 0 auto; color: var(--serie-2); }
+    .disc-drop strong { color: #fff; font-weight: 600; }
+    .disc-drop:hover, .disc-drop:focus-visible, .disc-drop--sobre { border-color: var(--serie-1); background: rgba(139, 92, 246, 0.10); outline: none; }
+    .disc-drop--listo { border-style: solid; border-color: var(--serie-3); background: rgba(182, 240, 60, 0.06); }
+    .disc-drop--listo svg { color: var(--serie-3); }
     .chips { display: flex; flex-wrap: wrap; gap: 4px; }
     .tabla-disc td, .tabla-disc th { vertical-align: top; }
     .metrica { display: flex; flex-direction: column; gap: 4px; min-width: 130px; }
@@ -92,11 +103,6 @@
         <div class="mando-header__pills" id="cabecera-pills"></div>
       </section>
 
-      <div class="aviso-simulado">
-        <i data-lucide="flask-conical"></i>
-        <span><strong>Datos simulados.</strong> La evaluación todavía no está conectada al backend: los discursos que pegues no se analizan,
-        el resultado es una demostración con los temas reales de Campeche del 10 de octubre de 2026 y discursos de ejemplo.</span>
-      </div>
 
       <section class="panel" id="panel-form">
         <h3 class="text-h3 panel__titulo"><i data-lucide="file-pen-line"></i> Discursos a evaluar</h3>
@@ -134,8 +140,7 @@
             <p class="text-small">Haz clic en un nodo para ver su detalle. Arrastra para moverlo; rueda o pellizco para acercar.</p>
           </aside>
         </div>
-        <p class="panel__nota">Tamaño del tema = número de notas. Tamaño de la categoría = % de ENVIPE (cada persona puede mencionar varios problemas, por eso no suman 100 %).
-        Flecha de discurso a tema = el discurso toca ese tema.</p>
+        <p class="panel__nota">Mapa de Campeche con sus 13 municipios: cada uno se ilumina según cuántos temas se disparan ahí, y al aparecer un tema pulsa en los municipios donde se dispara. Tamaño del tema = número de notas. Tamaño de la categoría = % de ENVIPE (cada persona puede mencionar varios problemas, por eso no suman 100 %). Flecha de discurso a tema = el discurso toca ese tema. Al elegir un municipio o un tema se resaltan sus conexiones y el resto queda más tenue.</p>
       </section>
 
       <section class="panel" id="panel-tabla" hidden></section>

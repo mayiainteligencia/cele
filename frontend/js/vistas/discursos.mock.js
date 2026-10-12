@@ -65,6 +65,74 @@
       { tema: 't2', frase: '…se gobierna escuchando…', motivo: 'Frase genérica en medio de pugnas políticas abiertas.' } ] },
   ];
 
+
+  /* ── Municipios ──
+     REAL: lista nominal, ganador, margen y participación 2024 (resultados_municipio_2024.json) y los titulares de la
+     semana que nombran al municipio (sólo 8 de 78 lo hacen: casi todas las notas dicen "Campeche" por el estado).
+     SIMULADO: qué temas "se disparan" en cada municipio más allá de esos titulares. Regla de demostración: el tema se
+     reparte en proporción a la lista nominal; el ciclón y lo marítimo sólo en municipios con costa. */
+  const MUN_2024 = [{"cve": "04001", "nombre": "Calkiní", "lista": 32551, "ganador": "Sigamos Haciendo Historia (PT-PVEM-Morena)", "margen": 21.13, "part": 74.16}, {"cve": "04002", "nombre": "Campeche", "lista": 213994, "ganador": "Movimiento Ciudadano", "margen": 9.47, "part": 63.72}, {"cve": "04003", "nombre": "Carmen", "lista": 188721, "ganador": "Sigamos Haciendo Historia (PT-PVEM-Morena)", "margen": 34.96, "part": 57.34}, {"cve": "04004", "nombre": "Champotón", "lista": 58657, "ganador": "Sigamos Haciendo Historia (PT-PVEM-Morena)", "margen": 29.85, "part": 59.72}, {"cve": "04005", "nombre": "Hecelchakán", "lista": 24253, "ganador": "Sigamos Haciendo Historia (PT-PVEM-Morena)", "margen": 4.04, "part": 72.8}, {"cve": "04006", "nombre": "Hopelchén", "lista": 30812, "ganador": "PRI-PRD", "margen": 0.23, "part": 71.0}, {"cve": "04007", "nombre": "Palizada", "lista": 7401, "ganador": "Sigamos Haciendo Historia (PT-PVEM-Morena)", "margen": 24.77, "part": 79.15}, {"cve": "04008", "nombre": "Tenabo", "lista": 8887, "ganador": "Sigamos Haciendo Historia (PT-PVEM-Morena)", "margen": 8.38, "part": 81.67}, {"cve": "04009", "nombre": "Escárcega", "lista": 44630, "ganador": "Sigamos Haciendo Historia (PT-PVEM-Morena)", "margen": 29.9, "part": 53.04}, {"cve": "04010", "nombre": "Calakmul", "lista": 20986, "ganador": "Sigamos Haciendo Historia (PT-PVEM-Morena)", "margen": 33.28, "part": 62.01}, {"cve": "04011", "nombre": "Candelaria", "lista": 36016, "ganador": "Sigamos Haciendo Historia (PT-PVEM-Morena)", "margen": 20.39, "part": 56.91}, {"cve": "04012", "nombre": "Seybaplaya", "lista": 12016, "ganador": "Sigamos Haciendo Historia (PT-PVEM-Morena)", "margen": 5.47, "part": 74.15}, {"cve": "04013", "nombre": "Dzitbalché", "lista": 12180, "ganador": "Movimiento Ciudadano", "margen": 7.59, "part": 73.97}];
+  const MENCIONES = [
+ {
+  "mun": "Calkiní",
+  "tema": "t1",
+  "titulo": "Campeche | Jairo Magaña | Ayuntamiento de Calkiní desaloja a 23 familias de Isla Arena por prevención ante 'Isaías' - La Jornada Maya",
+  "fuente": "La Jornada Maya",
+  "link": "https://news.google.com/rss/articles/CBMizAFBVV95cUxPSThjNTI5aU90Skxpa3BWNDdoV3NZUVJYcDJ3RktZX2dfNXN5N0tGcGV0SHY1aW9aUXJ0QTJOSlp5RDVKNGJkZm9CY3diZkVTZko3amt0UzMxbmhoekdzX2tpV3Zxc3BIak0zSkp6TmpQanlkT2F6VV83R2lTT2hzX3JSR3FRdGExOTFYVlFrcEVDdVN2QllfOS1RZXE4MzV6cWdMa1pJakV3VmJ2ZjVla1ZERENScWZZdjN1bWZoQWRsbER4Nm5TclVlZWc?oc=5"
+ },
+ {
+  "mun": "Seybaplaya",
+  "tema": "t1",
+  "titulo": "PESCADORES DE SEYBAPLAYA RESGUARDAN EMBARCACIONES ANTE POSIBLES EFECTOS DE “ISAÍAS” - Tribuna Campeche",
+  "fuente": "Tribuna Campeche",
+  "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxQbUVWQ2hMQjIyLVlpNUQyeG1pQUFySkRnbjJyRVVCVEFjRV9zLXktZUdlQWg4T0dDSC1NNENzaS12czY5b20ybE9scXA4M29XVHZlaHgyRVN6cGVMS1FiMXhQSXdmSFRKd19Jejc4UkFNcXBWUUticVhOV25lUlUySkxVZzFkTzJ3WWVuWFRHU2VrNmpTVENaYTlrWUR1R2pmSzZZUlNDY19hakQ2QUhGNVpjZWhWMTFqbk5GZg?oc=5"
+ },
+ {
+  "mun": "Carmen",
+  "tema": "t1",
+  "titulo": "Huracán 'Isaías' deja daños menores en Carmen - La Jornada Maya",
+  "fuente": "La Jornada Maya",
+  "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxNaXFQQ2toWkh6cHlwR1VuajdZaXp4Q1dIMUtFendZcEdtYTdWVjdKbEZDX0x2dmlWQmpKLUREZVhPdUpLTzNvYlV5RUt3b2dERDFxcDQ4WWFyZkx1cEhPb0NYOXQ5SVRkZWNDZEI0ZE4wU0ExVFJsMzJYcHZBa1Q3SHhldmFVckRNUDFJODVoYk1UNVJRanlWWHBPdmVfQzMyV3kzYVJQNW0?oc=5"
+ },
+ {
+  "mun": "Carmen",
+  "tema": "t1",
+  "titulo": "Tormenta Tropical 'Isaías' erosiona la playa y derriba ocho palapas en Sabancuy - La Jornada Maya",
+  "fuente": "La Jornada Maya",
+  "link": "https://news.google.com/rss/articles/CBMi7AFBVV95cUxOWGlIeDM3UkU1OUc4Q0tQbkRaaHlWQWNVS1g2UjNBT3p0U3UyTVNTYkNaRWJBRGZ2X2lYVGZPQVVhRHlvcU9xT0JkRDAwUUZFSm41bXJKRFhfMUFlcXdYcTFWaUNxNHViM0FCR2U0YnpvUHlnbTZSWU1JRTNzMXdVbnVaTkRLTDlkWE91SlcxV1JGZ1k0S3pmVFJhdUs3enItcm9GWDVrMnJMLW16ajU3UlpwYm9XOF83dGRRaGM1Y3VabHdTc1JNdXFpNC1NN1NIMUhqMTlMQWRzTGRRb1k5azNieURqZjd5OFZHWg?oc=5"
+ },
+ {
+  "mun": "Calkiní",
+  "tema": "t1",
+  "titulo": "Gobernadora de Campeche ordena evacuar Isla Arena por marea alta - MILENIO",
+  "fuente": "MILENIO",
+  "link": "https://news.google.com/rss/articles/CBMimgFBVV95cUxQTG9nQ1pkUzByT25rbjd1czNYVV9WYjUxajVQdUh1Q1dNd1RSb1BnVFpRMDlmdVNRcUVOTVhNSjhtQkRFd3Q4Z3g5ZTBNX1NaRHBQbEFueUtLd3p3MHpwRkdkUG5FR1BzdHJLc19pbVRwQ0VCd21COWxUTDZyb19feGpkc0NTTFl3Q3NISVZROWFIenA3WmxYS25B0gGaAUFVX3lxTE9BOFJrc2Z4YktESkRwY25QMHo5dkltOWllSS1wcWlmTjVKb3gwc2xQM3djQU0xZUtmTmx5Z19RZ1VRWTdqbFpHYmFGby1Rc0Z3ZE1CMkxKX3oyNnlucmpVcmdsWjRSR2hxSnYyLWR1LU1MSW5pelhKYm94VjZOOVE4eVFmUmtTS0ttYjdlUjc2NTNKZjJFV3I1THc?oc=5"
+ },
+ {
+  "mun": "Calkiní",
+  "tema": "t1",
+  "titulo": "SE INTENSIFICA LA TORMENTA TROPICAL ISAÍAS CON VIENTOS MÁXIMOS SOSTENIDOS DE 75 KILÓMETROS POR HORA; SE UBICA A 376 KILÓMETROS DE ISLA ARENA - Tribuna Campeche",
+  "fuente": "Tribuna Campeche",
+  "link": "https://news.google.com/rss/articles/CBMiigJBVV95cUxPOEt0cXp0dnlsaVM1UERNcldyV3VoVmJNQ0NHYWExZ3NXT3dxTW94OEI4S2VZUFByRFo1OHhPSlc3VGh6Z2x3aUxnTHdpOVJQa1NRSC1zeV94XzFqbGx4QWpENy1JT1M1Q3piM1FwRDNXUHdyNFNnQUh0UG4xRWJaR0N0VW1zTWxVRGowcUlBNGRfY1dxaTAyMnVKZm1hRGpLeFF3N0VtSU9kRlZ5QkFsaTFaNTFXS2pWUGFFUDZ2aTd2Wk1NRFBkZ2lVLVhoRzNiM0xZSHVNbWlQQkFFbm1kbWxoUzMtTzJ5bG9CcUkzU0xyc2YyalRVazQtNHp6MEhSZ295bU1ocG4tUQ?oc=5"
+ },
+ {
+  "mun": "Calkiní",
+  "tema": "t1",
+  "titulo": "EVACUACIÓN PREVENTIVA DE 23 PERSONAS EN ISLA ARENA, POR ISAÍAS - Tribuna Campeche",
+  "fuente": "Tribuna Campeche",
+  "link": "https://news.google.com/rss/articles/CBMiogFBVV95cUxNdUpwSl9WV3JZczU4b3pXYXc0N3R3N0hQVVpaX2JXLXJkekdrSVRkYzZrWFAwUVpYb1ZkX0NCN0VzQWIwZ2d2VWtoeHJPcmg5Zjd0Tk5QYXhwdzhHdnNCUV9mSGtWQ09TdDQ2ZXdGSWtqZm95c3F1RnMzZlBUSU9FSm9KUGFrZWZpSVIxamY3X21nTnJMTzZibnhjMkVEOTJ6Q2c?oc=5"
+ },
+ {
+  "mun": "Tenabo",
+  "tema": "t5",
+  "titulo": "ELEMENTO DE LA POLICÍA ESTATAL PIERDE LA VIDA EN FATAL ACCIDENTE EN LA CARRETERA CAMPECHE – TENABO - Tribuna Campeche",
+  "fuente": "Tribuna Campeche",
+  "link": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxPc0ZycjhzRXVLZjJoSlFCMjM5Q09aS1lIMTdHZzhmWWVZcFVWd2N4akNJU0NwX2MwX1VkdUhhazZMWUo4bG4tWmNWSUtaYXM3dkpERWVxeDhOTEw3VkgybjUxUzIyeDdLTXdPQnRZU01tc2Z4RWJ5X0FRR2RjT0xVTFZ0WWNyX3hFTkl1bUpyR2xjdmhTX0FZMFQ0aFdmNmtYZEs3Tzg2UlY4Tk5WMXNVelJfR05VVDZGTTlnMkViREw1VW9rU2dqMUFRaWdjeFBU?oc=5"
+ }
+];
+  const COSTEROS = ['Calkiní', 'Campeche', 'Carmen', 'Champotón', 'Seybaplaya', 'Tenabo'];
+  const SOLO_COSTA = ['t1', 't6'];
+
   /* ── Cálculo (misma fórmula que cruce_encuesta.pesos) ── */
   const totalNotas = temas.reduce((a, t) => a + t.notas, 0);
   const totalEnc = categorias.reduce((a, c) => a + c.pct, 0);
@@ -89,6 +157,37 @@
     temas: Object.keys(cruces).filter((tid) => cruces[tid].includes(c.id)),
   }));
 
+
+  /* Municipios: titulares reales + reparto simulado (máx. 3 municipios por tema). */
+  const resMunicipios = MUN_2024.map((m) => ({
+    id: 'm' + m.cve, cve: m.cve, nombre: m.nombre, listaNominal: m.lista, ganador2024: m.ganador, margen2024: m.margen,
+    participacion2024: m.part,
+    titulares: MENCIONES.filter((x) => x.mun === m.nombre),
+    dispara: [],
+  }));
+  const totalLista = MUN_2024.reduce((a, m) => a + m.lista, 0);
+  resTemas.forEach((t) => {
+    const reales = MENCIONES.filter((x) => x.tema === t.id);
+    resMunicipios.forEach((m) => {
+      const n = reales.filter((x) => x.mun === m.nombre).length;
+      if (n) m.dispara.push({ tema: t.id, n, real: true });
+    });
+    const cand = resMunicipios
+      .filter((m) => !m.dispara.some((d) => d.tema === t.id))
+      .filter((m) => !SOLO_COSTA.includes(t.id) || COSTEROS.includes(m.nombre))
+      .sort((a, b) => b.listaNominal - a.listaNominal);
+    const hay = resMunicipios.filter((m) => m.dispara.some((d) => d.tema === t.id)).length;
+    cand.slice(0, Math.max(0, 3 - hay)).forEach((m) => {
+      m.dispara.push({ tema: t.id, n: Math.max(1, Math.round(t.notas * m.listaNominal / totalLista)), real: false });
+    });
+  });
+  // Ningún municipio queda mudo: los que no salieron en el reparto reciben un tema de la agenda nacional (simulado).
+  const AGENDA = ['t3', 't4', 't5', 't8'];
+  resMunicipios.filter((m) => !m.dispara.length).forEach((m, i) => {
+    const t = resTemas.find((x) => x.id === AGENDA[i % AGENDA.length]);
+    m.dispara.push({ tema: t.id, n: Math.max(1, Math.round(t.notas * m.listaNominal / totalLista) || 1), real: false });
+  });
+
   function evaluar(d) {
     const tocados = resTemas.filter((t) => d.toca.includes(t.id));
     return {
@@ -108,6 +207,7 @@
       fuenteEncuesta: 'ENVIPE 2026 INEGI',
       temas: resTemas,
       categorias: resCategorias,
+      municipios: resMunicipios,
       discursos: discursos.map(evaluar),   // se asignan por orden a los discursos capturados
     },
   };

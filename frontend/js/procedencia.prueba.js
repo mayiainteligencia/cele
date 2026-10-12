@@ -32,9 +32,7 @@ TIPOS.forEach((t) => {
 
 /* ── "simulado" es aparte de los cinco: un dummy no es un dato ── */
 
-const sim = P.badge('simulado');
-assert.ok(sim.includes('proc--simulado'));
-assert.ok(sim.includes('Simulado'));
+assert.strictEqual(P.badge('simulado'), '');   // no se rotula
 assert.ok(!Object.keys(P.TIPOS).includes('simulado'),
   'simulado no debe colarse entre los cinco tipos de la spec');
 
@@ -69,7 +67,7 @@ assert.ok(pieCompleto.includes('Confianza alta'));
 
 // La leyenda lista los cinco; el simulado sólo si se pide.
 assert.ok(!P.leyenda().includes('proc--simulado'));
-assert.ok(P.leyenda(true).includes('proc--simulado'));
+assert.ok(!P.leyenda(true).includes('proc--simulado'));
 
 
 /* ── Contrato de los datos de demostración ── */

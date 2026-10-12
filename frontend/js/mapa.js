@@ -987,7 +987,7 @@
           ${grupos}
           <p class="mapa-panel__nota">
             Las capas marcadas como pendientes están declaradas en el contrato de
-            datos pero todavía no tienen archivo. No se dibujan geometrías simuladas.
+            datos pero todavía no tienen archivo.
           </p>
         </div>`;
 

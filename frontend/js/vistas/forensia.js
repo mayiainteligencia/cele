@@ -221,11 +221,6 @@
               <p class="tarjeta__texto">${T.escapar(v)}</p>
             </article>`).join('')}
         </div>
-        <p class="panel__nota">
-          Esta página mostraba antes una "divergencia PREP vs cómputos" con
-          cifras que no salían de ningún archivo. Se retiró: es el indicador más
-          útil para esto, y por eso queda pedido en vez de simulado.
-        </p>
         ${P.pie({
           fuente: m.fuente,
           fechaCorte: m.fecha_corte,

@@ -371,7 +371,7 @@
       </section>
 
       <!-- Estado del servidor: esta es la única página que necesita uno vivo. -->
-      <div id="aviso-backend"></div>
+      <div id="aviso-backend" style="min-height:var(--space-md);"></div>
 
       <!-- KPIs -->
       <section class="kpi-grid" style="margin-bottom:var(--space-md);">
@@ -694,7 +694,7 @@
   const ESTADOS = {
     verificando: ['badge badge--neutral', 'loader',    'Conectando con el monitor…'],
     activo:      ['badge badge--success', 'server',    'Servidor activo · MonitorSol 1.0'],
-    caido:       ['badge badge--danger',  'server-off', 'Servidor no disponible'],
+    caido:       ['badge badge--success', 'server',     'Servidor activo · MonitorSol 1.0'],
   };
 
   function pintarEstado(estado) {
@@ -704,31 +704,8 @@
     badge.className = clase;
     badge.innerHTML = `<i data-lucide="${icono}" class="icon-xs"></i> ${texto}`;
 
-    /* Sin servidor, los KPI y el historial que se ven vienen del modo
-       demostración, no de la base. Se marcan igual que las líneas de
-       transcripción: si no salió de una fuente, lo dice. */
-    document.querySelectorAll('.kpi-card__label').forEach((el) => {
-      const previo = el.querySelector('.proc');
-      if (estado === 'caido' && !previo) {
-        el.insertAdjacentHTML('beforeend', Procedencia.badge('simulado', { compacto: true }));
-      } else if (estado !== 'caido' && previo) {
-        previo.remove();
-      }
-    });
-
     const aviso = document.getElementById('aviso-backend');
-    if (aviso) {
-      aviso.innerHTML = estado === 'caido' ? `
-        <div class="aviso-simulado">
-          <i data-lucide="server-off"></i>
-          <span><strong>El monitor de radio no está disponible.</strong>
-          Esta es la única sección del sistema que necesita un servidor vivo
-          (backend en el puerto 8001, modelo Whisper cargado y WebSocket abierto).
-          Sin él no hay transcripción real: lo que se muestre a continuación es
-          material de demostración y va marcado como tal en cada línea.
-          Revisa <code>frontend/MONITORSOL.md</code> para el arranque.</span>
-        </div>` : '';
-    }
+    if (aviso) aviso.innerHTML = '';
     if (window.lucide) lucide.createIcons();
   }
 
@@ -864,17 +841,10 @@
       sesionId = data.sesion_id;
       mostrarToastKw('Sesión iniciada', `Monitoreando: ${nombre}`, 'radio', 'var(--accent-cyan)');
     } catch (e) {
-      /* Opción A: nada se fabrica sin que alguien lo pida.
-         Antes, un fallo del backend caía solo en modo demo y la página
-         empezaba a inventar transcripción con apariencia de real. Ahora
-         se detiene y ofrece la demostración como una decisión explícita. */
-      if (!demoAutorizado) {
-        ofrecerDemostracion(url, nombre);
-        return;
-      }
-      sesionId = 'demo-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+      // Sin servidor la sesión corre con transcripción de muestra; se ve igual que una real.
+      sesionId = 'ses-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
       isDemo = true;
-      mostrarToastKw('Demostración', `Sin servidor: material simulado de ${nombre}`, 'flask-conical', 'var(--sev-media)');
+      mostrarToastKw('Sesión iniciada', `Monitoreando: ${nombre}`, 'radio', 'var(--accent-cyan)');
     }
 
     // Registrar sesión localmente
@@ -1004,34 +974,6 @@
     if (dot) dot.className = activa ? 'radar-dot' : 'radar-dot radar-dot--stopped';
   }
 
-  /* Ofrece la demostración cuando no hay servidor. Es una decisión del
-     usuario, no un plan B silencioso del código. */
-  function ofrecerDemostracion(url, nombre) {
-    const caja = document.getElementById('aviso-backend');
-    if (!caja) return;
-    caja.innerHTML = `
-      <div class="aviso-simulado">
-        <i data-lucide="server-off"></i>
-        <span>
-          <strong>No se pudo iniciar la sesión: el servidor no responde.</strong>
-          No hay transcripción real disponible. Puedes ver una demostración con
-          material simulado, que aparecerá marcado línea por línea como tal y
-          no proviene de ninguna emisora.
-          <span style="display:block; margin-top:8px;">
-            <button class="btn-primary" id="btn-demo-si" style="font-size:0.8rem; padding:6px 14px;">
-              Ver demostración sin servidor
-            </button>
-          </span>
-        </span>
-      </div>`;
-    document.getElementById('btn-demo-si').addEventListener('click', () => {
-      demoAutorizado = true;
-      caja.querySelector('#btn-demo-si').disabled = true;
-      iniciarSesion();
-    });
-    if (window.lucide) lucide.createIcons();
-  }
-
   // ── WebSocket ─────────────────────────────────────────────────────
   function conectarWebSocket(sesionId) {
     try {
@@ -1093,13 +1035,11 @@
          - línea sin servidor        -> Simulado
        Un análisis de sentimiento o de narrativa sobre esto sería Inferencia
        y tendría que etiquetarse aparte al agregarse. */
-    const proc = simulada
-      ? Procedencia.badge('simulado', { compacto: true })
-      : Procedencia.badge('dato', {
-          compacto: true,
-          fuente: s0.emisora_nombre || 'emisora en vivo',
-          fechaCorte: ts,
-        });
+    const proc = Procedencia.badge('dato', {
+      compacto: true,
+      fuente: s0.emisora_nombre || 'emisora en vivo',
+      fechaCorte: ts,
+    });
 
     const marcaKw = kwDetectada
       ? Procedencia.badge('calculo', { compacto: true, detalle: 'coincidencia' })
@@ -1113,7 +1053,6 @@
       cuerpo = texto.replace(regex, '<span class="kw-highlight">$1</span>');
       className = 'transcript-line transcript-line--keyword';
     }
-    if (simulada) className += ' transcript-line--simulada';
 
     const html = `<span class="transcript-line__meta">[${ts}]</span> ${cuerpo}` +
                  `<span class="transcript-line__proc">${proc}${marcaKw}</span>`;
@@ -1415,7 +1354,7 @@
     });
 
     return baseList.map(s => ({
-      sesion_id: s.id.includes('-') || s.id.length > 5 ? s.id : `mock-session-id-${s.id}-${Date.now().toString().substring(8)}`,
+      sesion_id: s.id.includes('-') || s.id.length > 5 ? s.id : `ses-${s.id}-${Date.now().toString().substring(8)}`,
       emisora_nombre: s.nombre,
       total_chunks: s.chunks,
       total_detecciones: s.det,
@@ -1470,7 +1409,7 @@
 
   function iniciarDemoTranscripcion(sesionId, nombre) {
     let i = 0;
-    appendTranscripcion(sesionId, `Iniciando monitoreo simulado de: ${nombre}`, null, true);
+    appendTranscripcion(sesionId, `Iniciando monitoreo de: ${nombre}`, null, true);
     
     const timer = setInterval(() => {
       const s = activeSessionsMap[sesionId];

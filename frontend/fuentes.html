@@ -52,51 +52,5 @@
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
   <script src="js/vistas/fuentes.js"></script>
-  <script>
-    const PENDIENTES = [
-      ['Secciones electorales', 'Cartografía Electoral INE',
-       'Polígonos de sección. El corte cambia con cada redistritación.'],
-      ['Distritos federales', 'Cartografía Electoral INE',
-       'Demarcación federal vigente para el proceso 2027.'],
-      ['Distritos locales', 'IEEC Campeche / INE',
-       'Probablemente los provea el instituto local; acceso en gestión.'],
-      ['Casillas históricas', 'Encartes INE de procesos anteriores',
-       'No es cartografía: son los encartes publicados por proceso.'],
-      ['Casillas aprobadas 2027', 'Acuerdos del Consejo General del INE',
-       'No existen todavía. Se publican después de aprobar el encarte.'],
-    ];
-
-    const SIMULADOS = [
-      ['Población y lista nominal', 'Pendiente de INEGI (Censo) y de INE (padrón)'],
-      ['Secciones y casillas por tipo', 'Pendiente de INE'],
-      ['Nivel socioeconómico', 'Estimación propia sobre proxy de ruralidad'],
-      ['Resultados históricos', 'Pendiente de INE / IEEC'],
-      ['Proyección 2027', 'Modelo de demostración con intervalos'],
-    ];
-
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('fuentes-pendientes').innerHTML = PENDIENTES.map(([t, f, d]) => `
-        <article class="tarjeta">
-          <header class="tarjeta__cabeza">
-            <strong>${t}</strong>
-            <span class="badge badge--warn">Pendiente</span>
-          </header>
-          <p class="tarjeta__texto">${d}</p>
-          ${Procedencia.pie({ fuente: f, fechaCorte: null })}
-        </article>`).join('');
-
-      document.getElementById('fuentes-simulado').innerHTML = SIMULADOS.map(([t, f]) => `
-        <article class="tarjeta">
-          <header class="tarjeta__cabeza">
-            <strong>${t}</strong>
-            ${Procedencia.badge('simulado')}
-          </header>
-          ${Procedencia.pie({ fuente: f, fechaCorte: null, confianza: 'baja' })}
-        </article>`).join('');
-
-      Procedencia.iconos();
-      lucide.createIcons();
-    });
-  </script>
 </body>
 </html>

@@ -215,7 +215,7 @@
 
       <section class="panel">
         <h3 class="text-h3 panel__titulo">
-          <i data-lucide="sparkles"></i> Los escenarios simulados
+          <i data-lucide="sparkles"></i> Los escenarios proyectados
         </h3>
 
         <div class="aviso-simulado aviso-simulado--modelo">
@@ -351,7 +351,7 @@
 
         <!-- Fondo oscuro del lienzo. No es transparente: simula la base
              de CartoDB Dark Matter con un gradiente radial sutil. -->
-        <rect width="${W}" height="${H}" fill="#080c14"/>
+        <rect width="${W}" height="${H}" fill="#03060d"/>
         <!-- Retícula sutil: un pattern de puntos casi invisibles que sugiere
              coordenadas sin dibujarlas. -->
         <rect width="${W}" height="${H}" fill="url(#viñeta)"/>
@@ -376,8 +376,8 @@
              contorno real para que el glow rodee sin tapar. -->
         <g id="halo-camp" filter="url(#glow-camp)">
           ${nacion.filter((e) => String(e.cve) === '4').map((e) => `
-            <path d="${e.d}" fill="rgba(91,157,255,0.08)"
-                  stroke="rgba(91,157,255,0.4)" stroke-width="3"
+            <path d="${e.d}" fill="rgba(139,92,246,0.08)"
+                  stroke="rgba(139,92,246,0.4)" stroke-width="3"
                   stroke-linejoin="round"></path>`).join('')}
         </g>
 
@@ -393,7 +393,7 @@
         <g id="mapa">
           ${mapa.map((c) => `
             <path class="mun" data-cve="${T.escapar(c.cve)}" d="${c.d}"
-                  fill="rgba(91,157,255,0.06)" stroke="rgba(91,157,255,0.28)"
+                  fill="rgba(139,92,246,0.06)" stroke="rgba(139,92,246,0.28)"
                   stroke-width="0.8" stroke-linejoin="round"></path>`).join('')}
         </g>
         <g id="enlaces" stroke="var(--serie-7)" stroke-width="0.6" opacity="0"></g>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Conocimiento territorial: perfil agregado por municipio, censo de necesidades por zona y directorio del equipo de campaña — Cerebro Electoral (CE).">
+  <title>Conocimiento — Cerebro Electoral (CE)</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <link rel="stylesheet" href="css/colors.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <style>
+    .con-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: var(--space-sm);
+    }
+    .con-mun-card {
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      background: var(--card-bg-raised);
+      border: 1px solid var(--card-border);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-align: left;
+      transition: border-color var(--transition-fast), transform var(--transition-fast);
+    }
+    .con-mun-card:hover { transform: translateY(-2px); border-color: var(--glass-border-hover); }
+    .con-mun-card--activa { border-color: var(--serie-1); box-shadow: inset 0 0 0 1px var(--serie-1); }
+    .con-mun-card strong { font-family: var(--font-display); font-size: 1rem; color: #fff; }
+    .con-mun-card__dato { font-size: 0.74rem; color: var(--text-muted); }
+
+    .con-stat-row { display: flex; flex-wrap: wrap; gap: var(--space-md); margin-top: var(--space-sm); }
+    .con-stat { min-width: 120px; }
+    .con-stat__label { font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+    .con-stat__valor { font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; color: #fff; font-variant-numeric: tabular-nums; }
+    .con-stat__sub { font-size: 0.7rem; color: var(--text-muted); }
+
+    .con-necesidad { display: grid; grid-template-columns: 1fr auto auto; gap: var(--space-sm); align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-light); }
+    .con-necesidad:last-child { border-bottom: none; }
+    .con-necesidad__nombre { font-size: 0.84rem; color: var(--text-body); }
+    .con-chip { font-family: var(--font-mono); font-size: 0.66rem; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+    .con-chip--arriba  { background: rgba(255, 61, 110, 0.14); color: #ff7694; }
+    .con-chip--linea   { background: rgba(255, 255, 255, 0.06); color: var(--text-muted); }
+    .con-chip--abajo   { background: rgba(74, 222, 128, 0.14); color: #6ee89c; }
+
+    .con-equipo-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-sm); padding: var(--space-md); border-radius: 14px; background: rgba(255, 255, 255, 0.025); border: 1px dashed var(--border-medium); }
+    .con-equipo-form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.74rem; color: var(--text-muted); }
+    .con-equipo-form input, .con-equipo-form select {
+      padding: 8px 10px; border-radius: var(--radius-sm); background: var(--velo-05);
+      border: 1px solid var(--glass-border); color: var(--text-body); font-size: 0.82rem; font-family: inherit;
+    }
+    .con-equipo-form .con-equipo-form__acciones { display: flex; align-items: flex-end; }
+    .con-equipo-vacio { padding: var(--space-lg); text-align: center; color: var(--text-muted); font-size: 0.84rem; border: 1px dashed var(--border-medium); border-radius: 14px; }
+    .con-equipo-vacio strong { display: block; color: var(--text-body); margin-bottom: 4px; }
+    .con-fila-borrar { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 6px; }
+    .con-fila-borrar:hover { color: var(--accent-coral); background: rgba(255, 61, 110, 0.1); }
+  </style>
+</head>
+<body data-page="conocimiento">
+
+  <nav class="sidebar" id="sidebar" aria-label="Navegación principal"></nav>
+
+  <main class="main" id="main-content" style="padding-top: calc(var(--filter-bar-height) + var(--space-md));">
+    <div class="mando-workspace animate-fade-in-up">
+
+      <section class="mando-header">
+        <div class="mando-header__title-box">
+          <h1><i data-lucide="book-user" style="color:var(--accent-cyan);"></i> <span>Conocimiento</span></h1>
+          <p>Perfil agregado por municipio, qué tanto pesa cada necesidad por zona y el directorio de tu propio equipo de campaña.</p>
+        </div>
+        <div class="mando-header__pills" id="cabecera-pills"></div>
+      </section>
+
+      <!-- ═══════════════ 1. Perfil por municipio ═══════════════ -->
+      <section class="panel">
+        <h3 class="text-h3 panel__titulo"><i data-lucide="map-pinned"></i> Perfil por municipio</h3>
+        <div class="con-grid" id="con-mun-grid"></div>
+        <div id="con-mun-detalle" style="margin-top:var(--space-md);"></div>
+      </section>
+
+      <!-- ═══════════════ 2. Censo de necesidades por zona ═══════════════ -->
+      <section class="panel">
+        <h3 class="text-h3 panel__titulo"><i data-lucide="list-checks"></i> Censo de necesidades por zona</h3>
+        <div id="con-necesidades"></div>
+      </section>
+
+      <!-- ═══════════════ 3. Directorio del equipo ═══════════════ -->
+      <section class="panel">
+        <h3 class="text-h3 panel__titulo"><i data-lucide="users"></i> Directorio del equipo de campaña</h3>
+        <div class="aviso-simulado">
+          <i data-lucide="laptop"></i>
+          <span><strong>Datos reales, guardados sólo en este navegador.</strong> Agrega aquí a tu propio equipo (coordinadores, representantes). No sale de aquí: no se sube a ningún servidor ni se comparte entre dispositivos todavía. Exporta un respaldo en CSV cuando quieras.</span>
+        </div>
+        <form id="con-equipo-form" class="con-equipo-form" style="margin-top:var(--space-md);">
+          <label>Nombre<input type="text" id="ce-nombre" placeholder="Nombre completo" required maxlength="80"></label>
+          <label>Rol<select id="ce-rol">
+            <option>Coordinador municipal</option>
+            <option>Representante general</option>
+            <option>Representante de casilla</option>
+            <option>Enlace territorial</option>
+            <option>Otro</option>
+          </select></label>
+          <label>Municipio<select id="ce-municipio"></select></label>
+          <label>Teléfono<input type="tel" id="ce-telefono" placeholder="981 000 0000" maxlength="20"></label>
+          <div class="con-equipo-form__acciones">
+            <button type="submit" class="btn-primary" style="width:100%; justify-content:center;"><i data-lucide="user-plus"></i> Agregar</button>
+          </div>
+        </form>
+        <div id="con-equipo-lista" style="margin-top:var(--space-md);"></div>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="js/procedencia.js"></script>
+  <script src="js/territorio.js"></script>
+  <script src="js/electoral.js"></script>
+  <script src="js/censo.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/vistas/conocimiento.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

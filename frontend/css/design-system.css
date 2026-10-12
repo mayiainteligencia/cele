@@ -124,7 +124,9 @@ input, select, textarea {
    ════════════════════════════════════════════ */
 
 :root {
-  --font-display: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+  --font-display: 'Space Grotesk', 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+  --font-heading: var(--font-display);
+  --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   --font-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 

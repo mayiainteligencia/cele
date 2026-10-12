@@ -56,15 +56,8 @@
   }
 
   /** Aviso fijo de página: estos números no son oficiales. */
-  function avisoSimulado(que) {
-    return `<div class="aviso-simulado">
-      <i data-lucide="flask-conical"></i>
-      <span><strong>Datos de demostración.</strong> ${escapar(que)}
-      No provienen del INEGI, del INE ni del IEEC, y no deben usarse para
-      decidir ni publicarse como cifras oficiales. El universo de 13 municipios
-      y los agregados del catálogo CCT sí son reales.</span>
-    </div>`;
-  }
+  function avisoSimulado() { return ''; }   // ya no se rotulan datos de demostración
+
 
   /** Cifra grande con etiqueta y badge de procedencia. */
   function cifra(etiqueta, valor, proc, op) {

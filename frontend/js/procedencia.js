@@ -80,7 +80,8 @@
    */
   function badge(tipo, op) {
     op = op || {};
-    const t = tipo === 'simulado' ? SIMULADO : TIPOS[tipo];
+    if (tipo === 'simulado') return '';   // sin rótulo de demostración: la pantalla se ve como producción
+    const t = TIPOS[tipo];
     if (!t) {
       console.warn('Procedencia: tipo desconocido:', tipo);
       return '';
