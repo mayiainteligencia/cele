@@ -120,6 +120,30 @@
     }
 
     .transcript-line { animation: fadeInLine 0.4s ease; }
+
+    /* ── Rastreo de candidatos ───────────────────── */
+    .cand-chips { display:flex; flex-wrap:wrap; gap:6px; }
+    .cand-chip { display:inline-flex; align-items:center; gap:6px; padding:3px 10px 3px 3px; border-radius:999px; cursor:pointer; font-size:0.72rem; font-weight:600; color:var(--text-body); background:var(--velo-05); border:1px solid var(--velo-10); transition:all .2s; }
+    .cand-chip:hover { border-color:var(--glass-border-hover); }
+    .cand-chip--on { color:var(--text-heading); border-color:var(--accent-cyan); background:var(--cyan-tinte-sm); }
+    .cand-foto { position:relative; flex:none; width:24px; height:24px; border-radius:50%; overflow:hidden; display:grid; place-items:center; font-size:0.55rem; font-weight:800; color:var(--text-heading); background:var(--velo-08); border:2px solid var(--text-muted); }
+    .cand-foto img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .cand-foto--morena { border-color:var(--partido-morena); } .cand-foto--mc { border-color:var(--partido-mc); }
+    .cand-foto--pri { border-color:var(--partido-pri); } .cand-foto--pan { border-color:var(--partido-pan); }
+    .cand-hit { border-radius:3px; padding:0 3px; color:var(--text-heading); font-weight:700; background:var(--partido-otro); }
+    .cand-hit--morena { background:var(--partido-morena); } .cand-hit--mc { background:var(--partido-mc); color:var(--text-on-accent); }
+    .cand-hit--pri { background:var(--partido-pri); } .cand-hit--pan { background:var(--partido-pan); }
+    .cand-tag { display:inline-block; margin-left:6px; padding:0 7px; border-radius:999px; font-size:0.62rem; font-weight:700; color:var(--text-heading); background:var(--partido-otro); }
+    .cand-tag--morena { background:var(--partido-morena); } .cand-tag--mc { background:var(--partido-mc); color:var(--text-on-accent); }
+    .cand-tag--pri { background:var(--partido-pri); } .cand-tag--pan { background:var(--partido-pan); }
+    .menc-resumen { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; padding:var(--space-md); border-bottom:1px solid var(--glass-border); }
+    .menc-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:0.6rem; color:var(--text-muted); text-align:center; }
+    .menc-item b { font-size:0.95rem; color:var(--text-heading); font-family:var(--font-heading); }
+    .menc-lista { padding:var(--space-md); display:flex; flex-direction:column; gap:8px; max-height:340px; overflow-y:auto; min-height:70px; }
+    .menc-cita { padding:8px 10px; border-radius:var(--radius-xs); background:var(--velo-05); border-left:3px solid var(--partido-otro); font-size:0.74rem; line-height:1.5; color:var(--text-body); }
+    .menc-cita--morena { border-left-color:var(--partido-morena); } .menc-cita--mc { border-left-color:var(--partido-mc); }
+    .menc-cita--pri { border-left-color:var(--partido-pri); } .menc-cita--pan { border-left-color:var(--partido-pan); }
+    .menc-cita__meta { font-size:0.62rem; color:var(--text-muted); margin-bottom:2px; font-family:monospace; }
     @keyframes fadeInLine {
       from { opacity: 0; transform: translateY(6px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -453,6 +477,17 @@
                  </div>
                </div>
 
+              <!-- Candidatos a rastrear -->
+              <div>
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:8px;">
+                  <i data-lucide="users" class="icon-xs"></i> Candidatos a rastrear (clic para activar)
+                </label>
+                <div class="cand-chips" id="cand-chips"></div>
+                <div style="font-size:0.65rem; color:var(--text-muted); margin-top:6px;">
+                  Las menciones se detectan en toda la transcripción, estén activos o no. Activarlos también los envía al servidor como palabras clave.
+                </div>
+              </div>
+
               <!-- Botones -->
               <div style="display:flex; gap:10px; align-items:center;">
                 <button id="btn-iniciar" style="
@@ -529,6 +564,10 @@
                 </button>
               </div>
             </div>
+            <div style="padding:var(--space-sm) var(--space-lg); border-bottom:1px solid var(--glass-border);">
+              <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">Filtrar testigos por candidato</div>
+              <div class="cand-chips" id="testigos-cand-filtro"></div>
+            </div>
             <div id="testigos-lista" style="max-height:450px; overflow-y:auto; padding:var(--space-md); display:flex; flex-direction:column; gap:8px;">
               <div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding:var(--space-md);">Cargando historial...</div>
             </div>
@@ -552,6 +591,21 @@
             <div style="padding:var(--space-md); display:flex; flex-direction:column; gap:8px;">
               <div id="sessions-lista" class="sessions-scroll-container">
                 <div style="font-size:0.78rem; color:var(--text-muted); text-align:center;">Sin sesiones activas</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Menciones de candidatos -->
+          <div class="glass-strong" style="border-radius:var(--radius-lg); overflow:hidden;">
+            <div style="padding:var(--space-md); border-bottom:1px solid var(--glass-border); display:flex; align-items:center; gap:8px;">
+              <i data-lucide="user-search" style="color:var(--accent-cyan); width:14px; height:14px;"></i>
+              <strong style="font-size:0.78rem; color:var(--text-heading); text-transform:uppercase; letter-spacing:0.04em; font-family:var(--font-heading);">Menciones de Candidatos</strong>
+              <span id="menc-cnt" style="margin-left:auto; font-size:0.68rem; background:var(--cyan-tinte-sm); color:var(--accent-cyan); padding:2px 7px; border-radius:4px; font-weight:700;">0</span>
+            </div>
+            <div class="menc-resumen" id="menc-resumen"></div>
+            <div class="menc-lista" id="menc-lista">
+              <div style="font-size:0.78rem; color:var(--text-muted); text-align:center; padding:10px;">
+                Cuando una emisora nombre a un candidato, aparecerá aquí la frase transcrita con emisora y hora.
               </div>
             </div>
           </div>
@@ -673,6 +727,90 @@
 
   const KW_SUGERIDAS = ['candidato', 'campeche', 'partido', 'campaña', 'elecciones', 'votos', 'gobernador', 'diputado', 'pemex', 'carmen', 'calakmul'];
 
+  /* ── Candidatos rastreados ──
+     `alias` son las formas en que una emisora puede nombrarlos. Se evitan
+     apellidos sueltos y comunes (Arce, Castro) para no inventar menciones.
+     La búsqueda ignora acentos y mayúsculas: Whisper a veces los omite. */
+  const RUTA_CAND = 'assets/images/candidatos/';
+  const CANDIDATOS = [
+    { id:'pablo',    ini:'PG', nombre:'Pablo Gutiérrez Lazarus',   corto:'Pablo Gutiérrez',  partido:'MORENA', clase:'morena', foto:'pablogutierrezlazarus.webp', alias:['Pablo Gutiérrez Lazarus','Pablo Gutiérrez','Gutiérrez Lazarus'] },
+    { id:'layda',    ini:'LS', nombre:'Layda Sansores',            corto:'Layda Sansores',   partido:'MORENA', clase:'morena', foto:'laydaSansores.jpg',          alias:['Layda Sansores','Layda','Sansores'] },
+    { id:'eliseo',   ini:'EF', nombre:'Eliseo Fernández Montúfar', corto:'Eliseo Fernández', partido:'MC',     clase:'mc',     foto:'eliseofernandez.webp',       alias:['Eliseo Fernández Montúfar','Eliseo Fernández','Fernández Montúfar','Eliseo'] },
+    { id:'biby',     ini:'BR', nombre:'Biby Rabelo',               corto:'Biby Rabelo',      partido:'MC',     clase:'mc',     foto:'bibyrabelo.jpeg',            alias:['Biby Rabelo','Biby','Rabelo'] },
+    { id:'farias',   ini:'FF', nombre:'Francisco Farías Bailón',   corto:'Francisco Farías', partido:'MC',     clase:'mc',     foto:'franciscoFarias.jpg',        alias:['Francisco Farías Bailón','Francisco Farías','Farías Bailón'] },
+    { id:'paul',     ini:'PA', nombre:'Paul Arce Ontiveros',       corto:'Paul Arce',        partido:'MC',     clase:'mc',     foto:'paul_arce.jpg',              alias:['Paul Arce Ontiveros','Paul Arce','Arce Ontiveros'] },
+    { id:'christian',ini:'CC', nombre:'Christian Castro Bello',    corto:'Christian Castro', partido:'PRI',    clase:'pri',    foto:'christiancastro.jpeg',       alias:['Christian Castro Bello','Christian Castro','Castro Bello'] },
+    { id:'nelly',    ini:'NM', nombre:'Nelly Márquez',             corto:'Nelly Márquez',    partido:'PAN',    clase:'pan',    foto:'nellymarquez.jpg',           alias:['Nelly Márquez Zapata','Nelly Márquez'] },
+  ];
+
+  // Patrón sin acentos: cada vocal acepta su versión acentuada y los espacios cualquier separación.
+  function patronSinAcentos(s) {
+    return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/a/gi, '[aá]').replace(/e/gi, '[eé]').replace(/i/gi, '[ií]')
+      .replace(/o/gi, '[oó]').replace(/u/gi, '[uúü]').replace(/\s+/g, '\\s+');
+  }
+  CANDIDATOS.forEach(c => {
+    const alt = [...c.alias].sort((a, b) => b.length - a.length).map(patronSinAcentos).join('|');
+    c.rxSrc = `(?<![\\p{L}])(?:${alt})(?![\\p{L}])`;
+    c.rx = new RegExp(c.rxSrc, 'iu');
+    c.kws = [c.corto.toLowerCase()];
+    c.menciones = 0;
+  });
+
+  const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[ch]));
+
+  function fotoCand(c, extra = '') {
+    return `<span class="cand-foto cand-foto--${c.clase}" ${extra}>${c.ini}<img src="${RUTA_CAND}${c.foto}" alt="" loading="lazy" onerror="this.remove()"></span>`;
+  }
+
+  function renderCandidatos() {
+    const el = document.getElementById('cand-chips');
+    if (!el) return;
+    el.innerHTML = CANDIDATOS.map(c => {
+      const on = c.kws.every(k => keywordsActivas.includes(k));
+      return `<button type="button" class="cand-chip ${on ? 'cand-chip--on' : ''}" onclick="toggleCandidato('${c.id}')" title="${esc(c.nombre)} · ${c.partido}">${fotoCand(c)}${esc(c.corto)}</button>`;
+    }).join('');
+    renderResumenMenciones();
+  }
+
+  function toggleCandidato(id) {
+    const c = CANDIDATOS.find(x => x.id === id);
+    if (!c) return;
+    const on = c.kws.every(k => keywordsActivas.includes(k));
+    if (on) keywordsActivas = keywordsActivas.filter(k => !c.kws.includes(k));
+    else c.kws.forEach(k => { if (!keywordsActivas.includes(k)) keywordsActivas.push(k); });
+    renderKwTags();
+    renderKwSugeridas();
+    renderCandidatos();
+  }
+
+  function renderResumenMenciones() {
+    const el = document.getElementById('menc-resumen');
+    if (!el) return;
+    el.innerHTML = CANDIDATOS.map(c => `<div class="menc-item" title="${esc(c.nombre)}">${fotoCand(c)}<b>${c.menciones}</b>${esc(c.corto.split(' ')[0])}</div>`).join('');
+  }
+
+  let totalMenciones = 0;
+  function registrarMenciones(detectados, sesionId, texto, simulada, ts) {
+    const s = activeSessionsMap[sesionId] || {};
+    const lista = document.getElementById('menc-lista');
+    if (!lista) return;
+    const vacio = lista.querySelector('[data-vacio], div[style*="text-align:center"]');
+    if (vacio) vacio.remove();
+    detectados.forEach(c => {
+      c.menciones++; totalMenciones++;
+      const div = document.createElement('div');
+      div.className = `menc-cita menc-cita--${c.clase}`;
+      const resaltado = esc(texto).replace(new RegExp(c.rxSrc, 'giu'), m => `<mark class="cand-hit cand-hit--${c.clase}">${m}</mark>`);
+      div.innerHTML = `<div class="menc-cita__meta">${esc(c.nombre)} · ${esc(s.emisora_nombre || 'emisora')} · ${ts}${simulada ? ' · SIMULADA' : ''}</div>“${resaltado}”`;
+      lista.insertBefore(div, lista.firstChild);
+      while (lista.children.length > 50) lista.lastChild.remove();
+    });
+    document.getElementById('menc-cnt').textContent = totalMenciones;
+    renderResumenMenciones();
+  }
+
   // ── Init ──────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', async () => {
     CE.initAgents('medios');
@@ -680,6 +818,7 @@
     renderEmisoras();
     renderKwTags();
     renderKwSugeridas();
+    renderCandidatos();
     bindEvents();
     await checkBackend();
     await cargarTestigos();
@@ -771,6 +910,7 @@
       keywordsActivas.push(kw);
       renderKwTags();
       renderKwSugeridas();
+      renderCandidatos();
     }
     document.getElementById('input-keyword').value = '';
   }
@@ -779,6 +919,7 @@
     keywordsActivas = keywordsActivas.filter(k => k !== kw);
     renderKwTags();
     renderKwSugeridas();
+    renderCandidatos();
   }
 
   // ── Bind events ───────────────────────────────────────────────────
@@ -1054,8 +1195,22 @@
       className = 'transcript-line transcript-line--keyword';
     }
 
+    // Candidatos: se buscan siempre, estén o no activados como keyword.
+    const detectados = CANDIDATOS.filter(c => c.rx.test(texto));
+    let etiquetasCand = '';
+    if (detectados.length) {
+      detectados.forEach(c => {
+        // El lookahead evita tocar el interior de etiquetas HTML ya insertadas.
+        cuerpo = cuerpo.replace(new RegExp(`${c.rxSrc}(?![^<]*>)`, 'giu'),
+          m => `<mark class="cand-hit cand-hit--${c.clase}">${m}</mark>`);
+      });
+      etiquetasCand = detectados.map(c =>
+        `<span class="cand-tag cand-tag--${c.clase}" title="${esc(c.nombre)}">${esc(c.corto)} · ${c.partido}</span>`).join('');
+      registrarMenciones(detectados, sesionId, texto, simulada, ts);
+    }
+
     const html = `<span class="transcript-line__meta">[${ts}]</span> ${cuerpo}` +
-                 `<span class="transcript-line__proc">${proc}${marcaKw}</span>`;
+                 `<span class="transcript-line__proc">${proc}${marcaKw}${etiquetasCand}</span>`;
 
     // Almacenar en búfer histórico
     if (!transcriptHistory[sesionId]) transcriptHistory[sesionId] = [];
@@ -1138,6 +1293,11 @@
       t.emisora_nombre?.toLowerCase().includes(filtro.toLowerCase())
     );
 
+    // Candidatos mencionados en cada testigo (misma detección que la transcripción en vivo)
+    testigos.forEach(t => { t._cands = CANDIDATOS.filter(c => c.rx.test(t.transcripcion || '')); });
+    renderFiltroCandidatosTestigos(testigos);
+    if (filtroCandidato) testigos = testigos.filter(t => t._cands.some(c => c.id === filtroCandidato));
+
     // Actualizar KPIs
     actualizarKPIs(testigos);
 
@@ -1151,7 +1311,13 @@
         month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'
       });
       const regex = new RegExp(`(${t.keyword_detectada})`, 'gi');
-      const transcHtml = (t.transcripcion || '').replace(regex, '<strong style="color:var(--accent-cyan)">$1</strong>');
+      let transcHtml = (t.transcripcion || '').replace(regex, '<strong style="color:var(--accent-cyan)">$1</strong>');
+      (t._cands || []).forEach(c => {
+        transcHtml = transcHtml.replace(new RegExp(`${c.rxSrc}(?![^<]*>)`, 'giu'),
+          m => `<mark class="cand-hit cand-hit--${c.clase}">${m}</mark>`);
+      });
+      const tagsCand = (t._cands || []).map(c =>
+        `<span class="cand-tag cand-tag--${c.clase}" title="${esc(c.nombre)}">${esc(c.corto)} · ${c.partido}</span>`).join('');
       return `
         <div class="testigo-row">
           <div>
@@ -1162,7 +1328,7 @@
             <div style="font-size:0.78rem; color:var(--text-body); line-height:1.4;">${transcHtml}</div>
             <div style="font-size:0.68rem; color:var(--text-muted); margin-top:3px;">
               <i data-lucide="radio" style="width:10px;height:10px; vertical-align:middle;"></i>
-              ${t.emisora_nombre || t.emisora_url || '—'}
+              ${t.emisora_nombre || t.emisora_url || '—'}${t.simulado ? '<span class="cand-tag" title="Ejemplo ilustrativo, no es una transcripción real">EJEMPLO · SIMULADO</span>' : ''}${tagsCand}
             </div>
           </div>
           <div style="text-align:right;">
@@ -1174,6 +1340,22 @@
     // Keywords estadísticas
     renderKeywordsHist(testigos);
     lucide.createIcons();
+  }
+
+  /* Filtro por candidato: cuenta cuántos testigos almacenados mencionan a cada
+     uno (sobre la lista ya filtrada por texto) y deja elegir uno. */
+  let filtroCandidato = null;
+  function renderFiltroCandidatosTestigos(testigos) {
+    const el = document.getElementById('testigos-cand-filtro');
+    if (!el) return;
+    const cuenta = c => testigos.filter(t => t._cands.some(x => x.id === c.id)).length;
+    el.innerHTML =
+      `<button type="button" class="cand-chip ${filtroCandidato ? '' : 'cand-chip--on'}" onclick="filtrarTestigosPorCandidato(null)" style="padding:3px 12px;">Todos</button>` +
+      CANDIDATOS.map(c => `<button type="button" class="cand-chip ${filtroCandidato === c.id ? 'cand-chip--on' : ''}" onclick="filtrarTestigosPorCandidato('${c.id}')" title="${esc(c.nombre)} · ${c.partido}">${fotoCand(c)}${esc(c.corto)} <b style="color:var(--accent-cyan);">${cuenta(c)}</b></button>`).join('');
+  }
+  function filtrarTestigosPorCandidato(id) {
+    filtroCandidato = (filtroCandidato === id) ? null : id;
+    cargarTestigos(document.getElementById('filtro-keyword').value);
   }
 
   function actualizarKPIs(testigos) {
@@ -1391,6 +1573,22 @@
       { id:434, sesion_id:'1628daa2', emisora_nombre:'Radio Disney 92.1 FM',  keyword_detectada:'hoy',    transcripcion:'Hoy tenemos un show especial con todos los éxitos del momento.', timestamp:'2026-06-30T09:40:00.000000' },
       { id:433, sesion_id:'9197a60c', emisora_nombre:'MVS Noticias 102.5 FM', keyword_detectada:'pemex',  transcripcion:'Pemex reporta cifras récord de producción en la Sonda de Campeche.', timestamp:'2026-07-23T19:20:00.000000' },
       { id:432, sesion_id:'9197a60c', emisora_nombre:'MVS Noticias 102.5 FM', keyword_detectada:'mexico', transcripcion:'El gobierno de México presentó el plan económico para el próximo año.', timestamp:'2026-07-23T19:15:00.000000' },
+
+      /* EJEMPLOS SIMULADOS — no son transcripciones reales. Sirven para ver cómo
+         se muestran las menciones de candidatos. Frases neutrales de agenda
+         pública; no se atribuye ninguna declaración a las personas. */
+      { id:460, simulado:true, sesion_id:'sim-01', emisora_nombre:'Ahora Noticias Radio',   keyword_detectada:'pablo gutiérrez', transcripcion:'Pablo Gutiérrez Lazarus, coordinador estatal de Morena, realizó un recorrido por colonias de Ciudad del Carmen este fin de semana.', timestamp:'2026-10-12T08:15:00.000000' },
+      { id:459, simulado:true, sesion_id:'sim-01', emisora_nombre:'Radio Fórmula Campeche', keyword_detectada:'pablo gutiérrez', transcripcion:'En entrevista, Pablo Gutierrez habló sobre la organización de su partido rumbo a las elecciones de 2027.', timestamp:'2026-10-11T12:40:00.000000' },
+      { id:458, simulado:true, sesion_id:'sim-02', emisora_nombre:'TRC Radio Campeche',     keyword_detectada:'layda', transcripcion:'La gobernadora Layda Sansores encabezó una ceremonia de entrega de apoyos en la capital del estado.', timestamp:'2026-10-12T10:05:00.000000' },
+      { id:457, simulado:true, sesion_id:'sim-02', emisora_nombre:'Ahora Noticias Radio',   keyword_detectada:'layda', transcripcion:'Layda Sansores presentó el informe semanal de actividades del gobierno estatal.', timestamp:'2026-10-07T09:30:00.000000' },
+      { id:456, simulado:true, sesion_id:'sim-03', emisora_nombre:'Radio Fórmula Campeche', keyword_detectada:'eliseo', transcripcion:'Eliseo Fernández Montúfar, de Movimiento Ciudadano, participó en un foro con jóvenes sobre seguridad y empleo.', timestamp:'2026-10-12T17:20:00.000000' },
+      { id:455, simulado:true, sesion_id:'sim-03', emisora_nombre:'TRC Radio Campeche',     keyword_detectada:'eliseo', transcripcion:'Eliseo Fernandez fue consultado sobre el panorama electoral en el estado.', timestamp:'2026-10-09T13:10:00.000000' },
+      { id:454, simulado:true, sesion_id:'sim-04', emisora_nombre:'El Heraldo · Cd. del Carmen', keyword_detectada:'biby', transcripcion:'La alcaldesa Biby Rabelo inauguró trabajos de mejoramiento urbano en el municipio de Campeche.', timestamp:'2026-10-12T11:45:00.000000' },
+      { id:453, simulado:true, sesion_id:'sim-04', emisora_nombre:'Ahora Noticias Radio',   keyword_detectada:'biby', transcripcion:'Biby Rabelo anunció nuevas jornadas de atención ciudadana en colonias del municipio.', timestamp:'2026-10-08T15:00:00.000000' },
+      { id:452, simulado:true, sesion_id:'sim-05', emisora_nombre:'TRC Radio Campeche',     keyword_detectada:'francisco farías', transcripcion:'El diputado federal Francisco Farías Bailón participó en una reunión con pescadores de la región.', timestamp:'2026-10-10T09:50:00.000000' },
+      { id:451, simulado:true, sesion_id:'sim-06', emisora_nombre:'Radio Fórmula Campeche', keyword_detectada:'paul arce', transcripcion:'Paul Arce Ontiveros, dirigente estatal de Movimiento Ciudadano, convocó a militantes a una asamblea.', timestamp:'2026-10-11T18:25:00.000000' },
+      { id:450, simulado:true, sesion_id:'sim-07', emisora_nombre:'Ahora Noticias Radio',   keyword_detectada:'christian castro', transcripcion:'El diputado federal Christian Castro Bello visitó municipios del estado para reunirse con militantes del PRI.', timestamp:'2026-10-10T14:35:00.000000' },
+      { id:449, simulado:true, sesion_id:'sim-08', emisora_nombre:'TRC Radio Campeche',     keyword_detectada:'nelly márquez', transcripcion:'Nelly Márquez, presidenta estatal del PAN, ofreció una conferencia de prensa sobre la agenda de su partido.', timestamp:'2026-10-09T10:20:00.000000' },
     ];
   }
 
