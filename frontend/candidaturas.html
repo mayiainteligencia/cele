@@ -87,22 +87,7 @@
     .linea { list-style:none; display:flex; flex-direction:column; gap:8px; border-left:2px solid var(--glass-border-hover); padding-left:12px; }
     .linea li { font-size:0.82rem; color:var(--text-body); line-height:1.45; }
     .linea li b { color:var(--accent-cyan); margin-right:6px; }
-    .enlaces { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
-    .enlaces a { font-size:0.68rem; padding:2px 9px; border-radius:999px; text-decoration:none; color:var(--accent-cyan); border:1px solid var(--glass-border-hover); }
-    .enlaces a:hover { background:var(--velo-08); }
     .ficha__fuentes { font-size:0.7rem; color:var(--text-muted); margin-top:var(--space-md); }
-    .caso { padding:10px 12px; border-radius:var(--radius-md); background:var(--velo-05); border-left:3px solid var(--text-muted); margin-bottom:8px; }
-    .caso--firme { border-left-color:var(--accent-coral); }
-    .caso--proceso { border-left-color:var(--accent-warm); }
-    .caso--senal { border-left-color:var(--accent-blue); }
-    .caso__nivel { display:inline-block; font-size:0.65rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; padding:2px 8px; border-radius:999px; margin-bottom:4px; color:var(--text-on-accent); background:var(--text-muted); }
-    .caso--firme .caso__nivel { background:var(--accent-coral); }
-    .caso--proceso .caso__nivel { background:var(--accent-warm); }
-    .caso--senal .caso__nivel { background:var(--accent-blue); color:var(--text-heading); }
-    .caso__t { font-size:0.85rem; font-weight:700; color:var(--text-heading); }
-    .caso__d { font-size:0.8rem; color:var(--text-body); line-height:1.45; margin-top:2px; }
-    .caso__f { font-size:0.68rem; color:var(--text-muted); margin-top:4px; }
-    .leyenda { font-size:0.68rem; color:var(--text-muted); line-height:1.5; margin-top:6px; }
   </style>
 </head>
 <body data-page="candidaturas">
@@ -296,63 +281,6 @@
         fuentes:'SIL — Gobernación · Wikipol · La Jornada Maya' },
     };
 
-    const NIVELES = { firme:'Resolución firme', proceso:'En proceso', senal:'Señalamiento sin resolución', rumor:'Rumor / no verificado' };
-
-    /* Antecedentes legales. Regla: “resolución firme” solo si hay fallo de un
-       tribunal; “en proceso” si hay denuncia/carpeta/audiencia abierta; “señalamiento”
-       si es auditoría, acusación política o nota de prensa sin fallo. No se incluyen
-       cifras que no pudimos confirmar. Presunción de inocencia aplica a todos. */
-    const CASOS = {
-      'Layda Sansores': [
-        { n:'firme', t:'Violencia política contra las mujeres en razón de género (2022–2023)', d:'Por expresiones en su programa “Martes del Jaguar” contra diputadas del PRI, la Sala Regional Especializada del TEPJF la sancionó (disculpa pública e inscripción en el registro nacional de personas sancionadas). La Sala Superior confirmó la responsabilidad. Es un asunto electoral, no penal.', f:'TEPJF · El Financiero · Infobae' },
-        { n:'senal', t:'Quejas por imparcialidad y uso de recursos públicos', d:'Su programa semanal ha motivado denuncias ante el INE por presunta vulneración de neutralidad. No encontramos resolución definitiva en las fuentes consultadas.', f:'Medios locales' } ],
-      'Eliseo Fernández Montúfar': [
-        { n:'firme', t:'Inhabilitación de 20 años anulada', d:'El Tribunal de Justicia Administrativa lo inhabilitó por irregularidades del ejercicio 2020. Un Tribunal Colegiado federal le concedió amparo directo y ordenó dejar sin efectos la sanción. Hoy no tiene esa inhabilitación.', f:'La Jornada · La Jornada Maya' },
-        { n:'proceso', t:'Denuncias de ASECAM y órdenes de aprehensión por presunto peculado y otros delitos', d:'Los medios reportan órdenes de aprehensión y acusaciones por peculado, recursos de procedencia ilícita, defraudación fiscal y asociación delictuosa. Sin sentencia condenatoria en las fuentes. Él lo califica de persecución política. Su situación procesal actual debe confirmarse.', f:'La Jornada · Expansión' } ],
-      'Pablo Gutiérrez Lazarus': [
-        { n:'senal', t:'Denuncias por presunto peculado y adeudos (IMSS, SAT) en el Ayuntamiento de Carmen', d:'Medios reportan denuncias de ASECAM/Fiscalía Anticorrupción e IMSS, adeudos fiscales y laudos laborales sin pagar, sobre todo de su primera gestión (2015–2018). Las cifras varían entre notas y no las confirmamos, por eso no se muestran. No hay sentencia en las fuentes.', f:'La Jornada · Expansión · Heraldo de México' },
-        { n:'senal', t:'Señalamientos electorales', d:'Se le ha acusado de uso indebido de recursos en campaña y reelección ante el tribunal electoral local. Sin resolución confirmada.', f:'Diario Cambio 22' } ],
-      'Biby Rabelo': [
-        { n:'proceso', t:'Caso por presunto desvío de ~32 millones de pesos (Ayuntamiento de Campeche / SMAPAC)', d:'Compareció ante un juez de control, junto con Paul Arce y otros funcionarios, por denuncias de la Secretaría Anticorrupción estatal. La defensa pidió prórroga. Dice cooperar y que hay trasfondo político. Sin sentencia.', f:'La Jornada · La Jornada Maya · SDP Noticias' },
-        { n:'senal', t:'Observaciones de ASECAM a la cuenta pública', d:'Auditoría con observaciones de gasto no justificado. El PAN denunció posible mal uso de créditos. Las observaciones no son sanción firme.', f:'Por Esto · Heraldo de México' } ],
-      'Paul Arce Ontiveros': [
-        { n:'proceso', t:'Caso por presunto desvío de ~32 millones de pesos (SMAPAC y obra pública)', d:'Compareció ante juez de control por carpetas de la Secretaría Anticorrupción por presunto peculado. Él las llama “carpetas inventadas” y persecución política, y afirma que acusaciones previas se han caído. Sin sentencia.', f:'Milenio · La Jornada · 24 Horas' } ],
-      'Francisco Farías Bailón': [
-        { n:'senal', t:'Probable daño al erario en Candelaria (2021–2024)', d:'ASECAM reportó un probable daño por más de 45 millones de pesos: fondos de seguridad pública sin justificar, faltantes de ingresos y cheques sin comprobación. Es hallazgo de auditoría; no encontramos sentencia ni su postura pública.', f:'Por Esto' } ],
-      'Christian Castro Bello': [
-        { n:'rumor', t:'Menciones en investigaciones sobre redes de propiedades', d:'Su nombre aparece en discursos y notas sobre allegados a la administración priista, sin resolución judicial ni imputación formal confirmada. Tratar como no verificado.', f:'Notas periodísticas' },
-        { n:'senal', t:'Quejas de la oposición por programas sociales', d:'Morena y MC presentaron quejas electorales y administrativas sobre manejo de programas. Sin resultado conocido. Además, su parentesco con “Alito” Moreno lo expone a ataques políticos.', f:'Heraldo de México' } ],
-      'Nelly Márquez': [
-        { n:'senal', t:'Disputa interna por la dirigencia del PAN', d:'Sectores del partido la acusaron de irregularidades en el padrón interno y delitos electorales. El Tribunal Electoral local ordenó reponer o invalidar procesos internos, y ella lo rechaza y denuncia intromisión del gobierno estatal. No hay cargos penales en las fuentes.', f:'Por Esto · Campeche Hoy' } ],
-    };
-
-    /* Dominios para armar enlaces de búsqueda por sitio. No se enlazan notas
-       concretas porque no pudimos verificar cada URL: la búsqueda lleva al
-       medio o tribunal citado y muestra la nota original. */
-    const DOMINIOS = {
-      'La Jornada':'jornada.com.mx', 'La Jornada Maya':'lajornadamaya.mx', 'Expansión':'expansion.mx',
-      'El Financiero':'elfinanciero.com.mx', 'Infobae':'infobae.com', 'TEPJF':'te.gob.mx',
-      'Por Esto':'poresto.com', 'Heraldo de México':'heraldodemexico.com.mx', 'SDP Noticias':'sdpnoticias.com',
-      'Milenio':'milenio.com', '24 Horas':'24-horas.mx', 'Diario Cambio 22':'diariocambio22.mx', 'Campeche Hoy':'campechehoy.mx',
-    };
-
-    function enlacesFuente(nombre, c) {
-      const clave = c.t.split(' ').slice(0, 5).join(' ');
-      const q = (dom) => `https://www.google.com/search?q=${encodeURIComponent(`${dom ? 'site:' + dom + ' ' : ''}"${nombre}" ${clave}`)}`;
-      const links = c.f.split(' · ').map((s) => DOMINIOS[s] ? `<a href="${q(DOMINIOS[s])}" target="_blank" rel="noopener noreferrer">${s} ↗</a>` : '');
-      links.push(`<a href="${q('')}" target="_blank" rel="noopener noreferrer">Buscar más ↗</a>`);
-      return `<div class="enlaces">${links.join('')}</div>`;
-    }
-
-    function casosHtml(nombre) {
-      const lista = CASOS[nombre] || [];
-      const cuerpo = lista.length
-        ? lista.map((c) => `<div class="caso caso--${c.n}"><span class="caso__nivel">${NIVELES[c.n]}</span><div class="caso__t">${c.t}</div><div class="caso__d">${c.d}</div><div class="caso__f">Fuente: ${c.f}</div>${enlacesFuente(nombre, c)}</div>`).join('')
-        : '<p class="caso__d">Sin antecedentes legales encontrados en fuentes públicas.</p>';
-      return `<h4>Antecedentes legales y señalamientos</h4>${cuerpo}
-        <p class="leyenda"><b>Cómo leerlo:</b> “Resolución firme” = hay fallo de un tribunal. “En proceso” = denuncia o audiencia abierta, sin sentencia. “Señalamiento” = auditoría, acusación política o nota de prensa sin fallo. “Rumor” = sin sustento verificable. Toda persona es inocente hasta que un tribunal resuelva lo contrario. Los enlaces abren una búsqueda en el medio o tribunal citado; contrasta con expedientes oficiales.</p>`;
-    }
-
     const fondo = document.createElement('div');
     fondo.className = 'ficha-fondo';
     fondo.setAttribute('role', 'dialog');
@@ -374,7 +302,6 @@
           <div class="ficha__datos">${f.datos.map(([k, v]) => `<div><b>${k}:</b> ${v}</div>`).join('')}</div>
           <h4>Trayectoria</h4>
           <ul class="linea">${f.linea.map(([a, t]) => `<li><b>${a}</b>${t}</li>`).join('')}</ul>
-          ${casosHtml(nombre)}
           <p class="ficha__fuentes">Fuentes públicas: ${f.fuentes} · Consulta: 13 oct 2026</p>
         </article>`;
       fondo.querySelector('.ficha__cerrar').addEventListener('click', cerrarFicha);
