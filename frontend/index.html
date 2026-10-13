@@ -21,6 +21,15 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/auth.css">
+  <style>
+    .btn-envivo { display:inline-flex; align-items:center; gap:8px; margin-top:8px; padding:5px 14px 5px 10px; border-radius:999px; text-decoration:none;
+      font-family:var(--font-heading); font-size:0.72rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+      color:var(--text-heading); background:var(--accent-coral); border:1px solid var(--glass-border-hover);
+      transition:transform .2s ease, background .2s ease; }
+    .btn-envivo:hover { background:var(--accent-coral-hover); transform:translateY(-1px); }
+    .btn-envivo__punto { width:8px; height:8px; border-radius:50%; background:var(--text-heading); animation:envivo-pulso 1.2s ease-in-out infinite; }
+    @keyframes envivo-pulso { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.35; transform:scale(1.5); } }
+  </style>
 </head>
 <body data-page="inicio">
 
@@ -169,6 +178,9 @@
             <i data-lucide="map-pin" class="icon-xs" style="color:var(--accent-cyan);"></i>
             <span data-i18n="svc.marco">Marco Geoestadístico INEGI 2024 (corte agosto)</span>
           </p>
+          <a href="medios.html" class="btn-envivo" id="btn-en-vivo" aria-label="Ver Campeche en vivo">
+            <span class="btn-envivo__punto" aria-hidden="true"></span>En vivo
+          </a>
         </div>
         <a href="mando.html" class="btn-circle btn-circle--glass" aria-label="Abrir Centro de Mando">
           <i data-lucide="arrow-right"></i>

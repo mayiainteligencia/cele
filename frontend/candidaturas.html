@@ -21,6 +21,111 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/auth.css">
+
+  <style>
+    .cand { display:flex; flex-direction:column; gap:var(--space-md); }
+    .cand-datos { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:var(--space-sm); }
+    .cand-dato { padding:var(--space-md); border-radius:var(--radius-lg); display:flex; flex-direction:column; gap:2px; }
+    .cand-dato__v { font-family:var(--font-heading); font-size:1.4rem; font-weight:800; color:var(--text-heading); }
+    .cand-dato__l { font-size:0.7rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); }
+    .cand-dato__n { font-size:0.7rem; color:var(--text-muted); }
+    .cand-dos { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:var(--space-md); }
+    .cand-panel { padding:var(--space-lg); border-radius:var(--radius-lg); }
+    .cand-panel h3 { font-family:var(--font-heading); font-size:0.8rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-heading); margin-bottom:var(--space-sm); display:flex; align-items:center; gap:8px; }
+    .cand-panel p, .cand-panel li { font-size:0.85rem; color:var(--text-body); line-height:1.5; }
+    .cand-panel ul { padding-left:1.1rem; display:flex; flex-direction:column; gap:6px; }
+    .chip { display:inline-block; padding:2px 10px; border-radius:999px; font-size:0.72rem; font-weight:700; margin:2px 4px 2px 0; color:var(--text-on-accent); }
+    .chip--morena { background:var(--partido-morena); color:var(--text-heading); }
+    .chip--pt { background:var(--partido-pt); }
+    .chip--pvem { background:var(--partido-pvem); }
+    .chip--mc { background:var(--partido-mc); }
+    .chip--pri { background:var(--partido-pri); }
+    .chip--pan { background:var(--partido-pan); color:var(--text-heading); }
+
+    .bloque { display:grid; grid-template-columns:44px 1fr; border-radius:var(--radius-lg); overflow:hidden; border:1px solid var(--glass-border); }
+    .bloque__lado { writing-mode:vertical-rl; transform:rotate(180deg); display:flex; align-items:center; justify-content:center; font-family:var(--font-heading); font-weight:800; letter-spacing:.12em; color:var(--text-heading); }
+    .bloque--morena .bloque__lado, .bloque--morena .bloque__cuerpo { background:var(--partido-morena); }
+    .bloque--mc .bloque__lado, .bloque--mc .bloque__cuerpo { background:var(--partido-mc); }
+    .bloque--mc .bloque__lado { color:var(--text-on-accent); }
+    .bloque__cuerpo { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:var(--space-sm); padding:var(--space-sm); background-blend-mode:overlay; }
+    .figura { display:flex; align-items:center; gap:var(--space-sm); padding:var(--space-sm); border-radius:var(--radius-md); background:var(--panel-fondo-tenue); }
+    .foto { flex:none; width:68px; height:68px; border-radius:50%; overflow:hidden; display:grid; place-items:center; background:var(--velo-08); border:2px solid var(--glass-border-hover); font-family:var(--font-heading); font-weight:800; color:var(--text-heading); position:relative; }
+    .foto--sm { width:48px; height:48px; font-size:0.85rem; }
+    .foto img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .figura__nombre { font-weight:700; color:var(--text-heading); font-size:0.95rem; }
+    .figura__rol { font-size:0.78rem; color:var(--text-body); }
+
+    .perfiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:var(--space-sm); }
+    .perfil { display:flex; align-items:center; gap:10px; padding:var(--space-sm); border-radius:var(--radius-md); background:var(--velo-05); }
+    .perfil__n { font-size:0.8rem; color:var(--text-heading); font-weight:600; line-height:1.2; }
+
+    .barra { margin-bottom:10px; }
+    .barra__top { display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-heading); font-weight:600; margin-bottom:4px; }
+    .barra__riel { height:14px; border-radius:7px; background:var(--velo-08); overflow:hidden; }
+    .barra__rell { height:100%; border-radius:7px; width:0; transition:width 1.1s cubic-bezier(.2,.8,.2,1); }
+    .barra__rell--morena { background:var(--partido-morena); }
+    .barra__rell--mc { background:var(--partido-mc); }
+    .cand-nota { font-size:0.7rem; color:var(--text-muted); margin-top:4px; }
+
+    .percepcion { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:var(--space-sm); }
+    .percepcion div { display:flex; align-items:center; gap:8px; font-size:0.9rem; color:var(--text-heading); }
+    .percepcion b.m { color:var(--partido-morena); } .percepcion b.c { color:var(--partido-mc); }
+    .cand-fuentes { font-size:0.68rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; }
+    .nombre-link { cursor:pointer; text-decoration:underline; text-decoration-color:var(--glass-border-hover); text-underline-offset:3px; transition:text-decoration-color .2s ease; }
+    .nombre-link:hover, .nombre-link:focus-visible { text-decoration-color:var(--accent-cyan); outline:none; }
+    .ficha-fondo { position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:var(--space-md); background:var(--panel-fondo-alto); backdrop-filter:blur(6px); opacity:0; pointer-events:none; transition:opacity .25s ease; }
+    .ficha-fondo.abierta { opacity:1; pointer-events:auto; }
+    .ficha { width:min(620px,100%); max-height:88vh; overflow:auto; padding:var(--space-lg); border-radius:var(--radius-lg); border:1px solid var(--glass-border); background:var(--panel-fondo-alto); transform:translateY(12px); transition:transform .25s ease; position:relative; }
+    .ficha-fondo.abierta .ficha { transform:none; }
+    .ficha__cerrar { position:absolute; top:12px; right:12px; width:32px; height:32px; border-radius:50%; border:1px solid var(--glass-border); background:var(--velo-05); color:var(--text-heading); cursor:pointer; display:grid; place-items:center; }
+    .ficha__cab { display:flex; align-items:center; gap:var(--space-sm); margin-bottom:var(--space-md); }
+    .ficha__cab h2 { font-family:var(--font-heading); font-size:1.15rem; color:var(--text-heading); }
+    .ficha__cargo { font-size:0.8rem; color:var(--text-body); margin-top:2px; }
+    .ficha h4 { font-size:0.7rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin:var(--space-md) 0 6px; }
+    .ficha__datos { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:6px; font-size:0.82rem; color:var(--text-body); }
+    .ficha__datos b { color:var(--text-heading); }
+    .linea { list-style:none; display:flex; flex-direction:column; gap:8px; border-left:2px solid var(--glass-border-hover); padding-left:12px; }
+    .linea li { font-size:0.82rem; color:var(--text-body); line-height:1.45; }
+    .linea li b { color:var(--accent-cyan); margin-right:6px; }
+    .btn-ojo { display:inline-flex; align-items:center; gap:8px; margin-top:var(--space-md); padding:9px 18px; border-radius:999px; cursor:pointer; font-family:var(--font-heading); font-size:0.78rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--text-heading); background:var(--velo-05); border:1px solid var(--accent-cyan); transition:transform .2s ease, background .2s ease; }
+    .btn-ojo:hover { background:var(--velo-08); transform:translateY(-1px); }
+    .btn-ojo[disabled] { opacity:.5; cursor:progress; transform:none; }
+    .ojo { display:none; flex-direction:column; align-items:center; gap:10px; padding:var(--space-md) 0; color:var(--accent-cyan); }
+    .ojo.activo { display:flex; }
+    .ojo svg { width:150px; height:100px; overflow:visible; }
+    .ojo__rayos { transform-origin:60px 40px; animation:ojo-giro 6s linear infinite; opacity:.55; }
+    .ojo__iris { transform-origin:60px 40px; animation:ojo-latido 1.1s ease-in-out infinite; }
+    .ojo__parpado { transform-origin:60px 40px; animation:ojo-abre .9s ease-out both; }
+    .ojo__barrido { animation:ojo-barrido 1.4s ease-in-out infinite alternate; }
+    .ojo__txt { font-family:monospace; font-size:0.72rem; letter-spacing:.05em; color:var(--text-body); min-height:1.2em; }
+    .ojo__barra { width:180px; height:3px; border-radius:2px; background:var(--velo-08); overflow:hidden; }
+    .ojo__barra i { display:block; height:100%; width:0; background:var(--accent-cyan); }
+    .ojo.activo .ojo__barra i { animation:ojo-carga 2.8s ease-in-out forwards; }
+    @keyframes ojo-giro { to { transform:rotate(360deg); } }
+    @keyframes ojo-latido { 0%,100% { transform:scale(1); } 50% { transform:scale(1.18); } }
+    @keyframes ojo-abre { from { transform:scaleY(.05); } to { transform:scaleY(1); } }
+    @keyframes ojo-barrido { from { transform:translateX(-34px); } to { transform:translateX(34px); } }
+    @keyframes ojo-carga { to { width:100%; } }
+    .resultados .caso { opacity:0; transform:translateY(8px); animation:caso-entra .45s ease forwards; }
+    @keyframes caso-entra { to { opacity:1; transform:none; } }
+    .enlaces { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+    .enlaces a { font-size:0.68rem; padding:2px 9px; border-radius:999px; text-decoration:none; color:var(--accent-cyan); border:1px solid var(--glass-border-hover); }
+    .enlaces a:hover { background:var(--velo-08); }
+    @media (prefers-reduced-motion: reduce) { .ojo__rayos, .ojo__iris, .ojo__barrido { animation:none; } }
+    .ficha__fuentes { font-size:0.7rem; color:var(--text-muted); margin-top:var(--space-md); }
+    .caso { padding:10px 12px; border-radius:var(--radius-md); background:var(--velo-05); border-left:3px solid var(--text-muted); margin-bottom:8px; }
+    .caso--firme { border-left-color:var(--accent-coral); }
+    .caso--proceso { border-left-color:var(--accent-warm); }
+    .caso--senal { border-left-color:var(--accent-blue); }
+    .caso__nivel { display:inline-block; font-size:0.65rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; padding:2px 8px; border-radius:999px; margin-bottom:4px; color:var(--text-on-accent); background:var(--text-muted); }
+    .caso--firme .caso__nivel { background:var(--accent-coral); }
+    .caso--proceso .caso__nivel { background:var(--accent-warm); }
+    .caso--senal .caso__nivel { background:var(--accent-blue); color:var(--text-heading); }
+    .caso__t { font-size:0.85rem; font-weight:700; color:var(--text-heading); }
+    .caso__d { font-size:0.8rem; color:var(--text-body); line-height:1.45; margin-top:2px; }
+    .caso__f { font-size:0.68rem; color:var(--text-muted); margin-top:4px; }
+    .leyenda { font-size:0.68rem; color:var(--text-muted); line-height:1.5; margin-top:6px; }
+  </style>
 </head>
 <body data-page="candidaturas">
 
@@ -43,12 +148,107 @@
         </div>
       </section>
 
-      <section class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg);">
-        <h3 class="text-h3" style="margin-bottom:var(--space-sm);">Matriz de Trayectoria y Registros</h3>
-        <p style="font-size:0.85rem; color:var(--text-body);">
-          Módulo de contraste informativo basado en fuentes públicas verificables (Gaceta Oficial, Plataforma de Transparencia, Medios acreditados).
-        </p>
-      </section>
+      <div class="cand">
+
+        <!-- Datos clave -->
+        <section class="cand-datos" aria-label="Datos clave de Campeche">
+          <div class="cand-dato glass-strong"><span class="cand-dato__l">Población</span><span class="cand-dato__v">928,363</span><span class="cand-dato__n">Censo 2020</span></div>
+          <div class="cand-dato glass-strong"><span class="cand-dato__l">Lista nominal</span><span class="cand-dato__v">702,182</span><span class="cand-dato__n">INE 01 OCT 2026</span></div>
+          <div class="cand-dato glass-strong"><span class="cand-dato__l">Participación previa</span><span class="cand-dato__v">62.85%</span><span class="cand-dato__n">Gubernatura 2021</span></div>
+          <div class="cand-dato glass-strong"><span class="cand-dato__l">Gobernadora</span><span class="cand-dato__v" style="font-size:1rem;">Layda Sansores San Román</span><span class="cand-dato__n"><span class="chip chip--morena">MORENA</span></span></div>
+        </section>
+
+        <!-- Congreso + frase -->
+        <section class="cand-dos">
+          <div class="cand-panel glass-strong">
+            <h3><i data-lucide="landmark" class="icon-xs"></i> Congreso local</h3>
+            <p><b>Oficialismo 20:</b> <span class="chip chip--morena">MORENA 16</span><span class="chip chip--pt">PT 2</span><span class="chip chip--pvem">PVEM 2</span></p>
+            <p style="margin-top:6px;"><b>Oposición 15:</b> <span class="chip chip--mc">MC 10</span><span class="chip chip--pri">PRI 3</span><span class="chip chip--pan">PAN 2</span></p>
+          </div>
+          <div class="cand-panel glass-strong">
+            <h3><i data-lucide="message-square-quote" class="icon-xs"></i> En una frase</h3>
+            <p>Campeche dejó de ser una elección cómoda para el oficialismo. Hoy es una competencia abierta que premiará a quien conecte mejor estructura, territorio y decisión.</p>
+          </div>
+        </section>
+
+        <!-- Bloques de candidatos -->
+        <section class="bloque bloque--morena" aria-label="Figuras de MORENA">
+          <div class="bloque__lado">MORENA</div>
+          <div class="bloque__cuerpo">
+            <div class="figura"><span class="foto" data-ini="PG"><img src="assets/images/candidatos/pablogutierrezlazarus.webp" alt="Pablo Gutiérrez Lazarus"></span><div><div class="figura__nombre">Pablo Gutiérrez Lazarus</div><div class="figura__rol">Coordinador estatal y virtual abanderado</div></div></div>
+            <div class="figura"><span class="foto" data-ini="LS"><img src="assets/images/candidatos/laydaSansores.jpg" alt="Layda Sansores"></span><div><div class="figura__nombre">Layda Sansores</div><div class="figura__rol">Centro de poder y evaluación del gobierno</div></div></div>
+          </div>
+        </section>
+
+        <section class="bloque bloque--mc" aria-label="Figuras de Movimiento Ciudadano">
+          <div class="bloque__lado">MC</div>
+          <div class="bloque__cuerpo">
+            <div class="figura"><span class="foto" data-ini="EF"><img src="assets/images/candidatos/eliseofernandez.webp" alt="Eliseo Fernández Montúfar"></span><div><div class="figura__nombre">Eliseo Fernández Montúfar</div><div class="figura__rol">Principal figura opositora</div></div></div>
+            <div class="figura"><span class="foto" data-ini="BR"><img src="assets/images/candidatos/bibyrabelo.jpeg" alt="Biby Rabelo"></span><div><div class="figura__nombre">Biby Rabelo</div><div class="figura__rol">Alcaldesa y alternativa competitiva</div></div></div>
+          </div>
+        </section>
+
+        <!-- Perfiles a seguir -->
+        <section class="cand-panel glass-strong">
+          <h3><i data-lucide="users" class="icon-xs"></i> Perfiles a seguir</h3>
+          <div class="perfiles">
+            <div class="perfil"><span class="foto foto--sm" data-ini="FF"><img src="assets/images/candidatos/franciscoFarias.jpg" alt="Francisco Farías Bailón"></span><div><div class="perfil__n">Francisco Farías Bailón</div><span class="chip chip--mc">MC</span></div></div>
+            <div class="perfil"><span class="foto foto--sm" data-ini="PA"><img src="assets/images/candidatos/paul_arce.jpg" alt="Paul Arce Ontiveros"></span><div><div class="perfil__n">Paul Arce Ontiveros</div><span class="chip chip--mc">MC</span></div></div>
+            <div class="perfil"><span class="foto foto--sm" data-ini="CC"><img src="assets/images/candidatos/christiancastro.jpeg" alt="Christian Castro Bello"></span><div><div class="perfil__n">Christian Castro Bello</div><span class="chip chip--pri">PRI</span></div></div>
+            <div class="perfil"><span class="foto foto--sm" data-ini="NM"><img src="assets/images/candidatos/nellymarquez.jpg" alt="Nelly Márquez"></span><div><div class="perfil__n">Nelly Márquez</div><span class="chip chip--pan">PAN</span></div></div>
+          </div>
+        </section>
+
+        <!-- Encuestas -->
+        <section class="cand-dos">
+          <div class="cand-panel glass-strong">
+            <h3><i data-lucide="bar-chart-3" class="icon-xs"></i> Carrera abierta · Preferencia por partido</h3>
+            <div class="barra"><div class="barra__top"><span>MC</span><span>32.0%</span></div><div class="barra__riel"><div class="barra__rell barra__rell--mc" data-w="32.0"></div></div></div>
+            <div class="barra"><div class="barra__top"><span>MORENA</span><span>30.1%</span></div><div class="barra__riel"><div class="barra__rell barra__rell--morena" data-w="30.1"></div></div></div>
+            <p class="cand-nota">FactoMétrica · AGO 2026 · Margen de error ±3.4%</p>
+          </div>
+          <div class="cand-panel glass-strong">
+            <h3><i data-lucide="swords" class="icon-xs"></i> Careo · CE Research · JUL 2026</h3>
+            <div class="barra"><div class="barra__top"><span>Pablo Gutiérrez</span><span>40.0%</span></div><div class="barra__riel"><div class="barra__rell barra__rell--morena" data-w="40.0"></div></div></div>
+            <div class="barra"><div class="barra__top"><span>Eliseo Fernández</span><span>35.8%</span></div><div class="barra__riel"><div class="barra__rell barra__rell--mc" data-w="35.8"></div></div></div>
+          </div>
+        </section>
+
+        <!-- Qué se elige + lectura -->
+        <section class="cand-dos">
+          <div class="cand-panel glass-strong">
+            <h3><i data-lucide="clipboard-list" class="icon-xs"></i> Qué se elige en 2027</h3>
+            <ul>
+              <li>Gubernatura</li>
+              <li><b>35</b> diputaciones locales</li>
+              <li><b>13</b> ayuntamientos</li>
+              <li><b>22</b> juntas municipales</li>
+            </ul>
+          </div>
+          <div class="cand-panel glass-strong">
+            <h3><i data-lucide="target" class="icon-xs"></i> Lectura estratégica</h3>
+            <ul>
+              <li>La contienda se concentra entre MORENA y MC.</li>
+              <li>MORENA conserva gobierno, Congreso y estructura territorial.</li>
+              <li>MC concentra el crecimiento y tiene más de un perfil competitivo.</li>
+              <li>La unidad de MORENA con PT y PVEM será una variable crítica.</li>
+              <li>PRI y PAN pueden influir mediante alianzas y transferencia de voto.</li>
+              <li>La elección se definirá por cohesión, candidato y operación territorial.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="cand-panel glass-strong">
+          <h3><i data-lucide="gauge" class="icon-xs"></i> Percepción</h3>
+          <div class="percepcion">
+            <div><b class="m">MORENA</b> conserva la maquinaria.</div>
+            <div><b class="c">MC</b> concentra el crecimiento.</div>
+            <div>La elección se decidirá en el territorio.</div>
+          </div>
+        </section>
+
+        <p class="cand-fuentes">Fuentes: INE · INEGI · IEEC · Congreso del Estado · FactoMétrica · CE Research — Corte 12 oct 2026</p>
+      </div>
 
     </div>
   
@@ -67,6 +267,203 @@
   <script src="js/i18n.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
-  <script>lucide.createIcons();</script>
+  <script>
+    lucide.createIcons();
+    // Fotos: si el archivo no existe en assets/candidatos/, se queda la inicial.
+    document.querySelectorAll('.foto').forEach((f) => {
+      const img = f.querySelector('img');
+      f.insertAdjacentText('afterbegin', f.dataset.ini);
+      img.addEventListener('error', () => img.remove());
+    });
+    requestAnimationFrame(() => setTimeout(() => {
+      document.querySelectorAll('.barra__rell').forEach((b) => { b.style.width = (b.dataset.w * 2) + '%'; });
+    }, 150));
+  </script>
+  <script>
+    /* Fichas biográficas. Datos de fuentes públicas (Wikipedia, Wikipol, SIL de
+       Gobernación, portales municipales y medios), consultados el 13 oct 2026.
+       Se omiten datos no verificables. Conviene contrastar antes de uso oficial. */
+    const FICHAS = {
+      'Pablo Gutiérrez Lazarus': { partido:'MORENA', clase:'morena', cargo:'Coordinador Estatal de la Defensa de la Transformación en Campeche (desde 25 ago 2026)',
+        datos:[['Nacimiento','29 ago 1983, Ciudad de México'],['Formación','Lic. en Ciencias Políticas y Administración Pública (Universidad Iberoamericana)'],['Arraigo','Ciudad del Carmen, Campeche']],
+        linea:[['2015–2018','Presidente municipal de Carmen (PAN)'],['2018','Buscó la reelección y perdió por un margen estrecho'],['2020','Se suma a Morena'],['2021–2024','Presidente municipal de Carmen (Morena)'],['2024–2027','Reelecto en Carmen (Morena-PVEM-PT)'],['Jun 2026','Solicita licencia al cargo'],['25 ago 2026','Morena lo designa coordinador estatal; virtual aspirante a la gubernatura 2027']],
+        fuentes:'Wikipedia · Wikipol · Infobae' },
+      'Layda Sansores': { partido:'MORENA', clase:'morena', cargo:'Gobernadora de Campeche (desde 16 sep 2021)',
+        datos:[['Nacimiento','7 ago 1945, San Francisco de Campeche'],['Formación','Normalista (Escuela Nacional de Maestros); Lic. en Psicología (UNAM)'],['Familia','Hija de Carlos Sansores Pérez, exgobernador de Campeche']],
+        linea:[['1991–1994','Diputada federal'],['1994–2000','Senadora'],['1996','Renuncia al PRI'],['1997','Candidata del PRD a la gubernatura de Campeche'],['2006–2009','Diputada federal'],['2012–2018','Senadora'],['2018–2021','Alcaldesa de Álvaro Obregón, CDMX'],['2021','Gana la gubernatura (Morena); fin de 92 años de gobiernos del PRI'],['Gestión','Conocida por su programa semanal “Martes del Jaguar”']],
+        fuentes:'Wikipedia · El Economista · Gobierno de Campeche' },
+      'Eliseo Fernández Montúfar': { partido:'MC', clase:'mc', cargo:'Principal figura de Movimiento Ciudadano en Campeche; exalcalde de Campeche',
+        datos:[['Nacimiento','23 nov 1977, Campeche'],['Formación','Lic. en Mercadotecnia (Anáhuac Mayab); Lic. en Informática (ITC)']],
+        linea:[['2012–2015','Regidor de Campeche (PAN)'],['2015–2018','Diputado local; presidente de la Mesa Directiva'],['2018–2021','Presidente municipal de Campeche (MC)'],['2021','Candidato de MC a la gubernatura'],['Después','Procesos administrativos y legales por su gestión 2018–2021; él los califica de persecución política y ha obtenido amparos (según medios)']],
+        fuentes:'Wikipol · Municipio de Campeche · El Financiero · La Jornada' },
+      'Biby Rabelo': { partido:'MC', clase:'mc', cargo:'Presidenta municipal de Campeche (reelecta 2024–2027)',
+        datos:[['Nombre completo','Biby Karen Rabelo de la Torre'],['Nacimiento','22 abr 1989, Villahermosa, Tabasco (radica en Campeche desde 1993)'],['Formación','Lic. en Administración de Empresas (UNID); Maestría en Administración Pública (UVM, 2023)']],
+        linea:[['2015–2018','Gestora ciudadana en el Distrito II local'],['2018–2021','Diputada local por el Distrito II'],['2021–2024','Presidenta municipal de Campeche (MC); la más joven en la historia del municipio'],['2024–2027','Reelecta']],
+        fuentes:'Wikipedia · Wikipol · Municipio de Campeche' },
+      'Francisco Farías Bailón': { partido:'MC', clase:'mc', cargo:'Diputado federal plurinominal (LXVI Legislatura, 2024–2027)',
+        datos:[['Nombre completo','Francisco Javier Farías Bailón'],['Nacimiento','26 jul 1991, Ciudad del Carmen'],['Formación','Lic. en Ciencias Políticas y Relaciones Internacionales (Universidad Modelo)']],
+        linea:[['2018–2021','Regidor de Candelaria (PAN)'],['2021–2024','Presidente municipal de Candelaria'],['2023','Se suma a Movimiento Ciudadano'],['2024–2027','Diputado federal; comisiones de Pesca, Turismo y Federalismo']],
+        fuentes:'SIL — Secretaría de Gobernación · Heraldo de México' },
+      'Paul Arce Ontiveros': { partido:'MC', clase:'mc', cargo:'Dirigente estatal de Movimiento Ciudadano en Campeche (desde nov 2024)',
+        datos:[['Nombre completo','Paul Alfredo Arce Ontiveros'],['Formación','Ingeniería Civil'],['Vínculo','Cercano al grupo de Eliseo Fernández']],
+        linea:[['2015','Parte del equipo que ganó el Distrito II local'],['—','Segundo regidor del Ayuntamiento de Campeche'],['2021','Alcalde sustituto de Campeche tras la licencia de Eliseo Fernández'],['Después','Diputado local; coordinador de la bancada de MC'],['Nov 2024','Asume la dirigencia estatal de MC']],
+        fuentes:'La Jornada Maya · SaberVotar' },
+      'Christian Castro Bello': { partido:'PRI', clase:'pri', cargo:'Diputado federal plurinominal (LXVI Legislatura, 2024–2027)',
+        datos:[['Nombre completo','Christian Mishel Castro Bello'],['Origen','San Francisco de Campeche'],['Formación','Licenciado en Derecho'],['Familia política','Sobrino de Alejandro Moreno Cárdenas']],
+        linea:[['2010–2012','Subdirector administrativo, Procuraduría del Estado'],['2015–2018','Diputado local; coordinador del PRI'],['—','Delegado federal de SEDESOL en Campeche'],['2019–2020','Secretario de Desarrollo Social y Humano de Campeche'],['2021','Candidato de “Va por Campeche” (PRI-PAN-PRD) a la gubernatura'],['2024–2027','Diputado federal; comisiones de Bienestar, Defensa y Hacienda']],
+        fuentes:'Wikipedia · SIL — Gobernación · La Jornada' },
+      'Nelly Márquez': { partido:'PAN', clase:'pan', cargo:'Presidenta estatal del PAN en Campeche (periodo 2024–2027)',
+        datos:[['Nombre completo','Nelly del Carmen Márquez Zapata'],['Elección como dirigente','Marzo 2025, Consejo Estatal del PAN']],
+        linea:[['2006–2009','Diputada local; presidenta de la Comisión de Desarrollo Social'],['2007–2010','Integrante del CEN del PAN'],['2007–2013','Consejera nacional del PAN'],['2009–2012','Diputada federal (plurinominal)'],['2015–2018','Diputada federal (plurinominal)'],['2025','Dirigente estatal del PAN en Campeche']],
+        fuentes:'SIL — Gobernación · Wikipol · La Jornada Maya' },
+    };
+
+    const NIVELES = { firme:'Resolución firme', proceso:'En proceso', senal:'Señalamiento sin resolución', rumor:'Rumor / no verificado' };
+
+    /* Antecedentes legales. Regla: “resolución firme” solo si hay fallo de un
+       tribunal; “en proceso” si hay denuncia/carpeta/audiencia abierta; “señalamiento”
+       si es auditoría, acusación política o nota de prensa sin fallo. No se incluyen
+       cifras que no pudimos confirmar. Presunción de inocencia aplica a todos. */
+    const CASOS = {
+      'Layda Sansores': [
+        { n:'firme', t:'Violencia política contra las mujeres en razón de género (2022–2023)', d:'Por expresiones en su programa “Martes del Jaguar” contra diputadas del PRI, la Sala Regional Especializada del TEPJF la sancionó (disculpa pública e inscripción en el registro nacional de personas sancionadas). La Sala Superior confirmó la responsabilidad. Es un asunto electoral, no penal.', f:'TEPJF · El Financiero · Infobae' },
+        { n:'senal', t:'Quejas por imparcialidad y uso de recursos públicos', d:'Su programa semanal ha motivado denuncias ante el INE por presunta vulneración de neutralidad. No encontramos resolución definitiva en las fuentes consultadas.', f:'Medios locales' } ],
+      'Eliseo Fernández Montúfar': [
+        { n:'firme', t:'Inhabilitación de 20 años anulada', d:'El Tribunal de Justicia Administrativa lo inhabilitó por irregularidades del ejercicio 2020. Un Tribunal Colegiado federal le concedió amparo directo y ordenó dejar sin efectos la sanción. Hoy no tiene esa inhabilitación.', f:'La Jornada · La Jornada Maya' },
+        { n:'proceso', t:'Denuncias de ASECAM y órdenes de aprehensión por presunto peculado y otros delitos', d:'Los medios reportan órdenes de aprehensión y acusaciones por peculado, recursos de procedencia ilícita, defraudación fiscal y asociación delictuosa. Sin sentencia condenatoria en las fuentes. Él lo califica de persecución política. Su situación procesal actual debe confirmarse.', f:'La Jornada · Expansión' } ],
+      'Pablo Gutiérrez Lazarus': [
+        { n:'senal', t:'Denuncias por presunto peculado y adeudos (IMSS, SAT) en el Ayuntamiento de Carmen', d:'Medios reportan denuncias de ASECAM/Fiscalía Anticorrupción e IMSS, adeudos fiscales y laudos laborales sin pagar, sobre todo de su primera gestión (2015–2018). Las cifras varían entre notas y no las confirmamos, por eso no se muestran. No hay sentencia en las fuentes.', f:'La Jornada · Expansión · Heraldo de México' },
+        { n:'senal', t:'Señalamientos electorales', d:'Se le ha acusado de uso indebido de recursos en campaña y reelección ante el tribunal electoral local. Sin resolución confirmada.', f:'Diario Cambio 22' } ],
+      'Biby Rabelo': [
+        { n:'proceso', t:'Caso por presunto desvío de ~32 millones de pesos (Ayuntamiento de Campeche / SMAPAC)', d:'Compareció ante un juez de control, junto con Paul Arce y otros funcionarios, por denuncias de la Secretaría Anticorrupción estatal. La defensa pidió prórroga. Dice cooperar y que hay trasfondo político. Sin sentencia.', f:'La Jornada · La Jornada Maya · SDP Noticias' },
+        { n:'senal', t:'Observaciones de ASECAM a la cuenta pública', d:'Auditoría con observaciones de gasto no justificado. El PAN denunció posible mal uso de créditos. Las observaciones no son sanción firme.', f:'Por Esto · Heraldo de México' } ],
+      'Paul Arce Ontiveros': [
+        { n:'proceso', t:'Caso por presunto desvío de ~32 millones de pesos (SMAPAC y obra pública)', d:'Compareció ante juez de control por carpetas de la Secretaría Anticorrupción por presunto peculado. Él las llama “carpetas inventadas” y persecución política, y afirma que acusaciones previas se han caído. Sin sentencia.', f:'Milenio · La Jornada · 24 Horas' } ],
+      'Francisco Farías Bailón': [
+        { n:'senal', t:'Probable daño al erario en Candelaria (2021–2024)', d:'ASECAM reportó un probable daño por más de 45 millones de pesos: fondos de seguridad pública sin justificar, faltantes de ingresos y cheques sin comprobación. Es hallazgo de auditoría; no encontramos sentencia ni su postura pública.', f:'Por Esto' } ],
+      'Christian Castro Bello': [
+        { n:'rumor', t:'Menciones en investigaciones sobre redes de propiedades', d:'Su nombre aparece en discursos y notas sobre allegados a la administración priista, sin resolución judicial ni imputación formal confirmada. Tratar como no verificado.', f:'Notas periodísticas' },
+        { n:'senal', t:'Quejas de la oposición por programas sociales', d:'Morena y MC presentaron quejas electorales y administrativas sobre manejo de programas. Sin resultado conocido. Además, su parentesco con “Alito” Moreno lo expone a ataques políticos.', f:'Heraldo de México' } ],
+      'Nelly Márquez': [
+        { n:'senal', t:'Disputa interna por la dirigencia del PAN', d:'Sectores del partido la acusaron de irregularidades en el padrón interno y delitos electorales. El Tribunal Electoral local ordenó reponer o invalidar procesos internos, y ella lo rechaza y denuncia intromisión del gobierno estatal. No hay cargos penales en las fuentes.', f:'Por Esto · Campeche Hoy' } ],
+    };
+
+    /* Dominios para armar enlaces de búsqueda por sitio. No se enlazan notas
+       concretas porque no pudimos verificar cada URL: la búsqueda lleva al
+       medio o tribunal citado y muestra la nota original. */
+    const DOMINIOS = {
+      'La Jornada':'jornada.com.mx', 'La Jornada Maya':'lajornadamaya.mx', 'Expansión':'expansion.mx',
+      'El Financiero':'elfinanciero.com.mx', 'Infobae':'infobae.com', 'TEPJF':'te.gob.mx',
+      'Por Esto':'poresto.com', 'Heraldo de México':'heraldodemexico.com.mx', 'SDP Noticias':'sdpnoticias.com',
+      'Milenio':'milenio.com', '24 Horas':'24-horas.mx', 'Diario Cambio 22':'diariocambio22.mx', 'Campeche Hoy':'campechehoy.mx',
+    };
+    const PASOS = ['Consultando tribunales electorales…','Revisando auditorías ASECAM…','Cruzando denuncias y carpetas…','Verificando fuentes periodísticas…','Clasificando nivel de certeza…'];
+
+    function enlacesFuente(nombre, c) {
+      const clave = c.t.split(' ').slice(0, 5).join(' ');
+      const q = (dom) => `https://www.google.com/search?q=${encodeURIComponent(`${dom ? 'site:' + dom + ' ' : ''}"${nombre}" ${clave}`)}`;
+      const links = c.f.split(' · ').map((s) => DOMINIOS[s] ? `<a href="${q(DOMINIOS[s])}" target="_blank" rel="noopener noreferrer">${s} ↗</a>` : '');
+      links.push(`<a href="${q('')}" target="_blank" rel="noopener noreferrer">Buscar más ↗</a>`);
+      return `<div class="enlaces">${links.join('')}</div>`;
+    }
+
+    function casosHtml(nombre) {
+      const lista = CASOS[nombre] || [];
+      const cuerpo = lista.length
+        ? lista.map((c, i) => `<div class="caso caso--${c.n}" style="animation-delay:${i * 0.25}s"><span class="caso__nivel">${NIVELES[c.n]}</span><div class="caso__t">${c.t}</div><div class="caso__d">${c.d}</div><div class="caso__f">Fuente: ${c.f}</div>${enlacesFuente(nombre, c)}</div>`).join('')
+        : '<p class="caso__d">Sin antecedentes legales encontrados en fuentes públicas.</p>';
+      return `<h4>Antecedentes legales y señalamientos</h4>
+        <button type="button" class="btn-ojo" id="btn-buscar-procesos"><i data-lucide="scan-eye" class="icon-xs"></i><span>Buscar procesos (actuales e históricos)</span></button>
+        <div class="ojo" id="ojo" aria-live="polite">
+          <svg viewBox="0 0 120 80" aria-hidden="true">
+            <g class="ojo__rayos" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              ${Array.from({ length: 16 }, (_, k) => `<line x1="60" y1="-8" x2="60" y2="-2" transform="rotate(${k * 22.5} 60 40)"/>`).join('')}
+            </g>
+            <g class="ojo__parpado">
+              <path d="M6 40 Q60 -6 114 40 Q60 86 6 40 Z" fill="none" stroke="currentColor" stroke-width="2.5"/>
+              <g class="ojo__iris"><circle cx="60" cy="40" r="17" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="60" cy="40" r="7" fill="currentColor"/></g>
+              <line class="ojo__barrido" x1="60" y1="8" x2="60" y2="72" stroke="currentColor" stroke-width="1.5" opacity=".7"/>
+            </g>
+          </svg>
+          <div class="ojo__txt" id="ojo-txt"></div>
+          <div class="ojo__barra"><i></i></div>
+        </div>
+        <div class="resultados" id="resultados" hidden>${cuerpo}
+          <p class="leyenda"><b>Cómo leerlo:</b> “Resolución firme” = hay fallo de un tribunal. “En proceso” = denuncia o audiencia abierta, sin sentencia. “Señalamiento” = auditoría, acusación política o nota de prensa sin fallo. “Rumor” = sin sustento verificable. Toda persona es inocente hasta que un tribunal resuelva lo contrario. Los enlaces abren una búsqueda en el medio o tribunal citado; contrasta con expedientes oficiales.</p>
+        </div>`;
+    }
+
+    function iniciarBusqueda() {
+      const btn = document.getElementById('btn-buscar-procesos');
+      const ojo = document.getElementById('ojo');
+      const txt = document.getElementById('ojo-txt');
+      const res = document.getElementById('resultados');
+      btn.disabled = true;
+      res.hidden = true;
+      res.innerHTML = res.innerHTML; // reinicia animaciones de entrada
+      ojo.classList.remove('activo');
+      void ojo.offsetWidth;
+      ojo.classList.add('activo');
+      let p = 0;
+      txt.textContent = PASOS[0];
+      const t = setInterval(() => { p = (p + 1) % PASOS.length; txt.textContent = PASOS[p]; }, 560);
+      setTimeout(() => {
+        clearInterval(t);
+        ojo.classList.remove('activo');
+        res.hidden = false;
+        btn.disabled = false;
+        btn.querySelector('span').textContent = 'Repetir búsqueda';
+        res.scrollIntoView({ behavior:'smooth', block:'nearest' });
+      }, 2900);
+    }
+
+    const fondo = document.createElement('div');
+    fondo.className = 'ficha-fondo';
+    fondo.setAttribute('role', 'dialog');
+    fondo.setAttribute('aria-modal', 'true');
+    document.body.appendChild(fondo);
+
+    function cerrarFicha() { fondo.classList.remove('abierta'); }
+    function abrirFicha(nombre, fotoSrc, ini) {
+      const f = FICHAS[nombre];
+      if (!f) return;
+      fondo.innerHTML = `
+        <article class="ficha">
+          <button type="button" class="ficha__cerrar" aria-label="Cerrar"><i data-lucide="x" class="icon-xs"></i></button>
+          <div class="ficha__cab">
+            <span class="foto" data-ini="${ini}">${ini}${fotoSrc ? `<img src="${fotoSrc}" alt="${nombre}">` : ''}</span>
+            <div><h2>${nombre} <span class="chip chip--${f.clase}">${f.partido}</span></h2><p class="ficha__cargo">${f.cargo}</p></div>
+          </div>
+          <h4>Datos</h4>
+          <div class="ficha__datos">${f.datos.map(([k, v]) => `<div><b>${k}:</b> ${v}</div>`).join('')}</div>
+          <h4>Trayectoria</h4>
+          <ul class="linea">${f.linea.map(([a, t]) => `<li><b>${a}</b>${t}</li>`).join('')}</ul>
+          ${casosHtml(nombre)}
+          <p class="ficha__fuentes">Fuentes públicas: ${f.fuentes} · Consulta: 13 oct 2026</p>
+        </article>`;
+      fondo.querySelector('.ficha__cerrar').addEventListener('click', cerrarFicha);
+      document.getElementById('btn-buscar-procesos').addEventListener('click', iniciarBusqueda);
+      fondo.querySelectorAll('.foto img').forEach((i) => i.addEventListener('error', () => i.remove()));
+      fondo.classList.add('abierta');
+      lucide.createIcons();
+    }
+
+    fondo.addEventListener('click', (e) => { if (e.target === fondo) cerrarFicha(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarFicha(); });
+
+    document.querySelectorAll('.figura__nombre, .perfil__n').forEach((el) => {
+      const nombre = el.textContent.trim();
+      if (!FICHAS[nombre]) return;
+      const cont = el.closest('.figura, .perfil');
+      const img = cont.querySelector('.foto img');
+      const ini = cont.querySelector('.foto').dataset.ini;
+      el.classList.add('nombre-link');
+      el.setAttribute('role', 'button');
+      el.tabIndex = 0;
+      const abrir = () => abrirFicha(nombre, img ? img.getAttribute('src') : '', ini);
+      el.addEventListener('click', abrir);
+      el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); } });
+    });
+  </script>
 </body>
 </html>
