@@ -20,16 +20,17 @@
     /* ── Medios layout ─────────────────────────────── */
     .medios-workspace {
       display: grid;
-      grid-template-columns: 1fr 380px;
+      grid-template-columns: minmax(0, 1fr) 380px;
       gap: var(--space-md);
       align-items: start;
     }
+    .medios-main, .medios-rail { min-width: 0; overflow-wrap: anywhere; }
     .medios-main { display: flex; flex-direction: column; gap: var(--space-md); }
     .medios-rail { display: flex; flex-direction: column; gap: var(--space-md); }
 
     @media (max-width: 1024px) {
       .medios-workspace {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
       }
     }
 
@@ -45,6 +46,7 @@
       transition: all 0.2s ease-in-out;
       position: relative;
       overflow: hidden;
+      flex-shrink: 0;
     }
     .session-card:hover {
       border-color: var(--cyan-tinte-md);
@@ -216,7 +218,7 @@
       border-radius: 6px;
       padding: 8px 12px;
       display: grid;
-      grid-template-columns: 120px 1fr auto;
+      grid-template-columns: 120px minmax(0, 1fr) auto;
       gap: 12px;
       align-items: flex-start;
       animation: fadeInLine 0.3s ease;
@@ -1016,6 +1018,16 @@
     await cargarSesionesActivas();
   }
 
+  async function detenerSesionPorId(id) {
+    if (wsPool[id]) { wsPool[id].close(); delete wsPool[id]; }
+    if (demoTimers[id]) { clearInterval(demoTimers[id]); delete demoTimers[id]; }
+    try { await fetch(`${API}/stop/${id}`, { method: 'DELETE' }); } catch (e) {}
+    const local = activeSessionsMap[id];
+    if (local) local.status = 'stopped';
+    if (sesionEnFoco === id) setSesionActiva(false, local ? local.emisora_nombre : '');
+    await cargarSesionesActivas();
+  }
+
   async function detenerSesion() {
     if (!sesionEnFoco) return;
     const s = activeSessionsMap[sesionEnFoco];
@@ -1281,7 +1293,10 @@
     let testigos = [];
     try {
       const r = await fetch(`${API}/testigos`, { signal: AbortSignal.timeout(3000) });
-      if (r.ok) testigos = await r.json();
+      if (r.ok) {
+        const data = await r.json();
+        testigos = Array.isArray(data) ? data : (data.testigos || []);
+      }
     } catch (e) {
       testigos = getDemoTestigos();
     }
@@ -1494,6 +1509,8 @@
             ${(s.keywords || []).slice(0, 4).map(kw => `<span style="font-size:0.58rem; background:var(--cyan-tinte-xs); border:1px solid var(--cyan-tinte-sm); padding:1px 4px; border-radius:3px; color:var(--accent-cyan);">${kw}</span>`).join('')}
             ${(s.keywords || []).length > 4 ? `<span style="font-size:0.58rem; background:var(--velo-05); padding:1px 4px; border-radius:3px; color:var(--text-muted);">+${s.keywords.length - 4}</span>` : ''}
           </div>
+          ${s.status === 'stopped' ? '' : `<button type="button" onclick="event.stopPropagation(); detenerSesionPorId('${s.sesion_id}')"
+            style="margin-top:6px; width:100%; padding:4px; font-size:0.68rem; font-weight:700; cursor:pointer; border-radius:var(--radius-xs); background:transparent; color:var(--sev-critica); border:1px solid var(--sev-critica);">Detener</button>`}
         </div>`;
     }).join('');
     lucide.createIcons();
