@@ -150,21 +150,46 @@
     </section>
 
 
-    <!-- Consola de Agentes de IA en Segundo Plano (inferior izquierda) -->
-    <section class="stats-card glass-strong animate-fade-in-left delay-2" style="background: var(--panel-fondo-alto); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); width: 340px;" aria-label="Consola de Agentes">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--velo-08); padding-bottom:10px; margin-bottom:5px;">
+    <!-- Consola de Salud del Sistema, Redes Sociales y Agentes IA (inferior izquierda) -->
+    <section class="stats-card glass-strong animate-fade-in-left delay-2" style="background: var(--panel-fondo-alto); backdrop-filter: blur(20px); border: 1px solid var(--cyan-tinte-md); width: 400px;" aria-label="Consola de Agentes y Salud del Sistema">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--velo-08); padding-bottom:8px; margin-bottom:8px;">
         <div style="display:flex; align-items:center; gap:8px;">
-          <span style="display:inline-block; width:8px; height:8px; background:var(--accent-cyan); border-radius:50%;" class="animate-pulse"></span>
-          <strong style="color:var(--text-heading); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-family:var(--font-heading);" data-i18n="agents.titulo">Agentes de IA Activos</strong>
+          <span class="ce-dot-online"></span>
+          <strong style="color:var(--text-heading); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; font-family:var(--font-heading);">Servidores Activos · Construye en Tiempo Real la Elección</strong>
         </div>
         <i data-lucide="cpu" class="icon-xs" style="color:var(--accent-cyan);"></i>
       </div>
+
+      <!-- Píldoras de Estado Inmediato al Abrir -->
+      <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--proc-recomendacion-bg); border:1px solid var(--status-success); border-radius:6px; padding:5px 8px; font-size:0.7rem;">
+          <span style="color:var(--status-success); font-weight:700;">🟢 Salud del Sistema: Servidores activos</span>
+          <span style="font-family:var(--font-mono); color:var(--text-heading);">12/12 Nodos · 8ms</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--proc-calculo-bg); border:1px solid var(--accent-purple); border-radius:6px; padding:5px 8px; font-size:0.7rem;">
+          <span style="color:var(--accent-purple); font-weight:700;">📡 Redes Sociales: Construye en tiempo real la elección</span>
+          <span style="font-family:var(--font-mono); color:var(--text-heading);">+47.2K int/h</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--proc-inferencia-bg); border:1px solid var(--accent-coral); border-radius:6px; padding:5px 8px; font-size:0.7rem;">
+          <span style="color:var(--accent-coral); font-weight:700;">🎯 Estrategias de campo activadas</span>
+          <span style="font-family:var(--font-mono); color:var(--text-heading);">Sabemos por quién vas a votar</span>
+        </div>
+      </div>
       
-      <div id="live-agents-feed" style="display:flex; flex-direction:column; gap:8px; font-size:0.75rem; color:var(--text-body); font-family:monospace; line-height:1.4;">
-        <!-- Se llena dinámicamente con logs de agentes -->
-        <div><span style="color:var(--accent-cyan);">[CE-Sentinel-1]</span> Escaneando participación electoral...</div>
-        <div><span style="color:var(--accent-blue);">[CE-Forense]</span> Analizando actas de Champotón...</div>
-        <div><span style="color:var(--accent-warm);">[CE-Finanzas]</span> Auditoría presupuestal al 100%...</div>
+      <div id="live-agents-feed" style="display:flex; flex-direction:column; gap:6px; font-size:0.72rem; color:var(--text-body); font-family:monospace; line-height:1.35;">
+        <!-- Se llena dinámicamente con logs de los 12 agentes en modo muestra -->
+        <div><span style="color:var(--status-success); font-weight:700;">[CE-SysHealth]</span> Servidores activos (12/12) — Construye en tiempo real la elección...</div>
+        <div><span style="color:var(--accent-purple); font-weight:700;">[CE-SocialPulse]</span> TikTok, FB, IG y X moldeando intención de voto en vivo...</div>
+        <div><span style="color:var(--accent-coral); font-weight:700;">[CE-Oráculo-Voto]</span> Estrategias activadas: Nosotros sabemos por quién vas a votar (94.8%)...</div>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:8px; padding-top:8px; border-top:1px solid var(--velo-08);">
+        <a href="riesgos.html" style="flex:1; text-align:center; text-decoration:none; font-size:0.7rem; font-weight:700; padding:5px 8px; border-radius:6px; background:var(--cyan-tinte); color:var(--accent-cyan); border:1px solid var(--accent-cyan);">
+          Ver Grafo de Conocimiento →
+        </a>
+        <button type="button" onclick="window.dispararRafagaAlertas && window.dispararRafagaAlertas()" style="font-size:0.7rem; font-weight:600; padding:5px 8px; border-radius:6px; background:var(--velo-08); color:var(--text-heading); border:1px solid var(--glass-border); cursor:pointer;">
+          ⚡ Alerta Ahora
+        </button>
       </div>
     </section>
 

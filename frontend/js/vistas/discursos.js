@@ -195,6 +195,34 @@
   }
 
   /* ── Mapa de Campeche: el mismo municipios.geojson del mapa maestro, en líneas blancas ── */
+  const CENTROIDES_FALLBACK = {
+    '04001': { cve: '04001', nombre: 'Calkiní', x: 143, y: -360 },
+    '04002': { cve: '04002', nombre: 'Campeche', x: 158, y: -90 },
+    '04003': { cve: '04003', nombre: 'Carmen', x: -203, y: 253 },
+    '04004': { cve: '04004', nombre: 'Champotón', x: 86, y: 70 },
+    '04005': { cve: '04005', nombre: 'Hecelchakán', x: 197, y: -252 },
+    '04006': { cve: '04006', nombre: 'Hopelchén', x: 354, y: -45 },
+    '04007': { cve: '04007', nombre: 'Palizada', x: -352, y: 335 },
+    '04008': { cve: '04008', nombre: 'Tenabo', x: 168, y: -201 },
+    '04009': { cve: '04009', nombre: 'Escárcega', x: 92, y: 248 },
+    '04010': { cve: '04010', nombre: 'Calakmul', x: 339, y: 294 },
+    '04011': { cve: '04011', nombre: 'Candelaria', x: 25, y: 389 },
+    '04012': { cve: '04012', nombre: 'Seybaplaya', x: 46, y: -86 },
+    '04013': { cve: '04013', nombre: 'Dzitbalché', x: 247, y: -288 },
+  };
+
+  function crearMapaFallback() {
+    const todo = new Path2D();
+    const munis = new Map();
+    Object.values(CENTROIDES_FALLBACK).forEach((c) => {
+      const path = new Path2D();
+      path.arc(c.x, c.y, 24, 0, 2 * Math.PI);
+      todo.addPath(path);
+      munis.set(c.cve, { cve: c.cve, nombre: c.nombre, path, x: c.x, y: c.y });
+    });
+    return { munis, todo, ancho: 1000, alto: 800, izq: -500 };
+  }
+
   function cargarMapa() {
     if (mapa) return Promise.resolve(mapa);
     return fetch('data/geo/municipios.geojson').then((r) => {
@@ -231,6 +259,10 @@
         munis.set(f.properties.cve_mun, { cve: f.properties.cve_mun, nombre: f.properties.nombre, path, x: mejor.x, y: mejor.y });
       });
       mapa = { munis, todo, ancho: ANCHO, alto: (maxY - minY) * kx, izq: -ANCHO / 2 };
+      return mapa;
+    }).catch((err) => {
+      console.warn('GeoJSON no disponible por fetch (modo local sin servidor o file://), usando centroides de respaldo:', err);
+      mapa = crearMapaFallback();
       return mapa;
     });
   }
@@ -384,7 +416,9 @@
   /** Todo el estado a la vista y centrado, con aire alrededor. Después la vista es del usuario: no se re-encuadra sola. */
   function vistaInicial() {
     const caja = $('grafo-caja');
-    const k = Math.min(caja.clientWidth / (mapa.ancho * 1.12), caja.clientHeight / (mapa.alto * 1.12));
+    const ancho = (mapa && mapa.ancho) || 1000;
+    const alto = (mapa && mapa.alto) || 800;
+    const k = Math.min(caja.clientWidth / (ancho * 1.12), caja.clientHeight / (alto * 1.12));
     grafo.width(caja.clientWidth).height(caja.clientHeight).centerAt(0, 0, 0).zoom(k, 0);
   }
 
@@ -456,7 +490,7 @@
 
   const total = (m) => m.dispara.reduce((a, d) => a + d.n, 0);
   const nodoMun = (m) => {
-    const g = mapa.munis.get(m.cve);
+    const g = (mapa && mapa.munis && mapa.munis.get(m.cve)) || { x: 0, y: 0 };
     return { id: m.id, tipo: 'municipio', nombre: m.nombre, total: total(m), fx: g.x, fy: g.y, x: g.x, y: g.y };
   };
   const nodoTema = (t) => ({ id: t.id, tipo: 'tema', nombre: t.nombre, notas: t.notas, marca: t.lectura === 'sin_contraste' ? 'sin_contraste' : null });

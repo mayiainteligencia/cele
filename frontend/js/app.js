@@ -379,38 +379,40 @@ function initScrollAnimations() {
    ════════════════════════════════════════════ */
 
 const LOGS_AGENTES = [
-  { prefix: '[CE-Sentinel-1]', text: 'Escaneando participación electoral en Calkiní...', color: 'var(--accent-cyan)' },
-  { prefix: '[CE-Forense]', text: 'Analizando actas de Champotón...', color: 'var(--accent-blue)' },
-  { prefix: '[CE-Finanzas]', text: 'Auditoría presupuestal al 100%...', color: 'var(--accent-warm)' },
-  { prefix: '[CE-Sentinel-2]', text: 'Verificando firmas de Seybaplaya...', color: 'var(--accent-cyan)' },
-  { prefix: '[CE-Medios]', text: 'Monitoreando Share of Voice en prensa local...', color: 'var(--accent-purple)' },
-  { prefix: '[CE-Forense-2]', text: 'Escaneo de anomalías en Sección 0142 completado.', color: 'var(--accent-blue)' },
-  { prefix: '[CE-Finanzas]', text: 'Validando comprobantes de gastos de campaña...', color: 'var(--accent-warm)' },
-  { prefix: '[CE-Sentinel-1]', text: 'Analizando cobertura de representantes de casilla...', color: 'var(--accent-cyan)' },
+  { prefix: '[CE-SysHealth]', text: 'Servidores activos (12/12 en línea · 8ms) — Construye en tiempo real la elección...', color: 'var(--status-success)' },
+  { prefix: '[CE-SocialPulse]', text: 'Redes sociales en vivo: +47.2K interacciones — Construyendo en tiempo real la elección...', color: 'var(--accent-purple)' },
+  { prefix: '[CE-Oráculo-Voto]', text: 'Estrategias de campo activadas: Nosotros sabemos por quién vas a votar (94.8% certeza)...', color: 'var(--accent-coral)' },
+  { prefix: '[CE-Campo-Táctico]', text: '128 brigadas activadas en 13 municipios · Conversión de indecisos en tiempo real...', color: 'var(--accent-warm)' },
+  { prefix: '[CE-Grafo-Neural]', text: 'Grafo de conocimiento actualizado: 1,842 nodos y 4,610 relaciones activas...', color: 'var(--accent-cyan)' },
+  { prefix: '[CE-Enjambre-Digital]', text: 'Defensa narrativa en TikTok, FB y X · Neutralizando bots adversarios...', color: 'var(--accent-cyan)' },
+  { prefix: '[CE-WhatsApp-Territorio]', text: '340 grupos vecinales sincronizados con estrategias de campo...', color: 'var(--status-success)' },
+  { prefix: '[CE-MicroTarget]', text: 'Segmentación por AGEB activa: Sabemos por quién vas a votar en 542 secciones...', color: 'var(--accent-purple)' },
 ];
 
 const NOTIFICACIONES_AGENTES = [
-  { tipo: 'alerta', titulo: 'Alerta Forense [CE-Forense-3]', texto: 'Participación inusual del 87% detectada en Champotón (Sección 0142). Solicitando verificación de actas.' },
-  { tipo: 'medios', titulo: 'Monitoreo de Medios [CE-Medios-7]', texto: 'Detección de pico de sentimiento positivo (+4.2%) tras mitin del candidato en Seybaplaya.' },
-  { tipo: 'finanzas', titulo: 'Copiloto Financiero [CE-Finanzas-2]', texto: 'Logística de Calkiní conciliada. Comprobantes fiscales cargados correctamente.' },
-  { tipo: 'decision', titulo: 'Sala de Decisiones [CE-Sentinel-1]', texto: 'Recomendación de reubicación de representante en Dzitbalché por mayor volumen electoral.' },
-  { tipo: 'alerta', titulo: 'Alerta Forense [CE-Forense-2]', texto: 'Porcentaje atípico de votos nulos (6.2%) detectado en Palizada (Sección 0084).' }
+  { tipo: 'salud', tag: 'SALUD DEL SISTEMA · SERVIDORES ACTIVOS', titulo: 'Servidores Activos (12/12 Nodos Online)', texto: 'Salud del sistema al 99.98%. Construye en tiempo real la elección integrando redes sociales, campo y grafo de conocimiento.' },
+  { tipo: 'redes', tag: 'REDES SOCIALES · TIEMPO REAL', titulo: 'Construye en Tiempo Real la Elección [CE-SocialPulse]', texto: 'TikTok (+412K int.), Facebook (1.8M alcance) e Instagram (74% positivo) impulsando intención de voto hoy en Campeche y Carmen.' },
+  { tipo: 'voto', tag: 'ESTRATEGIAS DE CAMPO ACTIVADAS', titulo: 'Nosotros Sabemos por Quién Vas a Votar [CE-Oráculo-Voto]', texto: 'Estrategias de campo activadas en 542 secciones. Modelo psicográfico y territorial con 94.8% de certeza sobre intención de voto.' },
+  { tipo: 'grafo', tag: 'GRAFO DE CONOCIMIENTO · 12 AGENTES', titulo: 'Grafo de Conocimiento Sincronizado [CE-Grafo-Neural]', texto: 'Agentes en modo muestra conectando tendencias de redes sociales, líderes barriales y conversión de voto por sección.' },
+  { tipo: 'campo', tag: 'OPERACIÓN TERRITORIAL ACTIVA', titulo: 'Brigadas y Micro-Targeting [CE-Campo-Táctico]', texto: '128 brigadas y 340 grupos vecinales desplegados en Champotón, Calkiní y Candelaria donde el modelo detectó voto móvil.' }
 ];
 
 function initBackgroundMonitoring() {
-  const feedEl = document.getElementById('live-agents-feed');
-  
-  if (feedEl) {
+  const feeds = [
+    document.getElementById('live-agents-feed'),
+    document.getElementById('live-agents-feed-map')
+  ].filter(Boolean);
+
+  feeds.forEach((feedEl) => {
     let logIndex = 0;
-    // Llenar inicialmente
     feedEl.innerHTML = '';
-    for(let i=0; i<3; i++) {
-      const log = LOGS_AGENTES[i];
+    for (let i = 0; i < 4; i++) {
+      const log = LOGS_AGENTES[i % LOGS_AGENTES.length];
       const div = document.createElement('div');
-      div.innerHTML = `<span style="color:${log.color};">${log.prefix}</span> ${log.text}`;
+      div.innerHTML = `<span style="color:${log.color}; font-weight:700;">${log.prefix}</span> ${log.text}`;
       feedEl.appendChild(div);
     }
-    logIndex = 3;
+    logIndex = 4;
 
     setInterval(() => {
       const log = LOGS_AGENTES[logIndex];
@@ -418,36 +420,21 @@ function initBackgroundMonitoring() {
       div.style.opacity = '0';
       div.style.transform = 'translateY(10px)';
       div.style.transition = 'all 0.4s ease';
-      div.innerHTML = `<span style="color:${log.color};">${log.prefix}</span> ${log.text}`;
-      
+      div.innerHTML = `<span style="color:${log.color}; font-weight:700;">${log.prefix}</span> ${log.text}`;
+
       feedEl.appendChild(div);
       if (feedEl.children.length > 4) {
         feedEl.removeChild(feedEl.firstChild);
       }
-      
+
       setTimeout(() => {
         div.style.opacity = '1';
         div.style.transform = 'translateY(0)';
       }, 50);
 
       logIndex = (logIndex + 1) % LOGS_AGENTES.length;
-    }, 4500);
-  }
-
-  // Lanzar alertas del copiloto a través de Toasts cada 14 segundos
-  let toastIndex = 0;
-  setInterval(() => {
-    if (typeof toast === 'function') {
-      const alert = NOTIFICACIONES_AGENTES[toastIndex];
-      toast({
-        tipo: alert.tipo,
-        titulo: alert.titulo,
-        texto: alert.texto,
-        duracion: 8000
-      });
-      toastIndex = (toastIndex + 1) % NOTIFICACIONES_AGENTES.length;
-    }
-  }, 14000);
+    }, 3500);
+  });
 }
 
 

@@ -33,21 +33,54 @@
 
       <section class="mando-header">
         <div class="mando-header__title-box">
-          <h1><i data-lucide="bell" style="color:var(--accent-cyan);"></i> <span data-i18n="alertas.titulo">Tablero Unificado de Alertas Operativas</span></h1>
-          <p>Consolidado central de eventos, incidentes de medios, desinformación, variaciones financieras y forensia con responsable asignado.</p>
+          <h1><i data-lucide="bell" style="color:var(--accent-cyan);"></i> <span data-i18n="alertas.titulo">Tablero Unificado de Alertas Operativas y Redes Sociales</span></h1>
+          <p>Construye en tiempo real la elección: Alertas emergentes de redes sociales, salud del sistema (Servidores activos), estrategias de campo activadas («Nosotros sabemos por quién vas a votar») y grafo de conocimiento.</p>
         </div>
 
         <div class="mando-header__pills">
-          <span class="badge badge--success">Monitoreo 24/7</span>
-          <span class="badge badge--neutral">Asignación de Responsable</span>
+          <span class="badge badge--success">Servidores Activos (12/12)</span>
+          <span class="badge badge--neutral">Construye en Tiempo Real la Elección</span>
         </div>
       </section>
 
+      <!-- Bandeja de Alertas Emergentes en Vivo -->
       <section class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg);">
-        <h3 class="text-h3" style="margin-bottom:var(--space-sm);">Bandeja Unificada de Incidentes y Evidencia</h3>
-        <p style="font-size:0.85rem; color:var(--text-body);">
-          Cada alerta cuenta con nivel de urgencia (Verde, Amarillo, Naranja, Rojo), fuente verificada, evidencia adjunta y responsable ejecutivo asignado.
-        </p>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:var(--space-md);">
+          <div>
+            <h3 class="text-h3" style="margin-bottom:4px;">Bandeja en Tiempo Real: Redes Sociales, Salud del Sistema y Estrategias de Campo</h3>
+            <p style="font-size:0.82rem; color:var(--text-body);">
+              Desde que se abre Cerebro Electoral se activan las notificaciones emergentes. Haz clic en cualquier alerta para volver a proyectarla en pantalla.
+            </p>
+          </div>
+          <button type="button" class="btn-primary" onclick="window.dispararRafagaAlertas && window.dispararRafagaAlertas()">
+            <i data-lucide="zap"></i> Disparar Notificación Emergente
+          </button>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:var(--space-sm);" id="alertas-live-grid">
+          <div style="background:var(--proc-recomendacion-bg); border:1px solid var(--status-success); border-radius:var(--radius-md); padding:12px 14px;">
+            <div style="font-size:0.68rem; font-family:var(--font-mono); color:var(--status-success); font-weight:700; text-transform:uppercase;">🟢 Salud del Sistema · CE-SysHealth</div>
+            <strong style="font-size:0.9rem; color:var(--text-heading); display:block; margin:4px 0;">Servidores Activos (12/12 Nodos en Línea)</strong>
+            <p style="font-size:0.78rem; color:var(--text-body); margin:0;">Latencia 8ms · Uptime 99.98%. Cluster neuronal sincronizado construyendo en tiempo real la elección.</p>
+          </div>
+
+          <div style="background:var(--proc-calculo-bg); border:1px solid var(--accent-purple); border-radius:var(--radius-md); padding:12px 14px;">
+            <div style="font-size:0.68rem; font-family:var(--font-mono); color:var(--accent-purple); font-weight:700; text-transform:uppercase;">📡 Redes Sociales · CE-SocialPulse</div>
+            <strong style="font-size:0.9rem; color:var(--text-heading); display:block; margin:4px 0;">Construye en Tiempo Real la Elección</strong>
+            <p style="font-size:0.78rem; color:var(--text-body); margin:0;">+47.2K interacciones/h en TikTok, Facebook, Instagram y X. Sentimiento 94% positivo en Carmen y Campeche.</p>
+          </div>
+
+          <div style="background:var(--proc-inferencia-bg); border:1px solid var(--accent-coral); border-radius:var(--radius-md); padding:12px 14px;">
+            <div style="font-size:0.68rem; font-family:var(--font-mono); color:var(--accent-coral); font-weight:700; text-transform:uppercase;">🎯 Estrategias de Campo Activadas · CE-Oráculo-Voto</div>
+            <strong style="font-size:0.9rem; color:var(--text-heading); display:block; margin:4px 0;">Nosotros Sabemos por Quién Vas a Votar</strong>
+            <p style="font-size:0.78rem; color:var(--text-body); margin:0;">Cruce psicográfico y territorial en 542 secciones (94.8% certeza). 128 brigadas y 340 grupos vecinales activados.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Grafo de Conocimiento y 12 Agentes en Modo Muestra -->
+      <section class="glass-strong" style="padding:var(--space-lg); border-radius:var(--radius-lg);">
+        <div id="ce-grafo-conocimiento-box"></div>
       </section>
 
     </div>

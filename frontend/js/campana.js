@@ -137,16 +137,16 @@ const DATA_CAMPANA = {
     ]
   },
 
-  /* ── Feed de actividad simulado ── */
+  /* ── Feed de actividad simulado (Agentes en Modo Muestra) ── */
   feed: [
-    { agente: 'CE-Sentinel', accion: 'Escaneo de 142 secciones completado', icon: 'shield-check', time: '2 min' },
-    { agente: 'CE-Medios',   accion: 'Análisis de sentimiento en TikTok actualizado', icon: 'bar-chart-2', time: '5 min' },
-    { agente: 'CE-Forense',  accion: 'Auditoría de actas Champotón §0142', icon: 'search', time: '8 min' },
-    { agente: 'CE-Encuestas',accion: 'Nuevo tracking Demoscopia integrado', icon: 'trending-up', time: '12 min' },
-    { agente: 'CE-Logística', accion: '3 envíos zona Sur confirmados', icon: 'truck', time: '15 min' },
-    { agente: 'CE-Imagen',   accion: 'Monitoreo Instagram: +2.4K menciones hoy', icon: 'instagram', time: '18 min' },
-    { agente: 'CE-Sentinel', accion: 'Alerta: actividad anómala en Seybaplaya', icon: 'alert-triangle', time: '22 min' },
-    { agente: 'CE-Medios',   accion: 'Facebook Ads: CTR 3.2% (+0.4pp)', icon: 'facebook', time: '25 min' },
+    { agente: 'CE-SysHealth',   accion: 'Servidores activos (12/12 en línea · 8ms) — Construye en tiempo real la elección', icon: 'server', time: 'ahora' },
+    { agente: 'CE-SocialPulse', accion: 'Redes sociales en vivo (+47.2K int.): Construyendo en tiempo real la elección', icon: 'share-2', time: '1 min' },
+    { agente: 'CE-Oráculo-Voto',accion: 'Estrategias de campo activadas: Nosotros sabemos por quién vas a votar (94.8%)', icon: 'scan-eye', time: '2 min' },
+    { agente: 'CE-Campo-Táctico',accion: '128 brigadas activadas en territorio · Conversión de indecisos en vivo', icon: 'compass', time: '4 min' },
+    { agente: 'CE-Grafo-Neural',accion: 'Grafo de conocimiento sincronizado: 1,842 nodos y 4,610 relaciones', icon: 'network', time: '6 min' },
+    { agente: 'CE-Enjambre',    accion: 'Neutralizado ataque de bots en X · Sentimiento +4.2pp en Carmen', icon: 'shield-alert', time: '9 min' },
+    { agente: 'CE-MicroTarget', accion: 'Segmentación AGEB: Sabemos por quién vas a votar en 542 secciones', icon: 'target', time: '12 min' },
+    { agente: 'CE-WhatsApp',    accion: '340 grupos vecinales activados con narrativa hiper-local', icon: 'message-circle', time: '15 min' },
   ]
 };
 
@@ -487,31 +487,31 @@ function initAlerts() {
 
   const alertas = [
     {
-      titulo: 'Riesgo en Champotón, Calkiní y Seybaplaya',
-      detalle: 'Ventaja negativa vs oposición. Movilización urgente.',
-      severidad: 'critica',
-      icon: 'alert-triangle',
-      color: 'var(--status-error)',
-      time: 'Hace 8 min',
-      agente: 'CE-Sentinel'
-    },
-    {
-      titulo: 'Sentimiento negativo ↑ en X/Twitter',
-      detalle: 'Hashtag #CampecheExige trending local. Monitoreo activo.',
-      severidad: 'alta',
-      icon: 'alert-circle',
-      color: 'var(--accent-warm)',
-      time: 'Hace 22 min',
-      agente: 'CE-Medios'
-    },
-    {
-      titulo: 'Oportunidad: Candelaria margen <1pp',
-      detalle: 'Activación de brigada puede definir municipio.',
+      titulo: 'Salud del Sistema: Servidores Activos (12/12)',
+      detalle: 'Cluster IA operando al 99.98% (8ms). Construye en tiempo real la elección.',
       severidad: 'info',
-      icon: 'info',
-      color: 'var(--accent-blue)',
-      time: 'Hace 35 min',
-      agente: 'CE-Estratégico'
+      icon: 'server',
+      color: 'var(--status-success)',
+      time: 'En vivo',
+      agente: 'CE-SysHealth'
+    },
+    {
+      titulo: 'Estrategias de Campo: Nosotros Sabemos por Quién Vas a Votar',
+      detalle: 'Cruce psicográfico y territorial activo en 542 secciones (94.8% certeza). 128 brigadas en calle.',
+      severidad: 'critica',
+      icon: 'scan-eye',
+      color: 'var(--accent-coral)',
+      time: 'Hace 1 min',
+      agente: 'CE-Oráculo-Voto'
+    },
+    {
+      titulo: 'Redes Sociales: Construye en Tiempo Real la Elección',
+      detalle: 'TikTok (+412K int.), FB (1.8M alc.) e IG (74% positivo) impulsando tendencia en Carmen y Campeche.',
+      severidad: 'alta',
+      icon: 'share-2',
+      color: 'var(--accent-purple)',
+      time: 'Hace 3 min',
+      agente: 'CE-SocialPulse'
     }
   ];
 
