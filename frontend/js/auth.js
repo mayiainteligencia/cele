@@ -63,6 +63,7 @@ const NAV = [
     ],
   },
   { page: 'conocimiento', icon: 'book-user', label: 'Conocimiento', href: 'conocimiento.html', i18n: 'nav.conocimiento' },
+  { page: 'viral', icon: 'radio-tower', label: 'Viral Intelligence', href: 'viral.html', i18n: 'nav.viral' },
   { page: 'decisiones', icon: 'gavel', label: 'Sala de decisiones', href: 'decisiones.html', i18n: 'nav.decisiones' },
   { page: 'alertas',    icon: 'bell',  label: 'Alertas',            href: 'alertas.html',    i18n: 'nav.alertas' },
   {
