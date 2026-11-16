@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#04070d">
+  <title>ceNetwork — Centro de Mando · Escucha Social</title>
+  <link rel="stylesheet" href="./node_modules/@fontsource/inter/400.css">
+  <link rel="stylesheet" href="./node_modules/@fontsource/inter/500.css">
+  <link rel="stylesheet" href="./node_modules/@fontsource/inter/600.css">
+  <link rel="stylesheet" href="./node_modules/@fontsource/inter/700.css">
+  <link rel="stylesheet" href="./node_modules/@fontsource/jetbrains-mono/400.css">
+  <link rel="stylesheet" href="./node_modules/@fontsource/jetbrains-mono/500.css">
+  <link rel="stylesheet" href="./node_modules/@fontsource/jetbrains-mono/600.css">
+  <link rel="stylesheet" href="./node_modules/@fontsource/jetbrains-mono/700.css">
+  <link rel="stylesheet" href="./node_modules/maplibre-gl/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="./src/styles/network.css">
+</head>
+<body>
+  <div class="cenet-shell">
+    <!-- ═══════════════ BARRA SUPERIOR DELGADA ═══════════════ -->
+    <header class="cenet-topbar" role="banner">
+      <div class="cenet-brand">
+        <a href="http://localhost:8080/index.html" class="cenet-back-link" id="cenet-back-link" aria-label="Regresar a Cerebro Electoral">
+          <svg class="cenet-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
+          </svg>
+          <span>Cerebro Electoral</span>
+        </a>
+        <div class="cenet-brand__divider" aria-hidden="true"></div>
+        <div class="cenet-logo">
+          <div class="cenet-logo__title">
+            <span class="cenet-dot-live" aria-hidden="true"></span>
+            <span id="cenet-brand-title">ceNetwork</span>
+          </div>
+          <span class="cenet-logo__sub" id="cenet-brand-sub">Escucha Social &amp; Pulso Territorial</span>
+        </div>
+      </div>
+
+      <div class="cenet-topbar__right">
+        <!-- Pastilla discreta de estado de la fuente de datos (Demo / En vivo) -->
+        <div class="cenet-source-pill" id="cenet-source-pill" role="status" aria-live="polite" title="Estado de la fuente de datos">
+          <span class="cenet-source-pill__dot" id="cenet-source-dot" aria-hidden="true"></span>
+          <span id="cenet-source-label">Demo</span>
+        </div>
+
+        <!-- Modo debug oculto: solo visible con ?debug=1 -->
+        <div class="cenet-debug-pill" id="cenet-debug-pill" hidden></div>
+
+        <!-- Botón de cambio de tema -->
+        <button type="button" class="cenet-icon-btn" id="cenet-theme-btn" aria-label="Cambiar entre tema oscuro y claro" title="Cambiar tema">
+          <svg class="cenet-icon" id="cenet-theme-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+          </svg>
+          <span class="cenet-icon-btn__txt" id="cenet-theme-label">Claro</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ═══════════════ WORKSPACE PRINCIPAL ═══════════════ -->
+    <main class="cenet-workspace">
+      <div class="cenet-map-wrap">
+        <!-- Campo de estrellas tenue + halo atmosférico -->
+        <div class="cenet-starfield" aria-hidden="true"></div>
+
+        <!-- Mapa Globo MapLibre GL JS -->
+        <div id="cenet-map" role="region" aria-label="Globo interactivo de escucha social"></div>
+
+        <!-- ═══════════════ BARRA DE COMANDO FLOTANTE Y CENTRADA ═══════════════ -->
+        <div class="cenet-cmdbar-wrap">
+          <form class="cenet-cmdbar cenet-hud-glass" id="cenet-search-form" role="search" aria-label="Búsqueda de escucha social">
+            <span class="cenet-hud-corner cenet-hud-corner--tl" aria-hidden="true"></span>
+            <span class="cenet-hud-corner cenet-hud-corner--tr" aria-hidden="true"></span>
+            <span class="cenet-hud-corner cenet-hud-corner--bl" aria-hidden="true"></span>
+            <span class="cenet-hud-corner cenet-hud-corner--br" aria-hidden="true"></span>
+
+            <!-- 1. Campo de tema -->
+            <div class="cenet-cmdbar__field">
+              <svg class="cenet-icon cenet-cmdbar__search-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+              </svg>
+              <input
+                type="text"
+                id="cenet-topic-input"
+                class="cenet-cmdbar__input"
+                placeholder="Ej. seguridad, agua, bacheo…"
+                aria-label="Tema de búsqueda"
+                autocomplete="off"
+                required
+              >
+            </div>
+
+            <!-- Ficha de entidad guardada (escribir un nombre nuevo sigue funcionando) -->
+            <select id="cenet-ficha-sel" class="cenet-select cenet-ficha-sel" aria-label="Ficha de entidad guardada">
+              <option value="">Sin ficha</option>
+            </select>
+            <button type="button" class="cenet-hist-refresh" id="cenet-ficha-save" title="Guardar la búsqueda actual como ficha de entidad">Guardar como ficha</button>
+
+            <div class="cenet-cmdbar__sep" aria-hidden="true"></div>
+
+            <!-- 2. Selector de modo en segmentos (Tema | Persona | Tendencias) -->
+            <div class="cenet-segmented" role="radiogroup" aria-label="Modo de búsqueda">
+              <button type="button" class="cenet-segmented__btn is-active" data-mode="tema" role="radio" aria-checked="true">Tema</button>
+              <button type="button" class="cenet-segmented__btn" data-mode="persona" role="radio" aria-checked="false">Persona</button>
+              <button type="button" class="cenet-segmented__btn" data-mode="tendencias" role="radio" aria-checked="false">Tendencias</button>
+              <select id="cenet-sel-modo" class="cenet-sr-only" aria-label="Modo de búsqueda (selector)">
+                <option value="tema" selected>Tema</option>
+                <option value="persona">Persona</option>
+                <option value="tendencias">Tendencias</option>
+              </select>
+            </div>
+
+            <div class="cenet-cmdbar__sep" aria-hidden="true"></div>
+
+            <!-- 3. Selector de alcance en forma de ruta clicable (México / Estado / Municipio) -->
+            <div class="cenet-breadcrumb-wrap" id="cenet-breadcrumb-wrap">
+              <div class="cenet-breadcrumb" role="group" aria-label="Ruta de alcance geográfico">
+                <svg class="cenet-icon cenet-breadcrumb__pin" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                <button type="button" class="cenet-crumb" id="cenet-crumb-pais" data-crumb="pais" aria-label="Alcance país: México">México</button>
+                <span class="cenet-crumb__slash" id="cenet-slash-estado" aria-hidden="true">/</span>
+                <button type="button" class="cenet-crumb" id="cenet-crumb-estado" data-crumb="estado" aria-haspopup="dialog" aria-expanded="false">Seleccionar</button>
+                <span class="cenet-crumb__slash" id="cenet-slash-mun" aria-hidden="true">/</span>
+                <button type="button" class="cenet-crumb is-current" id="cenet-crumb-mun" data-crumb="municipio" aria-haspopup="dialog" aria-expanded="false">Seleccionar</button>
+                <button type="button" class="cenet-crumb-chevron" id="cenet-scope-toggle" aria-label="Cambiar territorio de búsqueda" aria-expanded="false">
+                  <svg class="cenet-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m6 9 6 6 6-6"/>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Popover de selección de territorio -->
+              <div class="cenet-scope-popover cenet-hud-glass" id="cenet-scope-popover" role="dialog" aria-label="Seleccionar alcance geográfico" hidden>
+                <div class="cenet-scope-popover__head">
+                  <span>Alcance territorial</span>
+                  <button type="button" class="cenet-popover-close" id="cenet-popover-close" aria-label="Cerrar selector de alcance">
+                    <svg class="cenet-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                    </svg>
+                  </button>
+                </div>
+                <div class="cenet-scope-popover__grid">
+                  <label class="cenet-field-lbl" for="cenet-sel-pais">
+                    <span>País</span>
+                    <select id="cenet-sel-pais" class="cenet-select" aria-label="País">
+                      <option value="" selected>Seleccionar</option>
+                      <option value="MX">México</option>
+                    </select>
+                  </label>
+                  <label class="cenet-field-lbl" for="cenet-sel-nivel">
+                    <span>Nivel</span>
+                    <select id="cenet-sel-nivel" class="cenet-select" aria-label="Nivel de alcance">
+                      <option value="" selected disabled>Seleccionar</option>
+                      <option value="pais">País completo</option>
+                      <option value="estado">Estado</option>
+                      <option value="municipio">Municipio / Alcaldía</option>
+                    </select>
+                  </label>
+                  <label class="cenet-field-lbl" for="cenet-sel-estado">
+                    <span>Estado</span>
+                    <select id="cenet-sel-estado" class="cenet-select" aria-label="Estado">
+                      <option value="">Seleccionar</option>
+                    </select>
+                  </label>
+                  <label class="cenet-field-lbl" for="cenet-sel-municipio">
+                    <span>Municipio / Alcaldía</span>
+                    <select id="cenet-sel-municipio" class="cenet-select" aria-label="Municipio o Alcaldía">
+                      <option value="">Seleccionar</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Búsquedas anteriores (historial) -->
+            <button type="button" class="cenet-hist-btn" id="cenet-hist-btn" aria-label="Búsquedas anteriores" title="Búsquedas anteriores">
+              <svg class="cenet-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>
+            </button>
+
+            <!-- Alertas de picos y narrativas -->
+            <button type="button" class="cenet-hist-btn" id="cenet-alert-btn" aria-label="Alertas" title="Alertas de picos y narrativas">
+              <svg class="cenet-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            </button>
+
+            <!-- 4. Botón Buscar con icono -->
+            <button type="submit" class="cenet-btn-search" id="cenet-search-btn" aria-label="Ejecutar búsqueda">
+              <svg class="cenet-icon" id="cenet-search-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+              </svg>
+              <span id="cenet-search-btn-label">Buscar</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- ═══════════════ ESTADO VACÍO ATRACTIVO ANTES DE BUSCAR ═══════════════ -->
+        <section class="cenet-empty-hero cenet-hud-glass" id="cenet-empty-hero" aria-label="Sugerencias de búsqueda inicial">
+          <span class="cenet-hud-corner cenet-hud-corner--tl" aria-hidden="true"></span>
+          <span class="cenet-hud-corner cenet-hud-corner--tr" aria-hidden="true"></span>
+          <span class="cenet-hud-corner cenet-hud-corner--bl" aria-hidden="true"></span>
+          <span class="cenet-hud-corner cenet-hud-corner--br" aria-hidden="true"></span>
+
+          <div class="cenet-empty-hero__head">
+            <span class="cenet-empty-hero__icon" aria-hidden="true">
+              <svg class="cenet-icon" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+                <path d="M2 12h20"/>
+              </svg>
+            </span>
+            <div>
+              <h2 class="cenet-empty-hero__title">Escribe un tema, elige dónde y presiona Buscar</h2>
+              <p class="cenet-empty-hero__sub">
+                Territorio activo: <strong id="cenet-empty-scope-label">ninguno: elige un lugar</strong>
+              </p>
+            </div>
+          </div>
+
+          <div class="cenet-empty-hero__examples">
+            <span class="cenet-empty-hero__lbl">Ejemplos rápidos:</span>
+            <div class="cenet-example-chips">
+              <button type="button" class="cenet-example-chip" data-example-topic="seguridad">
+                <svg class="cenet-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+                </svg>
+                <span>Seguridad</span>
+              </button>
+              <button type="button" class="cenet-example-chip" data-example-topic="percepción">
+                <svg class="cenet-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>
+                </svg>
+                <span>Percepción</span>
+              </button>
+              <button type="button" class="cenet-example-chip" data-example-topic="vecinos">
+                <svg class="cenet-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span>Vecinos</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="cenet-hist" id="cenet-hist-wrap" hidden>
+            <span class="cenet-empty-hero__lbl">Búsquedas anteriores</span>
+            <div class="cenet-hist__list" id="cenet-hist-list"></div>
+          </div>
+        </section>
+
+        <!-- Notificación discreta para avisos o errores -->
+        <div class="cenet-status-overlay" id="cenet-status-overlay" hidden>
+          <div class="cenet-status-card cenet-hud-glass" id="cenet-status-card" role="alert"></div>
+        </div>
+
+        <!-- ═══════════════ LEYENDA COMPACTA (SOLO VISIBLE CON RESULTADOS) ═══════════════ -->
+        <div class="cenet-hud-bottom">
+          <div class="cenet-legend cenet-hud-glass" id="cenet-legend" hidden aria-label="Leyenda de volumen de menciones">
+            <span class="cenet-legend__lbl">Bajo</span>
+            <div class="cenet-legend__bar" aria-hidden="true"></div>
+            <span class="cenet-legend__lbl">Alto</span>
+          </div>
+        </div>
+
+        <!-- Tooltip accesible del mapa -->
+        <div class="cenet-tooltip cenet-hud-glass" id="cenet-tooltip" role="status" aria-live="polite" hidden></div>
+      </div>
+
+      <!-- ═══════════════ CAJÓN LATERAL DERECHO / HOJA INFERIOR EN MÓVIL ═══════════════ -->
+      <aside class="cenet-drawer cenet-hud-glass" id="cenet-panel" aria-label="Resultados de escucha social" aria-hidden="true">
+        <span class="cenet-hud-corner cenet-hud-corner--tl" aria-hidden="true"></span>
+        <span class="cenet-hud-corner cenet-hud-corner--bl" aria-hidden="true"></span>
+
+        <!-- Tirador arrastrable para móvil (bottom sheet) -->
+        <div class="cenet-drawer__handle" id="cenet-drawer-handle" role="button" tabindex="0" aria-label="Arrastrar o alternar tamaño del panel de resultados">
+          <span class="cenet-drawer__handle-bar" aria-hidden="true"></span>
+        </div>
+
+        <div class="cenet-drawer__body" id="cenet-drawer-body"></div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="./dist/assets/app.js"></script>
+</body>
+</html>

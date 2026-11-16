@@ -20,6 +20,11 @@
 /* Siete grupos en el riel. Los módulos que tienen varias vistas cuelgan de
    `sub` y se pintan como píldoras de segundo nivel dentro de la página.
    Trece iconos sueltos no caben en 80 px sin volverse una sopa. */
+const CENETWORK_URL =
+  (typeof window !== 'undefined' && window.CE_ENV && window.CE_ENV.VITE_CENETWORK_URL) ||
+  (typeof localStorage !== 'undefined' && localStorage.getItem('VITE_CENETWORK_URL')) ||
+  'ceNetwork/index.html';
+
 const NAV = [
   {
     page: 'campana', icon: 'pie-chart', label: 'Inteligencia de campaña',
@@ -64,6 +69,7 @@ const NAV = [
   },
   { page: 'conocimiento', icon: 'book-user', label: 'Conocimiento', href: 'conocimiento.html', i18n: 'nav.conocimiento' },
   { page: 'viral', icon: 'radio-tower', label: 'Viral Intelligence', href: 'viral.html', i18n: 'nav.viral' },
+  { page: 'ceNetwork', icon: 'globe', label: 'ceNetwork · Escucha Social', href: CENETWORK_URL, external: true, i18n: 'nav.cenetwork' },
   { page: 'decisiones', icon: 'gavel', label: 'Sala de decisiones', href: 'decisiones.html', i18n: 'nav.decisiones' },
   { page: 'alertas',    icon: 'bell',  label: 'Alertas',            href: 'alertas.html',    i18n: 'nav.alertas' },
   {
@@ -105,8 +111,9 @@ function renderSidebar() {
           grupo && item.page === grupo.page ? 'sidebar__icon--active' : '',
         ].filter(Boolean).join(' ');
         const tooltip = item.i18n ? _t(item.i18n) : item.label;
+        const extAttrs = item.external ? ' target="_blank" rel="noopener"' : '';
         return `<li>
-          <a href="${item.href}" class="${clases}" data-tooltip="${tooltip}">
+          <a href="${item.href}" class="${clases}" data-tooltip="${tooltip}"${extAttrs}>
             <i data-lucide="${item.icon}"></i>
           </a>
         </li>`;

@@ -1,0 +1,46 @@
+{
+  "alcaldia": "Tlalpan",
+  "estado_id": "09",
+  "municipio_id": "09012",
+  "principales": [
+    { "termino": "Tlalpan", "ambiguo": false },
+    { "termino": "alcaldía Tlalpan", "ambiguo": false },
+    { "termino": "Alcaldía de Tlalpan", "ambiguo": false }
+  ],
+  "colonias_y_pueblos": [
+    { "termino": "Coapa", "ambiguo": true },
+    { "termino": "Villa Coapa", "ambiguo": false },
+    { "termino": "Santa Úrsula", "ambiguo": true },
+    { "termino": "Santa Úrsula Xitla", "ambiguo": false },
+    { "termino": "Padierna", "ambiguo": true },
+    { "termino": "Héroes de Padierna", "ambiguo": false },
+    { "termino": "Ajusco", "ambiguo": false },
+    { "termino": "Topilejo", "ambiguo": false },
+    { "termino": "San Miguel Topilejo", "ambiguo": false },
+    { "termino": "San Pedro Mártir", "ambiguo": true },
+    { "termino": "Fuentes Brotantes", "ambiguo": true },
+    { "termino": "Cuicuilco", "ambiguo": false },
+    { "termino": "Parres", "ambiguo": false },
+    { "termino": "Parres El Guarda", "ambiguo": false },
+    { "termino": "Chimalcoyoc", "ambiguo": false },
+    { "termino": "Isidro Fabela", "ambiguo": true },
+    { "termino": "Magdalena Petlacalco", "ambiguo": false },
+    { "termino": "San Miguel Xicalco", "ambiguo": false }
+  ],
+  "homonimos_descartar": [
+    {
+      "termino": "Calzada de Tlalpan",
+      "requiere_contexto_alcaldia": [
+        "alcaldía tlalpan",
+        "alcaldia tlalpan",
+        "alcaldía de tlalpan",
+        "alcaldia de tlalpan",
+        "gaby osorio",
+        "gabriela osorio",
+        "gobierno de tlalpan",
+        "demarcación tlalpan"
+      ]
+    }
+  ]
+}
+

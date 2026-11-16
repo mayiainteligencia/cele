@@ -1,0 +1,1599 @@
+/* ==========================================================================
+   CE NETWORK — CENTRO DE MANDO · ESCUCHA SOCIAL & PULSO TERRITORIAL
+   Todos los tokens cromáticos provienen de `src/map/theme.ts`.
+   Tipografía local con @fontsource/inter y @fontsource/jetbrains-mono (sin CDN).
+   ========================================================================== */
+
+:root {
+  --bg-base:              #04070d;
+  --bg-elevated:          #070d17;
+  --glass-bg:             rgba(8, 15, 26, 0.76);
+  --glass-bg-strong:      rgba(10, 18, 30, 0.90);
+  --glass-hover:          rgba(16, 28, 44, 0.88);
+  --glass-border:         rgba(148, 210, 194, 0.13);
+  --glass-border-bright:  rgba(52, 245, 181, 0.38);
+  --glass-top-highlight:  rgba(220, 255, 244, 0.14);
+  --glass-shadow:         0 18px 46px rgba(0, 0, 0, 0.62);
+
+  --accent-mint:          #6ee7b7;
+  --accent-mint-dim:      rgba(110, 231, 183, 0.15);
+  --accent-cyan:          #22d3ee;
+  --accent-cyan-dim:      rgba(34, 211, 238, 0.13);
+
+  /* Variables cromáticas del globo y cartografía */
+  --map-space-bg:         #03060c;
+  --map-ocean-fill:       #0b1929;
+  --map-world-fill:       #1b2a3a;
+  --map-world-border:     #3a5a6e;
+  --map-mexico-fill:      #0f3d3a;
+  --map-mexico-outline:   #2dd4bf;
+  --map-active-fill:      #6ee7b7;
+
+  /* Rojo y ámbar exclusivamente para sentimiento negativo y neutro */
+  --sent-pos:             #34f5b5;
+  --sent-neu:             #f59e0b;
+  --sent-neg:             #f43f5e;
+
+  --text-primary:         #f1f8f6;
+  --text-secondary:       #a3bab3;
+  --text-muted:           #647d76;
+  --text-on-accent:       #02130c;
+
+  --volume-gradient:      linear-gradient(90deg, #132a26 0%, #154d3f 20%, #14745a 40%, #149f76 60%, #1ec995 80%, #34f5b5 100%);
+
+  --font-sans:            'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:            'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-xs:            6px;
+  --radius-sm:            9px;
+  --radius-md:            13px;
+  --radius-lg:            16px;
+  --radius-full:          9999px;
+
+  --topbar-h:             46px;
+  --drawer-w:             430px;
+}
+
+body.light-mode {
+  --glass-shadow:         0 14px 36px rgba(8, 34, 24, 0.13);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-base);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Foco accesible con anillo de acento */
+:focus-visible {
+  outline: 2px solid var(--accent-mint);
+  outline-offset: 2px;
+}
+
+.cenet-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Iconografía SVG Lucide de trazo fino */
+.cenet-icon {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  stroke-width: 1.65;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  flex-shrink: 0;
+}
+
+/* Cifras monoespaciadas con tabular-nums */
+.cenet-num,
+.cenet-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Superficie tipo vidrio con borde 1px, sombra interior sutil y brillo superior */
+.cenet-hud-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(135%);
+  -webkit-backdrop-filter: blur(20px) saturate(135%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    inset 0 1px 0 0 var(--glass-top-highlight),
+    inset 0 0 18px rgba(52, 245, 181, 0.025),
+    var(--glass-shadow);
+}
+
+/* Marcas discretas de HUD en las esquinas */
+.cenet-hud-corner {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  pointer-events: none;
+  border-color: var(--accent-cyan);
+  opacity: 0.48;
+}
+.cenet-hud-corner--tl {
+  top: -1px;
+  left: -1px;
+  border-top: 1.5px solid var(--accent-cyan);
+  border-left: 1.5px solid var(--accent-cyan);
+  border-top-left-radius: 3px;
+}
+.cenet-hud-corner--tr {
+  top: -1px;
+  right: -1px;
+  border-top: 1.5px solid var(--accent-cyan);
+  border-right: 1.5px solid var(--accent-cyan);
+  border-top-right-radius: 3px;
+}
+.cenet-hud-corner--bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom: 1.5px solid var(--accent-cyan);
+  border-left: 1.5px solid var(--accent-cyan);
+  border-bottom-left-radius: 3px;
+}
+.cenet-hud-corner--br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1.5px solid var(--accent-cyan);
+  border-right: 1.5px solid var(--accent-cyan);
+  border-bottom-right-radius: 3px;
+}
+
+.cenet-shell {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+
+/* ═══════════════ 1. BARRA SUPERIOR DELGADA ═══════════════ */
+.cenet-topbar {
+  height: var(--topbar-h);
+  min-height: var(--topbar-h);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 0 var(--glass-top-highlight);
+}
+
+.cenet-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.cenet-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.74rem;
+  font-weight: 500;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+  white-space: nowrap;
+}
+.cenet-back-link:hover {
+  border-color: var(--glass-border-bright);
+  background: var(--accent-mint-dim);
+  color: var(--accent-mint);
+}
+
+.cenet-brand__divider {
+  width: 1px;
+  height: 18px;
+  background: var(--glass-border);
+}
+
+.cenet-logo {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  min-width: 0;
+}
+.cenet-logo__title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.cenet-dot-live {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-mint);
+  box-shadow: 0 0 10px var(--accent-mint);
+  display: inline-block;
+}
+.cenet-logo__sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cenet-topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Pastilla discreta de estado de la fuente (Demo / En vivo) */
+.cenet-source-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+.cenet-source-pill__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  box-shadow: 0 0 8px var(--accent-cyan);
+}
+.cenet-source-pill.is-live .cenet-source-pill__dot {
+  background: var(--accent-mint);
+  box-shadow: 0 0 8px var(--accent-mint);
+}
+.cenet-source-pill.is-live {
+  color: var(--accent-mint);
+  border-color: var(--glass-border-bright);
+}
+
+.cenet-debug-pill {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  background: var(--accent-cyan-dim);
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  color: var(--accent-cyan);
+}
+
+.cenet-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.73rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.cenet-icon-btn:hover {
+  border-color: var(--glass-border-bright);
+  background: var(--glass-hover);
+}
+
+/* ═══════════════ 2. WORKSPACE & CAMPO DE ESTRELLAS ═══════════════ */
+.cenet-workspace {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.cenet-map-wrap {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  background:
+    radial-gradient(circle at 50% 52%, rgba(45, 212, 191, 0.20) 0%, rgba(15, 61, 58, 0.26) 34%, var(--map-space-bg, var(--bg-base)) 68%);
+  overflow: hidden;
+}
+body.light-mode .cenet-map-wrap {
+  background:
+    radial-gradient(circle at 50% 52%, rgba(13, 148, 136, 0.22) 0%, rgba(199, 223, 236, 0.45) 38%, var(--map-space-bg, var(--bg-base)) 72%);
+}
+
+/* Campo de estrellas muy tenue en modo oscuro */
+.cenet-starfield {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.42;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(241, 248, 246, 0.65) 50%, transparent 100%),
+    radial-gradient(1px 1px at 28% 74%, rgba(34, 211, 238, 0.55) 50%, transparent 100%),
+    radial-gradient(1.2px 1.2px at 46% 14%, rgba(52, 245, 181, 0.50) 50%, transparent 100%),
+    radial-gradient(1px 1px at 67% 26%, rgba(241, 248, 246, 0.55) 50%, transparent 100%),
+    radial-gradient(1px 1px at 84% 62%, rgba(241, 248, 246, 0.60) 50%, transparent 100%),
+    radial-gradient(1.2px 1.2px at 91% 22%, rgba(34, 211, 238, 0.50) 50%, transparent 100%),
+    radial-gradient(1px 1px at 19% 48%, rgba(241, 248, 246, 0.45) 50%, transparent 100%),
+    radial-gradient(1px 1px at 74% 83%, rgba(52, 245, 181, 0.45) 50%, transparent 100%);
+  background-size: 520px 520px;
+}
+body.light-mode .cenet-starfield {
+  opacity: 0;
+}
+
+#cenet-map {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+}
+
+/* Controles de navegación MapLibre con acabado vidrio */
+.maplibregl-ctrl-top-left {
+  top: 72px !important;
+  left: 14px !important;
+}
+.maplibregl-ctrl-group {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: var(--glass-shadow) !important;
+  overflow: hidden;
+}
+.maplibregl-ctrl-group button {
+  background-color: transparent !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+}
+.maplibregl-ctrl-group button:last-child {
+  border-bottom: none !important;
+}
+body:not(.light-mode) .maplibregl-ctrl-icon {
+  filter: invert(0.92) hue-rotate(130deg) saturate(0.8);
+}
+
+/* ═══════════════ 3. BARRA DE COMANDO FLOTANTE Y CENTRADA ═══════════════ */
+.cenet-cmdbar-wrap {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  width: min(920px, calc(100% - 28px));
+  pointer-events: none;
+}
+
+.cenet-cmdbar {
+  position: relative;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 12px;
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.cenet-cmdbar:focus-within {
+  border-color: var(--glass-border-bright);
+}
+
+.cenet-cmdbar__field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 210px;
+  min-width: 140px;
+}
+.cenet-cmdbar__search-icon {
+  color: var(--accent-mint);
+}
+.cenet-cmdbar__input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  font-weight: 500;
+  outline: none;
+}
+.cenet-cmdbar__input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.cenet-cmdbar__sep {
+  width: 1px;
+  height: 22px;
+  background: var(--glass-border);
+  flex-shrink: 0;
+}
+
+/* Selector de modo en segmentos (Tema | Persona | Tendencias) */
+.cenet-segmented {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  background: rgba(2, 6, 12, 0.45);
+  border: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+body.light-mode .cenet-segmented {
+  background: rgba(12, 48, 34, 0.06);
+}
+.cenet-segmented__btn {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.73rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: calc(var(--radius-sm) - 2px);
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+  white-space: nowrap;
+}
+.cenet-segmented__btn:hover {
+  color: var(--text-primary);
+}
+.cenet-segmented__btn.is-active {
+  background: var(--accent-mint-dim);
+  color: var(--accent-mint);
+  box-shadow: inset 0 0 0 1px rgba(52, 245, 181, 0.32);
+}
+
+/* Selector de alcance en forma de ruta clicable (México / Estado / Municipio) */
+.cenet-breadcrumb-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.cenet-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 6px 3px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(2, 6, 12, 0.38);
+  border: 1px solid var(--glass-border);
+  max-width: 310px;
+}
+body.light-mode .cenet-breadcrumb {
+  background: rgba(12, 48, 34, 0.05);
+}
+.cenet-breadcrumb__pin {
+  color: var(--accent-cyan);
+  width: 13px;
+  height: 13px;
+  margin-right: 2px;
+}
+.cenet-crumb {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 500;
+  padding: 3px 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 118px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.cenet-crumb:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+.cenet-crumb.is-current {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.cenet-crumb__slash {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  user-select: none;
+}
+.cenet-crumb-chevron {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 3px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.cenet-crumb-chevron:hover {
+  color: var(--accent-cyan);
+}
+
+/* Popover de selección de territorio */
+.cenet-scope-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 300px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cenet-scope-popover[hidden] {
+  display: none !important;
+}
+.cenet-scope-popover__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-cyan);
+}
+.cenet-popover-close {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+}
+.cenet-popover-close:hover {
+  color: var(--text-primary);
+}
+.cenet-scope-popover__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cenet-field-lbl {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.69rem;
+  color: var(--text-secondary);
+}
+.cenet-select {
+  width: 100%;
+  padding: 6px 9px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-elevated);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  outline: none;
+}
+.cenet-select:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Botón Buscar con icono */
+.cenet-btn-search {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(52, 245, 181, 0.55);
+  background: var(--accent-mint);
+  color: var(--text-on-accent);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 0 18px rgba(52, 245, 181, 0.24);
+  transition: transform 0.14s ease, opacity 0.18s ease, box-shadow 0.18s ease;
+}
+.cenet-btn-search:hover:not(:disabled) {
+  box-shadow: 0 0 24px rgba(52, 245, 181, 0.42);
+}
+.cenet-btn-search:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.cenet-btn-search:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ═══════════════ 4. ESTADO VACÍO ATRACTIVO ANTES DE BUSCAR ═══════════════ */
+.cenet-empty-hero {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 20;
+  width: min(510px, calc(100% - 28px));
+  padding: 15px 18px;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: opacity 0.24s ease, transform 0.24s ease;
+}
+.cenet-empty-hero[hidden] {
+  display: none !important;
+}
+.cenet-empty-hero__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.cenet-empty-hero__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-mint-dim);
+  border: 1px solid rgba(52, 245, 181, 0.30);
+  color: var(--accent-mint);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.cenet-empty-hero__icon .cenet-icon {
+  width: 18px;
+  height: 18px;
+}
+.cenet-empty-hero__title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.cenet-empty-hero__sub {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.cenet-empty-hero__sub strong {
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.cenet-empty-hero__examples {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--glass-border);
+}
+.cenet-empty-hero__lbl {
+  font-family: var(--font-mono);
+  font-size: 0.67rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+.cenet-example-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.cenet-example-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.73rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+.cenet-example-chip .cenet-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--accent-cyan);
+}
+.cenet-example-chip:hover {
+  border-color: var(--glass-border-bright);
+  background: var(--accent-mint-dim);
+  color: var(--accent-mint);
+}
+
+/* ═══════════════ 5. LEYENDA MÍNIMA (SOLO CON RESULTADOS) ═══════════════ */
+.cenet-hud-bottom {
+  position: absolute;
+  left: 16px;
+  bottom: 18px;
+  z-index: 18;
+  pointer-events: none;
+}
+
+.cenet-legend {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 11px;
+  border-radius: var(--radius-full);
+}
+.cenet-legend[hidden] {
+  display: none !important;
+}
+.cenet-legend__lbl {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.03em;
+}
+.cenet-legend__bar {
+  width: 96px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--volume-gradient);
+  border: 1px solid var(--glass-border);
+}
+
+/* ═══════════════ 6. TOOLTIP DEL MAPA ═══════════════ */
+.cenet-tooltip {
+  position: fixed;
+  z-index: 45;
+  pointer-events: none;
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  font-size: 0.74rem;
+  min-width: 148px;
+  transform: translate(12px, -50%);
+}
+.cenet-tooltip[hidden] {
+  display: none !important;
+}
+.cenet-tooltip__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.cenet-tooltip__abrev {
+  font-family: var(--font-mono);
+  font-size: 0.63rem;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--accent-cyan-dim);
+  color: var(--accent-cyan);
+}
+.cenet-tooltip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  margin-top: 3px;
+}
+
+/* ═══════════════ 7. CAJÓN LATERAL DERECHO DE RESULTADOS ═══════════════ */
+.cenet-drawer {
+  position: relative;
+  width: var(--drawer-w);
+  max-width: 100%;
+  height: 100%;
+  z-index: 28;
+  display: flex;
+  flex-direction: column;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  border-left: 1px solid var(--glass-border);
+  margin-right: calc(-1 * var(--drawer-w));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    margin-right 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.24s ease,
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cenet-drawer.is-open {
+  margin-right: 0;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.cenet-drawer__handle {
+  display: none;
+}
+
+.cenet-drawer__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
+}
+
+/* Cabecera del cajón */
+.cenet-drawer__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.cenet-drawer__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-cyan);
+  margin-bottom: 3px;
+}
+.cenet-drawer__title {
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+.cenet-drawer__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 7px;
+}
+.cenet-meta-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--glass-border);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+.cenet-meta-tag strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.cenet-meta-tag--mono {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.cenet-close-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  border-radius: var(--radius-xs);
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: border-color 0.16s ease, color 0.16s ease;
+}
+.cenet-close-btn:hover {
+  border-color: var(--glass-border-bright);
+  color: var(--text-primary);
+}
+
+/* 4 Tarjetas KPI (2×2) */
+.cenet-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+}
+.cenet-kpi-card {
+  position: relative;
+  padding: 11px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 0 var(--glass-top-highlight);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.cenet-kpi-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.69rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.cenet-kpi-card__top .cenet-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--accent-cyan);
+}
+.cenet-kpi-card__val {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.28rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.cenet-kpi-card__val--mint {
+  color: var(--accent-mint);
+}
+.cenet-kpi-card__val--cyan {
+  color: var(--accent-cyan);
+}
+.cenet-kpi-card__sub {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  color: var(--text-muted);
+}
+
+/* Secciones tipo tarjeta dentro del cajón */
+.cenet-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.022);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  box-shadow: inset 0 1px 0 0 var(--glass-top-highlight);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cenet-card__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+.cenet-card__title-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cenet-card__title-left .cenet-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--accent-cyan);
+}
+.cenet-card__badge {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.67rem;
+  color: var(--accent-mint);
+}
+
+/* Gráfica de Volumen por día (14 días) con animación de entrada */
+.cenet-daily-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 98px;
+  padding-top: 8px;
+}
+.cenet-day-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+.cenet-day-bar {
+  width: 100%;
+  min-height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, var(--accent-mint) 0%, rgba(20, 159, 118, 0.35) 100%);
+  transform-origin: bottom;
+  animation: cenetBarGrowY 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.cenet-day-bar.is-zero {
+  background: var(--glass-border);
+  opacity: 0.4;
+}
+.cenet-day-lbl {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.56rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+@keyframes cenetBarGrowY {
+  from { transform: scaleY(0.05); opacity: 0.3; }
+  to   { transform: scaleY(1); opacity: 1; }
+}
+
+@keyframes cenetBarGrowX {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* Sentimiento (Verde menta / Ámbar / Rojo coral) */
+.cenet-sent-bar {
+  display: flex;
+  height: 8px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  gap: 2px;
+}
+.cenet-sent-bar__seg {
+  height: 100%;
+  transform-origin: left;
+  animation: cenetBarGrowX 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.cenet-sent-bar__pos { background: var(--sent-pos); }
+.cenet-sent-bar__neu { background: var(--sent-neu); }
+.cenet-sent-bar__neg { background: var(--sent-neg); }
+
+.cenet-sent-legend {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+.cenet-sent-pos { color: var(--sent-pos); }
+.cenet-sent-neu { color: var(--sent-neu); }
+.cenet-sent-neg { color: var(--sent-neg); }
+
+/* Categorías con barra de proporción */
+.cenet-cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.cenet-cat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cenet-cat-row__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+}
+.cenet-cat-row__name {
+  color: var(--text-primary);
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.cenet-cat-row__nums {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+.cenet-cat-row__track {
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+.cenet-cat-row__fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--accent-cyan) 0%, var(--accent-mint) 100%);
+  transform-origin: left;
+  animation: cenetBarGrowX 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Pestañas de Narrativas: "Oficial y afín" vs "Medios y ciudadanía" */
+.cenet-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 3px;
+  border-radius: var(--radius-sm);
+  background: rgba(2, 6, 12, 0.42);
+  border: 1px solid var(--glass-border);
+}
+body.light-mode .cenet-tabs {
+  background: rgba(12, 48, 34, 0.06);
+}
+.cenet-tab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: calc(var(--radius-sm) - 2px);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+.cenet-tab-btn.is-active {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  box-shadow: inset 0 0 0 1px var(--glass-border-bright);
+}
+.cenet-tab-btn__count {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.66rem;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--accent-mint);
+}
+
+.cenet-tab-pane[hidden] {
+  display: none !important;
+}
+
+/* Tarjetas de narrativa y posts con etiquetas de color por tipo de fuente */
+.cenet-post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cenet-post-card {
+  padding: 10px 11px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.028);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.16s ease;
+}
+.cenet-post-card:hover {
+  border-color: rgba(148, 210, 194, 0.28);
+}
+.cenet-post-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cenet-post-card__author-wrap {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.cenet-post-card__author {
+  font-size: 0.77rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.cenet-post-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+/* Etiquetas por tipo de fuente y sentimiento */
+.cenet-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.cenet-badge {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.cenet-badge--oficial {
+  background: var(--accent-cyan-dim);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(34, 211, 238, 0.30);
+}
+.cenet-badge--politico {
+  background: rgba(56, 189, 248, 0.14);
+  color: #7dd3fc;
+  border: 1px solid rgba(56, 189, 248, 0.30);
+}
+.cenet-badge--medio {
+  background: var(--accent-mint-dim);
+  color: var(--accent-mint);
+  border: 1px solid rgba(52, 245, 181, 0.28);
+}
+.cenet-badge--ciudadano {
+  background: rgba(148, 163, 184, 0.14);
+  color: var(--text-primary);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+.cenet-badge--pos {
+  background: rgba(52, 245, 181, 0.13);
+  color: var(--sent-pos);
+}
+.cenet-badge--neu {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--sent-neu);
+}
+.cenet-badge--neg {
+  background: rgba(244, 63, 94, 0.15);
+  color: var(--sent-neg);
+}
+.cenet-badge--sin_clasificar {
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--text-secondary);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+}
+
+.cenet-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.cenet-post-card__text {
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  white-space: pre-line;
+}
+
+.cenet-post-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(148, 210, 194, 0.08);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.67rem;
+  color: var(--text-muted);
+}
+.cenet-post-metrics {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+}
+.cenet-post-metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.cenet-post-metric .cenet-icon {
+  width: 12px;
+  height: 12px;
+  color: var(--text-muted);
+}
+.cenet-post-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent-cyan);
+  text-decoration: none;
+  font-weight: 500;
+}
+.cenet-post-link .cenet-icon {
+  width: 12px;
+  height: 12px;
+}
+.cenet-post-link:hover {
+  color: var(--accent-mint);
+}
+
+.cenet-empty-box {
+  padding: 16px 12px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border: 1px dashed var(--glass-border);
+  border-radius: var(--radius-xs);
+}
+
+/* ═══════════════ 8. ESQUELETOS DE CARGA CON BRILLO (SHIMMER) ═══════════════ */
+.cenet-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-xs);
+}
+.cenet-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(52, 245, 181, 0.09) 45%,
+    rgba(34, 211, 238, 0.14) 55%,
+    transparent 100%
+  );
+  animation: cenetShimmer 1.35s infinite;
+}
+@keyframes cenetShimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* Modal / aviso discreto */
+.cenet-status-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(4, 7, 13, 0.55);
+  backdrop-filter: blur(4px);
+}
+.cenet-status-overlay[hidden] {
+  display: none !important;
+}
+.cenet-status-card {
+  max-width: 360px;
+  width: 100%;
+  border-radius: var(--radius-md);
+  padding: 18px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.cenet-status-card h3 {
+  font-size: 0.92rem;
+  color: var(--text-primary);
+}
+.cenet-status-card p {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+/* ═══════════════ 9. RESPONSIVE (1440px, 768px, 390px) ═══════════════ */
+@media (max-width: 960px) {
+  :root {
+    --drawer-w: 390px;
+  }
+  .cenet-cmdbar {
+    flex-wrap: wrap;
+    padding: 8px;
+  }
+  .cenet-cmdbar__sep {
+    display: none;
+  }
+  .cenet-cmdbar__field {
+    flex: 1 1 55%;
+  }
+  .cenet-drawer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    margin-right: 0;
+    transform: translateX(100%);
+  }
+  .cenet-drawer.is-open {
+    transform: translateX(0);
+  }
+  .maplibregl-ctrl-top-left {
+    top: 112px !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .cenet-topbar {
+    padding: 0 10px;
+  }
+  .cenet-logo__sub,
+  .cenet-back-link span,
+  .cenet-icon-btn__txt {
+    display: none;
+  }
+  .cenet-cmdbar-wrap {
+    top: 10px;
+    width: calc(100% - 16px);
+  }
+  .cenet-cmdbar {
+    gap: 6px;
+    padding: 7px 8px;
+  }
+  .cenet-cmdbar__field {
+    flex: 1 1 100%;
+    order: 1;
+  }
+  .cenet-segmented {
+    order: 2;
+    flex: 1;
+    justify-content: space-between;
+  }
+  .cenet-segmented__btn {
+    flex: 1;
+    text-align: center;
+    padding: 5px 6px;
+    font-size: 0.7rem;
+  }
+  .cenet-breadcrumb-wrap {
+    order: 3;
+    flex: 1 1 auto;
+  }
+  .cenet-breadcrumb {
+    max-width: 100%;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .cenet-crumb {
+    max-width: 86px;
+    font-size: 0.7rem;
+  }
+  .cenet-btn-search {
+    order: 4;
+    padding: 6px 11px;
+    font-size: 0.74rem;
+  }
+  .cenet-scope-popover {
+    left: 0;
+    right: auto;
+    width: min(290px, 88vw);
+  }
+
+  .cenet-empty-hero {
+    bottom: 14px;
+    width: calc(100% - 16px);
+    padding: 12px 14px;
+  }
+
+  /* Cajón pasa a hoja inferior arrastrable (bottom sheet) en móvil */
+  .cenet-drawer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: 100%;
+    height: 66vh;
+    border-left: none;
+    border-top: 1px solid var(--glass-border-bright);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    transform: translateY(105%);
+  }
+  .cenet-drawer.is-open {
+    transform: translateY(0);
+  }
+  .cenet-drawer.is-collapsed {
+    transform: translateY(calc(66vh - 68px));
+  }
+  .cenet-drawer__handle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 9px 0 4px;
+    cursor: grab;
+    touch-action: none;
+  }
+  .cenet-drawer__handle-bar {
+    width: 38px;
+    height: 4px;
+    border-radius: var(--radius-full);
+    background: var(--glass-border-bright);
+  }
+}
+
+/* Respeto estricto a prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* ───────── Historial de búsquedas ───────── */
+.cenet-hist { margin-top: 14px; }
+.cenet-hist__list { display: grid; gap: 8px; margin-top: 8px; }
+.cenet-hist__card {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 10px 12px;
+  border: 1px solid var(--border-subtle, rgba(255,255,255,.12)); border-radius: 10px; cursor: pointer; text-align: left;
+  background: transparent; color: inherit; width: 100%;
+}
+.cenet-hist__card:hover, .cenet-hist__card:focus-visible { border-color: var(--accent, #22e0ff); outline: none; }
+.cenet-hist__ico { width: 28px; height: 28px; display: grid; place-items: center; opacity: .85; }
+.cenet-hist__ico svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.cenet-hist__tema { font-size: .84rem; font-weight: 600; }
+.cenet-hist__meta { font-size: .72rem; opacity: .7; margin-top: 2px; }
+.cenet-hist__del { background: transparent; border: 0; color: inherit; opacity: .55; cursor: pointer; padding: 6px; border-radius: 6px; min-width: 32px; min-height: 32px; }
+.cenet-hist__del:hover { opacity: 1; }
+.cenet-hist-btn { background: transparent; border: 0; color: inherit; cursor: pointer; padding: 8px; border-radius: 8px; min-width: 40px; min-height: 40px; }
+.cenet-hist-btn:hover { background: rgba(255,255,255,.08); }
+.cenet-hist-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: .72rem; opacity: .85; margin-bottom: 10px; }
+.cenet-hist-refresh { background: transparent; border: 1px solid currentColor; color: inherit; border-radius: 8px; padding: 5px 10px; font-size: .72rem; cursor: pointer; }
+
+.cenet-tl { display: flex; align-items: flex-end; gap: 3px; height: 44px; margin-top: 8px; }
+.cenet-tl span { flex: 1; min-width: 4px; background: var(--accent, #22e0ff); opacity: .8; border-radius: 2px 2px 0 0; }

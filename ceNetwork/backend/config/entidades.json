@@ -1,0 +1,22 @@
+{
+  "5b11a82822": {
+    "id": "5b11a82822",
+    "tipo": "persona",
+    "nombre": "Víctor Hugo Lobo Román",
+    "cargo": "",
+    "partido": "Morena",
+    "territorio": {
+      "estado_id": "09",
+      "municipio_id": "09005",
+      "nombre": "Gustavo A. Madero"
+    },
+    "idioma": "es",
+    "monitoreo": false,
+    "variantes": [],
+    "paginas_oficiales": [
+      "https://www.facebook.com/people/Victor-Hugo-Lobo-Roman/100066646683577/"
+    ],
+    "hashtags": [],
+    "palabras_descarte": []
+  }
+}

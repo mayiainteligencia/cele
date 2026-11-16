@@ -110,7 +110,7 @@
 
         </div>
 
-        <!-- Fila 2: 2 módulos -->
+        <!-- Fila 2: 3 módulos -->
         <div class="eco-modules-row">
 
           <!-- Inteligencia Día D -->
@@ -122,6 +122,17 @@
               <div class="atom__ring atom__ring--3"></div>
             </div>
             <span class="eco-module__label" data-i18n="eco.dia_d">Inteligencia<br>Día D</span>
+          </a>
+
+          <!-- ceNetwork · Escucha Social -->
+          <a href="ceNetwork/index.html" class="eco-module" target="_blank" rel="noopener" id="mod-network">
+            <div class="atom">
+              <div class="atom__core"></div>
+              <div class="atom__ring atom__ring--1"></div>
+              <div class="atom__ring atom__ring--2"></div>
+              <div class="atom__ring atom__ring--3"></div>
+            </div>
+            <span class="eco-module__label" data-i18n="eco.network">ceNetwork<br>Escucha Social</span>
           </a>
 
           <!-- Tu Gobierno Inteligente -->
@@ -192,6 +203,14 @@
         core.style.animationDelay = -(Math.random() * 2.5) + 's';
       }
     });
+  })();
+
+  /* ── Enlace configurable a ceNetwork por variable de entorno ── */
+  (function initCeNetworkLink() {
+    const netEl = document.getElementById('mod-network');
+    if (!netEl) return;
+    const url = (window.CE_ENV && window.CE_ENV.VITE_CENETWORK_URL) || localStorage.getItem('VITE_CENETWORK_URL') || 'ceNetwork/index.html';
+    netEl.href = url;
   })();
 
   /* ── Lucide icons ── */

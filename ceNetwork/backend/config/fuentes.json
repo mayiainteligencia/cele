@@ -1,0 +1,23 @@
+{
+  "oficial": [
+    { "id": "100064560255110", "nombre": "Alcaldía Tlalpan", "handles": ["TlalpanAl", "Alcaldía Tlalpan", "Alcaldia Tlalpan"] },
+    { "id": "ssc_cdmx", "nombre": "Secretaría de Seguridad Ciudadana CDMX", "handles": ["SSC CDMX", "Visión Policial CDMX", "Vision Policial CDMX"] },
+    { "id": "gob_cdmx", "nombre": "Gobierno de la Ciudad de México", "handles": ["GobiernoCDMX", "Gobierno de la Ciudad de México"] }
+  ],
+  "politico": [
+    { "id": "100044587330856", "nombre": "Gabriela Osorio", "handles": ["GabyOsorioMorena", "Gabriela Osorio", "Gaby Osorio"] },
+    { "id": "100044326185083", "nombre": "Clara Brugada", "handles": ["ClaraBrugadaM", "Clara Brugada"] },
+    { "id": "100011005259960", "nombre": "Jesus Ulises Melgoza Mendoza", "handles": ["Jesus Ulises Melgoza Mendoza", "Ulises Melgoza"] },
+    { "id": "saul_magdaleno", "nombre": "Saul MagdalenoGiles", "handles": ["Saul MagdalenoGiles"] }
+  ],
+  "medio": [
+    { "id": "100064544776219", "nombre": "Sin Embargo MX", "handles": ["SinEmbargoMX", "Sin Embargo MX"] },
+    { "id": "100070742507243", "nombre": "Red Central", "handles": ["LaRedCentral", "Red Central"] },
+    { "id": "61575089874495", "nombre": "Noticias Tlalpenses", "handles": ["Noticias Tlalpenses"] },
+    { "id": "el_hilo_mx", "nombre": "El HILO MX", "handles": ["El HILO MX"] },
+    { "id": "denuncias_tlalpan", "nombre": "Denuncias y Noticias Tlalpan", "handles": ["Denuncias y Noticias Tlalpan"] },
+    { "id": "el_pueblo_manda", "nombre": "El Pueblo Manda", "handles": ["El Pueblo Manda"] },
+    { "id": "100066425051983", "nombre": "No Mi Ciela", "handles": ["No Mi Ciela"] }
+  ]
+}
+
