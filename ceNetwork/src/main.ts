@@ -19,10 +19,16 @@ import {
   type ThemeMode,
   type MapThemePalette,
 } from './map/theme';
+import { montarPestanas } from './analisisUi';
+import { confirmar } from './dialogo';
 import { computeFeatureBBox, computeFeatureCenter } from './data/mockGenerator';
 import {
   abrirHistorialEntry,
   analyzePersonaPage,
+  estimadoPlataformas,
+  estimadoComentarios,
+  extraerComentarios,
+  calcularQueSeSabe,
   borradorAlerta,
   borrarHistorial,
   checkBackendSearchMode,
@@ -51,6 +57,11 @@ import type {
   SocialApiNarrative,
   SocialApiPost,
   SocialApiSummary,
+  DescartadoDetalle,
+  Plataforma,
+  EstimadoPlataformas,
+  PeriodoReq,
+  PeriodoInfo,
 } from './types';
 
 declare global {
@@ -288,6 +299,16 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
   let globeSpinning = !prefersReducedMotion();
   let spinFrameId: number | null = null;
   let lastSpinTs = 0;
+  // Tooltip y giro: el giro se pausa con el cursor sobre el mapa o con interacción, y se reanuda tras unos segundos
+  let cursorOnMap = false;
+  let interacting = false;
+  let lastPointer: { x: number; y: number } | null = null;
+  let pausedUntil = 0;
+  let swayBase: { lng: number; lat: number } | null = null;
+  let swayPhase = 0;
+  const PAUSA_MS = 5000;
+  const SWAY_DEG = 4;        // oscilación de pocos grados alrededor del centro (México)
+  const SWAY_PERIOD_S = 90;  // periodo lento
 
   // Referencias del DOM
   const topicInput = document.getElementById('cenet-topic-input') as HTMLInputElement;
@@ -462,6 +483,7 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
       btn.classList.toggle('is-active', active);
       btn.setAttribute('aria-checked', active ? 'true' : 'false');
     });
+    if (typeof actualizarBloqueoBusqueda === 'function') actualizarBloqueoBusqueda();
   }
 
   syncModeSegmentedUi(currentMode);
@@ -539,8 +561,9 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
 
   /** El botón Buscar se bloquea mientras busca y mientras no haya un lugar elegido. */
   function actualizarBloqueoBusqueda(): void {
-    if (searchBtn) searchBtn.disabled = searchInFlight || !scopeElegido;
-    if (searchBtnLabel) searchBtnLabel.textContent = searchInFlight ? 'Buscando…' : scopeElegido ? 'Buscar' : 'Elige un lugar';
+    const puedeBuscar = scopeElegido || Boolean(currentMode === 'persona' && fichaSel?.territorio?.nombre);   // el territorio de la ficha es el alcance por defecto
+    if (searchBtn) searchBtn.disabled = searchInFlight || !puedeBuscar;
+    if (searchBtnLabel) searchBtnLabel.textContent = searchInFlight ? 'Buscando…' : puedeBuscar ? 'Buscar' : 'Elige un lugar';
   }
 
   function setSearchLoadingUi(loading: boolean): void {
@@ -590,19 +613,28 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
     }
   }
 
+  function registrarActividad(): void {
+    pausedUntil = Date.now() + PAUSA_MS;
+    swayBase = null;   // al reanudar, la oscilación se ancla en donde el usuario dejó el globo
+  }
+
   function spinStep(ts: number): void {
     if (!globeSpinning || prefersReducedMotion()) return;
-    if (lastSpinTs > 0) {
-      const dt = (ts - lastSpinTs) / 1000;
-      const c = map.getCenter();
-      map.setCenter([c.lng - config.globeSpinSpeedDegPerSec * dt, c.lat]);
-    }
+    const dt = lastSpinTs > 0 ? (ts - lastSpinTs) / 1000 : 0;
     lastSpinTs = ts;
+    if (cursorOnMap || interacting || Date.now() < pausedUntil) {
+      swayBase = null;
+    } else {
+      const c = map.getCenter();
+      if (!swayBase) swayBase = { lng: c.lng - SWAY_DEG * Math.sin(swayPhase), lat: c.lat };
+      swayPhase += (dt * 2 * Math.PI) / SWAY_PERIOD_S;
+      map.setCenter([swayBase.lng + SWAY_DEG * Math.sin(swayPhase), swayBase.lat]);
+    }
     spinFrameId = requestAnimationFrame(spinStep);
   }
 
   ['mousedown', 'touchstart', 'wheel', 'dragstart'].forEach((evName) => {
-    map.getCanvasContainer().addEventListener(evName, () => stopGlobeSpin(), { passive: true });
+    map.getCanvasContainer().addEventListener(evName, () => registrarActividad(), { passive: true });
   });
 
   function setStatus(status: DataStatus, message = ''): void {
@@ -929,12 +961,16 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
         id: 'state-abbr-labels',
         type: 'symbol',
         source: 'state-labels-src',
+        minzoom: 4,   // a vista de globo completo no se dibujan
         layout: {
           'text-field': ['get', 'label'],
           'text-font': ['Noto Sans Bold', 'Open Sans Bold', 'Arial Unicode MS Bold'],
           'text-size': ['interpolate', ['linear'], ['zoom'], 2, 9, 5, 11, 7, 12.5],
-          'text-allow-overlap': false,
-          'text-padding': 2,
+          'text-allow-overlap': false,   // colisión de etiquetas activada: no se solapan
+          'text-ignore-placement': false,
+          'text-optional': true,
+          'symbol-avoid-edges': true,
+          'text-padding': 6,
         },
         paint: {
           'text-color': theme.labelText,
@@ -1263,8 +1299,10 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
 
   function getSourceBadgeLabel(tipo: string): string {
     if (tipo === 'oficial') return 'Oficial';
-    if (tipo === 'politico') return 'Político';
+    if (tipo === 'politico' || tipo === 'afin') return 'Afín';
+    if (tipo === 'persona') return 'Persona';
     if (tipo === 'medio') return 'Medio';
+    if (tipo === 'sin_clasificar') return 'Sin clasificar';
     return 'Ciudadano';
   }
 
@@ -1323,14 +1361,14 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
 
   function renderNarrativeCard(n: SocialApiNarrative): string {
     const srcLabel = getSourceBadgeLabel(n.tipo_fuente);
-    const isOfficial = n.tipo_fuente === 'oficial' || n.tipo_fuente === 'politico';
+    const isOfficial = ['oficial', 'afin', 'politico', 'persona', 'sin_clasificar'].includes(n.tipo_fuente);
     const sentBadge = !isOfficial ? renderSentimentBadge(n.sentimiento) : '';
     const cleanedTitle = cleanDisplayText(n.titulo || n.texto || '');
     return `
       <article class="cenet-post-card">
         <div class="cenet-post-card__head">
           <div class="cenet-post-card__author-wrap">
-            <span class="cenet-post-card__author">${escapeHtml(n.fuentes.join(', '))}</span>
+            <span class="cenet-post-card__author">${escapeHtml(n.fuentes.join(', '))}${n.plataformas && n.plataformas.length > 1 ? ` · ${escapeHtml(n.plataformas.map((x) => NOMBRE_PLAT[x] ?? x).join(' + '))}` : ''}</span>
             <div class="cenet-post-card__meta">
               <span style="text-transform:capitalize;">${escapeHtml(n.categoria)}</span>
               ${n.time ? `<span>· ${escapeHtml(formatCorridaDate(n.time))}</span>` : ''}
@@ -1354,17 +1392,89 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
     `;
   }
 
+  /* ───────── Qué se sabe hoy y pasos para conseguir más muestra ───────── */
+  const NOMBRE_TIPO: Record<string, string> = { persona: 'publicado por la persona', oficial: 'oficial', afin: 'afín', medio: 'medio', ciudadano: 'ciudadano', sin_clasificar: 'sin clasificar' };
+
+  function baseTexto(c: { posts: number; comentarios: number }): string {
+    return `${c.posts} posts + ${c.comentarios} comentarios`;
+  }
+
+  /** Etiqueta de la muestra: «Preliminar (N posts)» con 1 a MUESTRA_MIN-1, y el nivel de confianza. */
+  function renderConfianza(c?: { preliminar: boolean; etiqueta: string; nivel: string; vacio: boolean }): string {
+    if (!c) return '';
+    if (c.vacio) return '<span class="cenet-card__badge">Sin muestra</span>';
+    return `${c.preliminar ? `<span class="cenet-card__badge" style="color:var(--sent-neu);">${escapeHtml(c.etiqueta)}</span> ` : ''}<span class="cenet-card__badge">Confianza ${escapeHtml(c.nivel)}</span>`;
+  }
+
+  function renderQueSeSabe(summary: SocialApiSummary): string {
+    const q = summary.que_se_sabe;
+    if (!q) return '<section class="cenet-card" id="cenet-quesesabe"><div class="cenet-card__title"><span class="cenet-card__title-left">Qué se sabe hoy</span></div><div class="cenet-skeleton" style="height:60px;"></div></section>';
+    const tipos = Object.entries(q.por_tipo_fuente).filter(([, n]) => n > 0).map(([t, n]) => `${NOMBRE_TIPO[t] ?? t}: ${n}`).join(' · ') || 'sin posts';
+    const plats = Object.entries(q.por_plataforma).map(([p, n]) => `${NOMBRE_PLAT[p] ?? p}: ${n}`).join(' · ') || 'sin posts';
+    const narr = q.narrativas.map((n) => {
+      const d = n.desglose_reacciones;
+      const rz = (v: number | null) => (v == null ? 'sin dato' : v.toFixed(2));
+      return `<div class="cenet-desc__item"><b>${escapeHtml(n.titulo || n.fragmento)}</b>
+        <small>${n.cuentas} ${n.cuentas === 1 ? 'cuenta' : 'cuentas'} · ${n.posts} ${n.posts === 1 ? 'post' : 'posts'} · desde ${escapeHtml(formatCorridaDate(n.desde))} · ${formatMetricEs(n.interaccion)} interacciones · ${escapeHtml(n.plataformas.map((p) => NOMBRE_PLAT[p] ?? p).join(', '))}</small>
+        <small>Señal de conversación: ${rz(n.comentarios_por_reaccion)} comentarios por reacción · ${rz(n.compartidos_por_reaccion)} compartidos por reacción${d ? ` · enojo ${d.enojo}, risa ${d.risa}, tristeza ${d.tristeza}` : ''}</small></div>`;
+    }).join('');
+    const f = q.falta;
+    const faltaTxt = f.faltan_para_media > 0
+      ? `Hay ${f.posts_terceros} posts + ${f.comentarios_terceros} comentarios de terceros; se necesitan ${f.minimo} para confianza media (faltan ${f.faltan_para_media}) y 20 para alta.`
+      : f.faltan_para_alta > 0 ? `Hay ${f.posts_terceros} posts + ${f.comentarios_terceros} comentarios de terceros; para confianza alta faltan ${f.faltan_para_alta}.` : `Hay ${f.posts_terceros} posts + ${f.comentarios_terceros} comentarios de terceros: base suficiente.`;
+    return `<section class="cenet-card" id="cenet-quesesabe"><div class="cenet-card__title"><span class="cenet-card__title-left">Qué se sabe hoy</span><span>${renderConfianza(q.confianza)}</span></div>
+      <p class="cenet-hist__meta">Calculado en código con ${q.total_posts} posts del periodo; sin IA.</p>
+      <p style="font-size:0.78rem;">Por tipo de fuente: ${escapeHtml(tipos)}<br>Por plataforma: ${escapeHtml(plats)}</p>
+      ${q.aviso_tipo ? `<p class="cenet-an-aviso">${escapeHtml(q.aviso_tipo)}</p>` : ''}
+      ${narr ? `<h4 class="cenet-desc__h">Narrativas principales</h4>${narr}<p class="cenet-an-nota">${escapeHtml(q.nota_senal)}.</p>` : '<p class="cenet-an-nota">Sin narrativas repetidas en el periodo.</p>'}
+      <h4 class="cenet-desc__h">Qué falta</h4><p style="font-size:0.78rem;">${escapeHtml(faltaTxt)}</p>
+      ${q.confianza.vacio ? renderPasosSiguientes(summary) : ''}</section>`;
+  }
+
+  const PERIODO_SIGUIENTE: Record<string, [string, string]> = { '1': ['7', '7 días'], '7': ['30', '30 días'], '14': ['30', '30 días'], '30': ['90', '90 días'], '90': ['0', 'Todo el historial'] };
+
+  /** Lista de pasos para conseguir muestra, con botón y costo estimado. Se usa en el estado vacío y en las pestañas. */
+  function renderPasosSiguientes(summary: SocialApiSummary): string {
+    const persona = summary.query?.modo === 'persona';
+    const sigPeriodo = PERIODO_SIGUIENTE[periodoSelEl?.value ?? '14'];
+    const faltan = (['facebook', 'x', 'tiktok', 'instagram'] as Plataforma[]).filter((p) => !plataformasSel().includes(p));
+    const hayPostsCom = summary.posts_recientes.some((p) => (p.plataforma || 'facebook') !== 'tiktok' && (p.plataforma || 'facebook') !== 'instagram' && p.url);
+    const paso = (id: string, titulo: string, desc: string, btn: string, off = false) =>
+      `<div class="cenet-paso"><div><b>${titulo}</b><small>${desc}</small></div><div class="cenet-paso__acc"><span class="cenet-paso__costo" data-costo="${id}"></span><button type="button" class="cenet-hist-refresh" data-paso="${id}" ${off ? 'disabled' : ''}>${btn}</button></div></div>`;
+    const pasos = [
+      persona ? paso('comentarios', 'Extraer comentarios de los posts con más interacción', hayPostsCom ? 'Es donde la gente opina; heredan la atribución del post.' : 'Requiere al menos 1 post atribuido de Facebook o X.', 'Extraer', !hayPostsCom) : '',
+      sigPeriodo ? paso('periodo', `Ampliar el periodo a ${sigPeriodo[1]}`, 'Más tiempo trae más publicaciones; el tope por plataforma no cambia.', 'Buscar de nuevo') : '',
+      faltan.length ? paso('plataformas', `Activar ${faltan.map((p) => NOMBRE_PLAT[p]).join(', ')}`, 'Más plataformas, más menciones.', 'Buscar con todas') : '',
+      persona ? paso('ficha', 'Completar la ficha', 'Cargo, apodo, hashtags y variantes del nombre.', 'Abrir ficha') : '',
+      persona && !summary.persona?.pagina_url ? paso('pagina', 'Agregar su página oficial', 'Para excluir lo que publica la propia persona de la opinión.', 'Buscar página') : '',
+    ].filter(Boolean).join('');
+    return pasos ? `<div class="cenet-pasos"><h4 class="cenet-desc__h">Cómo conseguir una muestra</h4>${pasos}</div>` : '';
+  }
+
+  function renderAvisosPersona(summary: SocialApiSummary): string {
+    const av = [summary.aviso_ficha, summary.aviso_menciones].filter(Boolean) as string[];
+    return av.length ? `<section class="cenet-card" style="border-color:rgba(245, 158, 11, 0.40);">${av.map((a) => `<p class="cenet-hist__meta" style="color:var(--sent-neu);">${escapeHtml(a)}</p>`).join('')}</section>` : '';
+  }
+
   function renderPersonaSection(summary: SocialApiSummary): string {
     const per = summary.persona;
     const st = summary.sin_texto;
     if (!per) return '';
     const origenTxt = (o?: string) => (o === 'publicado_por_persona' ? 'publicada por la persona' : 'mención');
+    const op = summary.opinion;
+    const pp = summary.publicado_por_persona;
+    const comentariosHtml = summary.comentarios
+      ? `<p class="cenet-hist__meta">Comentarios extraídos: ${summary.comentarios.items.length} de ${summary.comentarios.posts_consultados} posts. Entran a las cifras de opinión.</p>`
+      : `<button type="button" class="cenet-hist-refresh" data-comentarios>Extraer comentarios</button>`;
     return `
       <section class="cenet-card">
         <div class="cenet-card__title">
-          <span class="cenet-card__title-left"><span>Página elegida: ${escapeHtml(per.pagina_nombre || per.pagina_url)}</span></span>
+          <span class="cenet-card__title-left"><span>${per.pagina_url ? `Página elegida: ${escapeHtml(per.pagina_nombre || per.pagina_url)}` : 'Qué dicen los demás'}</span></span>
+          ${per.pagina_url ? '' : '<button type="button" class="cenet-link-btn" data-agregar-pagina>Agregar su página oficial</button>'}
         </div>
-        <p style="font-size:0.78rem;">${per.publicados} publicadas por la persona · ${per.menciones} menciones de terceros</p>
+        ${op ? `<p style="font-size:0.78rem;"><strong>Opinión de terceros</strong> ${renderConfianza(op.confianza)}: ${op.base > 0 ? `${op.positive}% positivo · ${op.neutral}% neutral · ${op.negative}% negativo` : 'sin muestra todavía'}<br>
+          <span class="cenet-hist__meta">Respaldo: ${op.posts} posts + ${op.comentarios} comentarios. No incluye lo que publica la propia persona.</span></p>` : ''}
+        ${summary.relevantes_posts > 0 ? comentariosHtml : ''}
         ${
           st && st.total
             ? `<p style="font-size:0.78rem;margin-top:6px;"><strong>${st.total} sin texto, no analizables</strong> (${st.publicados} de la persona, ${st.menciones} menciones)</p>
@@ -1379,6 +1489,33 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
             : ''
         }
       </section>
+      ${renderAvisosPersona(summary)}
+      ${
+        summary.variantes_buscadas?.length
+          ? `<details class="cenet-card"><summary>Variantes buscadas (${summary.variantes_buscadas.length})</summary>
+              <p class="cenet-an-nota">Posts traídos que mencionan cada variante.</p>
+              ${summary.variantes_buscadas.map((v) => `<div class="cenet-desc__item"><b>${escapeHtml(v.variante)}</b> <span class="cenet-card__badge">${escapeHtml(v.tipo)}</span> · ${v.posts} posts</div>`).join('')}</details>`
+          : ''
+      }
+      ${
+        summary.lugares_mencion?.length
+          ? `<section class="cenet-card"><div class="cenet-card__title"><span class="cenet-card__title-left">Dónde se habla de la persona</span></div>
+              ${(() => {
+                const max = Math.max(...summary.lugares_mencion!.map((l) => l.posts), 1);
+                return summary.lugares_mencion!
+                  .map((l) => `<div class="cenet-an-bar"><span>${escapeHtml(l.lugar)}</span><div class="cenet-an-bar__track"><i class="is-pos" style="width:${Math.round((l.posts / max) * 100)}%"></i></div><b>${l.posts} ${l.posts === 1 ? 'post' : 'posts'}</b></div>`)
+                  .join('');
+              })()}
+              <p class="cenet-an-nota">Conteo por lugares citados en el texto (municipios y colonias); no es geolocalización.</p></section>`
+          : ''
+      }
+      ${
+        pp && pp.total
+          ? `<details class="cenet-card"><summary>Publicado por la persona (${pp.total})</summary>
+              <p class="cenet-hist__meta" style="color:var(--sent-neu);">No entra en las cifras de opinión. ${pp.en_periodo} dentro del periodo.</p>
+              ${pp.posts.map((d) => `<div class="cenet-desc__item"><b>${escapeHtml(d.autor || '')}</b> (${escapeHtml(NOMBRE_PLAT[d.plataforma] ?? d.plataforma)}) · ${escapeHtml(formatCorridaDate(d.fecha))} · ${formatMetricEs(d.interacciones)} interacciones${d.url ? ` · <a href="${escapeHtml(d.url)}" target="_blank" rel="noopener noreferrer">ver publicación</a>` : ''}<small>${escapeHtml(d.fragmento)}</small></div>`).join('')}</details>`
+          : ''
+      }
     `;
   }
 
@@ -1391,6 +1528,111 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
       closeDrawer();
       map.resize();
     });
+  }
+
+  /* ───────── Plataformas: selector, costo estimado y colores ───────── */
+  const NOMBRE_PLAT: Record<string, string> = { facebook: 'Facebook', x: 'X', tiktok: 'TikTok', instagram: 'Instagram' };
+  const COLOR_PLAT: Record<string, string> = { facebook: '#4c8dff', x: '#cbd5e1', tiktok: '#22e0ff', instagram: '#ff3d81' };
+  const platBox = document.getElementById('cenet-plat');
+  const platCosto = document.getElementById('cenet-plat-costo');
+
+  /* ───────── Periodo de la búsqueda ───────── */
+  const periodoSelEl = document.getElementById('cenet-periodo') as HTMLSelectElement | null;
+  const rangoEl = document.getElementById('cenet-rango') as HTMLElement | null;
+  const rangoFechasEl = document.getElementById('cenet-rango-fechas') as HTMLElement | null;
+  const rangoNotaEl = document.getElementById('cenet-rango-nota') as HTMLElement | null;
+  const desdeEl = document.getElementById('cenet-desde') as HTMLInputElement | null;
+  const hastaEl = document.getElementById('cenet-hasta') as HTMLInputElement | null;
+
+  /** Periodo elegido: {dias} (0 = todo el historial) o {desde, hasta}. Por defecto 14 días. */
+  function periodoSel(): PeriodoReq {
+    const v = periodoSelEl?.value ?? '14';
+    if (v === 'rango') {
+      const desde = desdeEl?.value || undefined;
+      const hasta = hastaEl?.value || undefined;
+      return desde || hasta ? { desde, hasta } : { dias: 14 };
+    }
+    return { dias: Number(v) };
+  }
+
+  /** Periodo de una búsqueda guardada, en el formato de la petición. */
+  function periodoDe(p?: PeriodoInfo): PeriodoReq {
+    if (!p) return {};
+    return p.tipo === 'todo' ? { dias: 0 } : p.tipo === 'rango' ? { desde: p.desde ?? undefined, hasta: p.hasta ?? undefined } : { dias: p.dias ?? 14 };
+  }
+
+  function actualizarPopoverPeriodo(): void {
+    const v = periodoSelEl?.value;
+    if (!rangoEl) return;
+    rangoEl.hidden = !(v === 'rango' || v === '0');
+    if (rangoFechasEl) rangoFechasEl.hidden = v !== 'rango';
+    if (rangoNotaEl) rangoNotaEl.hidden = v !== '0';
+  }
+  periodoSelEl?.addEventListener('change', () => {
+    actualizarPopoverPeriodo();
+    void refrescarCostoPlat();
+  });
+  [desdeEl, hastaEl].forEach((el) => el?.addEventListener('change', () => void refrescarCostoPlat()));
+  document.addEventListener('click', (e) => {
+    if (rangoEl && !rangoEl.hidden && !(e.target as HTMLElement).closest('#cenet-periodo-wrap')) rangoEl.hidden = true;
+  });
+
+  function plataformasSel(): Plataforma[] {
+    const sel = Array.from(platBox?.querySelectorAll<HTMLInputElement>('input:checked') ?? []).map((i) => i.value as Plataforma);
+    return sel.length ? sel : ['facebook'];
+  }
+
+  function textoCosto(est: EstimadoPlataformas): string {
+    if (!est.en_vivo) return `Sin costo: datos de ejemplo${est.nota_todo ? `\n\n${est.nota_todo}` : ''}`;
+    const filas = Object.entries(est.plataformas).map(([p, f]) => `${NOMBRE_PLAT[p] ?? p}: hasta ${f.max_resultados} resultados, USD ${f.costo_usd.toFixed(3)}`);
+    return `${filas.join('\n')}\nTotal máximo estimado: USD ${est.total_usd.toFixed(3)}${est.aviso_periodo ? `\n\n${est.aviso_periodo}` : ''}${est.nota_todo ? `\n\n${est.nota_todo}` : ''}`;
+  }
+
+  async function refrescarCostoPlat(): Promise<void> {
+    if (!platCosto) return;
+    try {
+      const est = await estimadoPlataformas(apiHist, plataformasSel(), currentMode, periodoSel());
+      platCosto.textContent = `Costo estimado\n${textoCosto(est)}`;
+    } catch {
+      platCosto.textContent = '';
+    }
+  }
+  const platBtn = document.getElementById('cenet-plat-btn') as HTMLButtonElement | null;
+  const platBtnLabel = document.getElementById('cenet-plat-btn-label');
+  const platMenu = document.getElementById('cenet-plat-menu') as HTMLElement | null;
+  const platWrap = document.getElementById('cenet-plat-wrap');
+
+  function togglePlatMenu(abrir?: boolean): void {
+    if (!platMenu || !platBtn) return;
+    const open = abrir ?? platMenu.hidden;
+    platMenu.hidden = !open;
+    platBtn.setAttribute('aria-expanded', String(open));
+  }
+  platBtn?.addEventListener('click', () => togglePlatMenu());
+  document.addEventListener('click', (e) => {
+    if (platMenu && !platMenu.hidden && platWrap && !platWrap.contains(e.target as Node)) togglePlatMenu(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && platMenu && !platMenu.hidden) {
+      togglePlatMenu(false);
+      platBtn?.focus();
+    }
+  });
+  platBox?.addEventListener('change', () => {
+    if (platBtnLabel) platBtnLabel.textContent = `Plataformas (${plataformasSel().length})`;
+    void refrescarCostoPlat();
+  });
+  void refrescarCostoPlat();
+
+  /** Confirmación previa a buscar: costo máximo por plataforma y total. Devuelve false si el usuario cancela. */
+  async function confirmarConsumo(plats: Plataforma[], periodo: PeriodoReq = periodoSel()): Promise<boolean> {
+    try {
+      const est = await estimadoPlataformas(apiHist, plats, currentMode, periodo);
+      if (!est.en_vivo) return true;
+      return await confirmar({ titulo: 'Consumo de créditos de Apify', mensaje: textoCosto(est), aceptar: 'Buscar' });
+    } catch {
+      return confirmar({ titulo: 'Consumo de créditos', mensaje: 'No se pudo calcular el costo estimado. ¿Continuar?' });
+    }
   }
 
   /* ───────── Historial de búsquedas (todo local: no llama a Apify ni a Gemini) ───────── */
@@ -1422,7 +1664,7 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
         return `<div class="cenet-hist__card" role="button" tabindex="0" data-hist-id="${escapeHtml(h.id)}">
           <span class="cenet-hist__ico">${ICONO_MODO[h.modo] || ICONO_MODO.tema}</span>
           <span><div class="cenet-hist__tema">${escapeHtml(h.tema)}</div>
-            <div class="cenet-hist__meta">${modo} · ${escapeHtml(lugar)} · ${escapeHtml(haceCuanto(h.fecha))} · ${h.n_posts} posts</div></span>
+            <div class="cenet-hist__meta">${modo} · ${escapeHtml(lugar)} · ${escapeHtml(haceCuanto(h.fecha))} · ${h.n_posts} posts · ${escapeHtml((h.plataformas?.length ? h.plataformas : ['facebook']).map((x) => NOMBRE_PLAT[x] ?? x).join(', '))} · ${escapeHtml(h.periodo?.etiqueta ?? '14 días')}</div></span>
           <button type="button" class="cenet-hist__del" data-hist-del="${escapeHtml(h.id)}" aria-label="Borrar esta búsqueda">&times;</button>
         </div>`;
       })
@@ -1479,7 +1721,7 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
     agregarCerrar();
     enlazarHistorial(drawerBody);
     drawerBody.querySelector('#cenet-hist-vaciar')?.addEventListener('click', async () => {
-      if (!window.confirm('¿Borrar todo el historial de búsquedas?')) return;
+      if (!(await confirmar({ titulo: 'Vaciar historial', mensaje: 'Se borrarán todas las búsquedas guardadas. Esta acción no se puede deshacer.', aceptar: 'Borrar todo' }))) return;
       await borrarHistorial(apiHist);
       await cargarHistorial();
       mostrarListaHistorial();
@@ -1520,7 +1762,9 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
   async function actualizarDesdeHistorial(e: HistorialEntry): Promise<void> {
     if (searchInFlight) return;
     const health = await checkBackendSearchMode(config.apiUrl, config.facebookFixture, config.apifyMaxPosts);
-    if (!health.facebook_fixture && !window.confirm(`Esta búsqueda consumirá créditos de Apify (máx. ${health.apify_max_posts} resultados)`)) return;
+    const platsHist = (e.plataformas?.length ? e.plataformas : ['facebook']) as Plataforma[];
+    const periodoHist = periodoDe(e.periodo ?? e.resumen.periodo);
+    if (!health.facebook_fixture && !(await confirmarConsumo(platsHist, periodoHist))) return;
     const texto = e.alcance?.texto || resolveReadableScopeText(scope);
     const searchScope: ScopeSelection = { ...scope, nombre: resolvePlaceShortName(scope), texto };
     setSearchLoadingUi(true);
@@ -1536,8 +1780,10 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
               entidadId: e.resumen.ficha?.id,
               alcance: searchScope,
               refrescar: true,
+              plataformas: platsHist,
+              periodo: periodoHist,
             })
-          : await fetchSocialSearchSummary({ ...apiHist, tema: e.tema, modo: e.modo, alcance: searchScope, refrescar: true });
+          : await fetchSocialSearchSummary({ ...apiHist, tema: e.tema, modo: e.modo, alcance: searchScope, refrescar: true, plataformas: platsHist, entidadId: e.resumen.ficha?.id, periodo: periodoHist });
       mostrarResumen(summary, searchScope, e.tema, e.modo, texto, false);
       void cargarHistorial();
     } catch (err) {
@@ -1574,6 +1820,7 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
       if (topicInput) topicInput.value = fichaSel.nombre;
       syncModeSegmentedUi(fichaSel.tipo === 'persona' ? 'persona' : 'tema');
     }
+    actualizarBloqueoBusqueda();
   });
   // Escribir otro nombre desasocia la ficha: la búsqueda libre sigue funcionando igual.
   topicInput?.addEventListener('input', () => {
@@ -1598,12 +1845,20 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
         <label>Tipo <select id="fi-tipo" class="cenet-select">${['persona', 'tema', 'partido'].map((t) => `<option value="${t}" ${base.tipo === t ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
         <label>Nombre completo <input id="fi-nombre" class="cenet-cmdbar__input" required value="${v(base.nombre)}"></label>
         <label>Variantes (separadas por coma) <input id="fi-variantes" class="cenet-cmdbar__input" value="${v((base.variantes || []).join(', '))}"></label>
+        <label>Apodo <input id="fi-apodo" class="cenet-cmdbar__input" value="${v(base.apodo || '')}"></label>
         <label>Cargo <input id="fi-cargo" class="cenet-cmdbar__input" value="${v(base.cargo)}"></label>
         <label>Partido <input id="fi-partido" class="cenet-cmdbar__input" value="${v(base.partido)}"></label>
         <label>Territorio (nombre) <input id="fi-terr" class="cenet-cmdbar__input" value="${v(terr?.nombre || '')}"></label>
         <label>Páginas oficiales (una URL por línea) <textarea id="fi-paginas" class="cenet-cmdbar__input" rows="2">${v((base.paginas_oficiales || []).join('\n'))}</textarea></label>
         <label>Hashtags (separados por coma) <input id="fi-hashtags" class="cenet-cmdbar__input" value="${v((base.hashtags || []).join(', '))}"></label>
         <label>Palabras de descarte (separadas por coma) <input id="fi-descarte" class="cenet-cmdbar__input" value="${v((base.palabras_descarte || []).join(', '))}"></label>
+        <label>Usuario de X <input id="fi-ux" class="cenet-cmdbar__input" placeholder="sin @" value="${v(base.usuario_x || '')}"></label>
+        <label>Usuario de TikTok <input id="fi-ut" class="cenet-cmdbar__input" placeholder="sin @" value="${v(base.usuario_tiktok || '')}"></label>
+        <label>Usuario de Instagram <input id="fi-ui" class="cenet-cmdbar__input" placeholder="sin @" value="${v(base.usuario_instagram || '')}"></label>
+        <label>Hashtags en X (coma) <input id="fi-hx" class="cenet-cmdbar__input" value="${v((base.hashtags_x || []).join(', '))}"></label>
+        <label>Hashtags en TikTok (coma) <input id="fi-ht" class="cenet-cmdbar__input" value="${v((base.hashtags_tiktok || []).join(', '))}"></label>
+        <label>Hashtags en Instagram (coma) <input id="fi-hi" class="cenet-cmdbar__input" value="${v((base.hashtags_instagram || []).join(', '))}"></label>
+        <label>Logros verificables (texto libre; única base de las ideas de contenido) <textarea id="fi-logros" class="cenet-cmdbar__input" rows="3">${v(base.logros_verificables || '')}</textarea></label>
         <label style="display:flex;gap:8px;align-items:center;"><input type="checkbox" id="fi-monitoreo" ${base.monitoreo ? 'checked' : ''}> Monitoreo activo (corrida programada de alertas)</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button type="submit" class="cenet-btn-search">Guardar ficha${textoSecundario ? ' y analizar' : ''}</button>
@@ -1622,12 +1877,20 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
           nombre: val('fi-nombre').trim(),
           variantes: lista(val('fi-variantes'), /,/),
           cargo: val('fi-cargo').trim(),
+          apodo: val('fi-apodo').trim(),
           partido: val('fi-partido').trim(),
           territorio: { estado_id: terr?.estado_id ?? null, municipio_id: terr?.municipio_id ?? null, nombre: val('fi-terr').trim() || null },
           paginas_oficiales: lista(val('fi-paginas'), /\n/),
           hashtags: lista(val('fi-hashtags'), /,/),
           palabras_descarte: lista(val('fi-descarte'), /,/),
           idioma: 'es',
+          logros_verificables: val('fi-logros').trim(),
+          usuario_x: val('fi-ux').trim(),
+          usuario_tiktok: val('fi-ut').trim(),
+          usuario_instagram: val('fi-ui').trim(),
+          hashtags_x: lista(val('fi-hx'), /,/),
+          hashtags_tiktok: lista(val('fi-ht'), /,/),
+          hashtags_instagram: lista(val('fi-hi'), /,/),
           monitoreo: (document.getElementById('fi-monitoreo') as HTMLInputElement).checked,
         });
         await cargarFichas(saved.id);
@@ -1638,7 +1901,15 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
     });
   }
 
-  fichaSaveBtn?.addEventListener('click', () => {
+  // «Guardar como ficha» solo se habilita cuando hay un nombre o tema escrito (o una ficha elegida)
+  const actualizarFichaSave = () => {
+    if (fichaSaveBtn) fichaSaveBtn.disabled = !(topicInput?.value || '').trim() && !fichaSel;
+  };
+  topicInput?.addEventListener('input', actualizarFichaSave);
+  fichaSelEl?.addEventListener('change', actualizarFichaSave);
+  actualizarFichaSave();
+
+  function abrirFormFicha(): void {
     const territorio = {
       estado_id: scope.estado_id,
       municipio_id: scope.municipio_id,
@@ -1650,7 +1921,8 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
     mostrarFormFicha(base, (f) => {
       if (f) setStatus('ready');
     });
-  });
+  }
+  fichaSaveBtn?.addEventListener('click', abrirFormFicha);
 
   void cargarFichas();
 
@@ -1673,7 +1945,7 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
     const lista = (k: string) => ((d[k] as string[]) || []).map(escapeHtml).join(', ');
     const tono: Record<string, string> = { ataque: 'ataque', critica_legitima: 'crítica legítima', neutral: 'neutral', no_determinado: 'no determinado' };
     return `<article class="cenet-card" data-alerta="${escapeHtml(a.id)}">
-      <div class="cenet-card__title"><span class="cenet-card__title-left"><span>${a.tipo === 'pico' ? 'Pico de menciones' : 'Narrativa repetida'} · ${escapeHtml(a.ficha_nombre)}</span></span>
+      <div class="cenet-card__title"><span class="cenet-card__title-left"><span>${a.tipo === 'pico' ? 'Pico de menciones' : a.tipo === 'contenido_antiguo' ? 'Contenido antiguo que reaparece' : 'Narrativa repetida'} · ${escapeHtml(a.ficha_nombre)}</span></span>
         <span class="cenet-card__badge">${escapeHtml(a.gravedad)}</span></div>
       <p class="cenet-hist__meta">${escapeHtml(formatCorridaDate(a.fecha))} · ${escapeHtml(a.estado)} · <strong>${escapeHtml(a.etiqueta)}</strong></p>
       <p style="font-size:0.8rem;margin:8px 0;">${escapeHtml(a.resumen)}</p>
@@ -1738,12 +2010,12 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
       if (!drawerBody) return true;
       drawerBody.innerHTML = `
         <div class="cenet-drawer__header"><div style="width:100%;">
-          <div class="cenet-drawer__eyebrow">Modo Persona · paso 1 de 2</div>
+          <div class="cenet-drawer__eyebrow">Modo Persona · agregar su página oficial (opcional)</div>
           <h2 class="cenet-drawer__title">${escapeHtml(nombre)}</h2>
         </div></div>
         <section class="cenet-card">
           <div class="cenet-card__title"><span class="cenet-card__title-left"><span>Perfiles y páginas encontrados</span></span><span class="cenet-card__badge">${r.perfiles.length}</span></div>
-          <p style="font-size:0.74rem;color:var(--text-secondary);">Puede haber homónimos: elige la página correcta.</p>
+          <p style="font-size:0.74rem;color:var(--text-secondary);">Sirve para identificar y separar lo que publica la propia persona; no cambia las cifras de opinión de terceros. Puede haber homónimos: elige la página correcta.</p>
           ${
             r.perfiles.length
               ? r.perfiles
@@ -1794,6 +2066,34 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
   }
 
   /** Modo Persona, paso 2: publicaciones de la página elegida + menciones. */
+  /** Alcance de una búsqueda de Persona: el elegido o, si no hay, el territorio de la ficha. */
+  function alcancePersona(): { searchScope: ScopeSelection; texto: string; esDeFicha: boolean } {
+    const t = fichaSel?.territorio;
+    if (!scopeElegido && t?.nombre) {
+      const searchScope = { ...scope, nivel: t.municipio_id ? 'municipio' : 'estado', estado_id: t.estado_id ?? scope.estado_id, municipio_id: t.municipio_id ?? null, nombre: t.nombre, texto: t.nombre } as ScopeSelection;
+      return { searchScope, texto: t.nombre, esDeFicha: true };
+    }
+    const texto = resolveReadableScopeText(scope);
+    return { searchScope: { ...scope, nombre: resolvePlaceShortName(scope), texto }, texto, esDeFicha: false };
+  }
+
+  /** Modo Persona por defecto: qué dicen los demás de la persona (sin elegir página). */
+  async function analizarMenciones(nombre: string): Promise<void> {
+    if (searchInFlight) return;
+    const { searchScope, texto, esDeFicha } = alcancePersona();
+    setSearchLoadingUi(true);
+    renderDrawerSkeleton(nombre, texto);
+    try {
+      const summary = await analyzePersonaPage({ ...apiHist, nombre, alcance: searchScope, entidadId: fichaSel?.id ?? null, plataformas: plataformasSel(), periodo: periodoSel() });
+      mostrarResumen(summary, searchScope, nombre, 'persona', texto, !esDeFicha);
+      void cargarHistorial();
+    } catch (err) {
+      setStatus('error', err instanceof Error ? err.message : 'Error al buscar menciones.');
+    } finally {
+      setSearchLoadingUi(false);
+    }
+  }
+
   async function analizarPagina(nombre: string, pagina: PersonaProfile, entidadId?: string): Promise<void> {
     if (searchInFlight) return;
     const texto = resolveReadableScopeText(scope);
@@ -1801,7 +2101,7 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
     setSearchLoadingUi(true);
     renderDrawerSkeleton(nombre, pagina.nombre);
     try {
-      const summary = await analyzePersonaPage({ ...apiHist, nombre, pagina, alcance: searchScope, entidadId });
+      const summary = await analyzePersonaPage({ ...apiHist, nombre, pagina, alcance: searchScope, entidadId, plataformas: plataformasSel(), periodo: periodoSel() });
       mostrarResumen(summary, searchScope, nombre, 'persona', texto, false);
       void cargarHistorial();
     } catch (err) {
@@ -1811,14 +2111,31 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
     }
   }
 
+  /** Métricas según la plataforma: vistas en TikTok, retuits en X, etc. Lo que no viene se muestra como "sin dato". */
+  function renderMetricasPlataforma(p: SocialApiPost): string {
+    const pl = p.plataforma || 'facebook';
+    const m = p.metricas;
+    if (pl === 'facebook' || !m) return renderMetricsGroup(p.likesCount, p.commentsCount, p.sharesCount);
+    const dato = (v: number | null | undefined) => (v == null ? 'sin dato' : formatMetricEs(v));
+    const filas: [string, number | null | undefined][] =
+      pl === 'x'
+        ? [['Me gusta', m.reacciones], ['Respuestas', m.comentarios], ['Retuits', m.retuits], ['Vistas', m.vistas]]
+        : pl === 'tiktok'
+          ? [['Me gusta', m.reacciones], ['Comentarios', m.comentarios], ['Compartidos', m.compartidos], ['Vistas', m.vistas]]
+          : [['Me gusta', m.reacciones], ['Comentarios', m.comentarios], ['Vistas', m.vistas]];
+    return `<div class="cenet-post-metrics" role="group" aria-label="Métricas de interacción">${filas
+      .map(([t, v]) => `<span class="cenet-post-metric" title="${t}"><span class="cenet-post-metric__val">${escapeHtml(dato(v))}</span> ${t.toLowerCase()}</span>`)
+      .join('')}</div>`;
+  }
+
   function renderPostCard(p: SocialApiPost): string {
     const srcLabel = getSourceBadgeLabel(p.tipo_fuente);
-    const isOfficial = p.tipo_fuente === 'oficial' || p.tipo_fuente === 'politico';
+    const isOfficial = ['oficial', 'afin', 'politico', 'persona', 'sin_clasificar'].includes(p.tipo_fuente);
     const sentBadge = !isOfficial ? renderSentimentBadge(p.sentimiento) : '';
     const cleanedBody = cleanDisplayText(p.text || '');
     const snippet = cleanedBody.length > 220 ? `${cleanedBody.slice(0, 220)}…` : cleanedBody;
     return `
-      <article class="cenet-post-card">
+      <article class="cenet-post-card" data-plat="${escapeHtml(p.plataforma || 'facebook')}">
         <div class="cenet-post-card__head">
           <div class="cenet-post-card__author-wrap">
             <span class="cenet-post-card__author">${escapeHtml(p.user?.name || 'Usuario')}</span>
@@ -1829,19 +2146,21 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
             </div>
           </div>
           <div class="cenet-badges">
+            <span class="cenet-badge cenet-badge--plat" style="border-color:${COLOR_PLAT[p.plataforma || 'facebook']};">${escapeHtml(NOMBRE_PLAT[p.plataforma || 'facebook'] ?? 'Facebook')}</span>
             ${p.origen_post ? `<span class="cenet-badge">${p.origen_post === 'publicado_por_persona' ? 'Publicada por la persona' : 'Mención'}</span>` : ''}
             <span class="cenet-badge cenet-badge--${escapeHtml(p.tipo_fuente)}">${escapeHtml(srcLabel)}</span>
             ${sentBadge}
           </div>
         </div>
         <p class="cenet-post-card__text">${escapeHtml(snippet)}</p>
+        ${p.coincidencia ? `<p class="cenet-hist__meta">Coincidencia ${p.coincidencia.puntaje}/100 (umbral ${p.coincidencia.umbral ?? 60}): ${escapeHtml(p.coincidencia.coincidencias.join(', '))}</p>` : ''}
         ${
           p.atribucion
             ? `<p class="cenet-hist__meta">Atribuido a la persona (${p.atribucion.puntaje}/100): ${escapeHtml(p.atribucion.razones.join('; ') || 'sin indicios adicionales')}${p.atribucion.razon_ia ? ` · IA: ${escapeHtml(p.atribucion.razon_ia)}` : ''}</p>`
             : ''
         }
         <div class="cenet-post-card__foot">
-          ${renderMetricsGroup(p.likesCount, p.commentsCount, p.sharesCount)}
+          ${renderMetricasPlataforma(p)}
           ${
             p.url
               ? `<a class="cenet-post-link" href="${escapeHtml(p.url)}" target="_blank" rel="noopener"><span>Abrir publicación</span>${LUCIDE_SVG.externalLink}</a>`
@@ -1859,6 +2178,104 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
    * 3. Sentimiento y categorías
    * 4. Narrativas ("Oficial y afín" | "Medios y ciudadanía") + tarjetas de post limpias
    */
+  /** Avisos del periodo: todo el historial, página inactiva y muestra limitada por el tope de cada plataforma. */
+  /** Sentimiento en dos bloques con su propia base: la cifra principal es la de terceros no afines (ciudadano y medio). */
+  function renderSentimientoBloques(summary: SocialApiSummary): string {
+    const t = summary.sentimiento;
+    const a = summary.sentimiento_afines;
+    const bloque = (titulo: string, pos: number, neu: number, neg: number, base: number, principal: boolean) =>
+      `<div class="cenet-sent-bloque ${principal ? 'is-principal' : ''}"><b>${titulo}</b>
+        ${base > 0 ? `<span>${pos}% positivo · ${neu}% neutral · ${neg}% negativo</span>` : '<span class="cenet-an-sd">sin muestra</span>'}
+        <small>Base: ${base} posts${principal && base > 0 && base < (summary.muestra?.minimo ?? 5) ? ` · ${escapeHtml(summary.muestra?.etiqueta || 'Preliminar')}` : ''}</small></div>`;
+    return `<section class="cenet-card"><div class="cenet-card__title"><span class="cenet-card__title-left">Sentimiento por tipo de fuente</span></div>
+      <div class="cenet-sent-bloques">${bloque('Terceros no afines (ciudadano y medio)', t.positive, t.neutral, t.negative, t.base ?? 0, true)}
+      ${bloque('Afines y entorno (afín y oficial)', a?.positive ?? 0, a?.neutral ?? 0, a?.negative ?? 0, a?.base ?? 0, false)}</div>
+      <p class="cenet-an-nota">Lo que publica la propia persona no entra en ninguno. Los posts sin clasificar (sin IA) no se cuentan como opinión.</p></section>`;
+  }
+
+  const qssIntentos = new Set<string>();
+
+  function renderAvisosPeriodo(summary: SocialApiSummary): string {
+    const avisos: string[] = [];
+    if (summary.periodo?.tipo === 'todo') avisos.push('Incluye contenido antiguo; las cifras pueden no reflejar la conversación actual');
+    const pg = summary.persona;
+    if (pg?.inactiva) {
+      avisos.push(`Página inactiva: la última publicación fue hace ${pg.dias_sin_publicar} días (${formatCorridaDate(pg.ultima_publicacion || '')})`);
+    }
+    Object.entries(summary.plataformas || {}).forEach(([pl, e]) => {
+      if (e.limitada) avisos.push(`${NOMBRE_PLAT[pl] ?? pl}: muestra limitada a ${e.tope ?? e.crudos} posts (tope por plataforma); un periodo largo no sube el tope`);
+    });
+    return avisos.length
+      ? `<section class="cenet-card" style="border-color:rgba(245, 158, 11, 0.40);">${avisos.map((a) => `<p class="cenet-hist__meta" style="color:var(--sent-neu);">${escapeHtml(a)}</p>`).join('')}</section>`
+      : '';
+  }
+
+  function renderHistorialAnterior(summary: SocialApiSummary): string {
+    const items = summary.historial_anterior || [];
+    if (!items.length) return '';
+    return `<details class="cenet-card"><summary>Historial anterior al periodo (${summary.historial_anterior_total ?? items.length})</summary>
+      <p class="cenet-hist__meta" style="color:var(--sent-neu);">No entra en las cifras. Contexto: los ${items.length} posts anteriores al periodo con más interacción.</p>
+      ${(summary.antiguo_repetido || []).map((g) => `<p class="cenet-hist__meta">Contenido antiguo que reaparece: repetido por ${g.cuentas} cuentas</p>`).join('')}
+      ${items.map((d) => `<div class="cenet-desc__item"><b>${escapeHtml(d.autor)}</b> (${escapeHtml(NOMBRE_PLAT[d.plataforma] ?? d.plataforma)}) · <strong>${escapeHtml(formatCorridaDate(d.fecha))}</strong> · hace ${d.dias_antiguedad} días · ${formatMetricEs(d.interacciones)} interacciones${d.url ? ` · <a href="${escapeHtml(d.url)}" target="_blank" rel="noopener noreferrer">ver publicación</a>` : ''}
+        <small>${escapeHtml(d.fragmento)}</small></div>`).join('')}</details>`;
+  }
+
+  function renderEstadoPlataformas(summary: SocialApiSummary): string {
+    const ent = Object.entries(summary.plataformas || {});
+    if (!ent.length) return '';
+    const origenTxt = (o: string | null) => (o === 'apify' ? 'en vivo' : o === 'cache' ? 'caché' : o === 'fixture' ? 'datos de ejemplo' : '');
+    const filas = ent.map(([pl, e]) => {
+      const detalle =
+        e.estado === 'ok'
+          ? `${e.crudos} posts · ${e.con_texto} con texto · ${e.relevantes} relevantes`
+          : e.estado === 'vacío'
+            ? `vacío: ${e.motivo ?? 'sin publicaciones'}`
+            : `error: ${e.motivo ?? 'falló la consulta'}`;
+      return `<div class="cenet-plat-fila is-${e.estado === 'vacío' ? 'vacio' : e.estado}">
+        <span class="cenet-badge cenet-badge--plat" style="border-color:${COLOR_PLAT[pl] ?? '#888'};">${escapeHtml(NOMBRE_PLAT[pl] ?? pl)}</span>
+        <span>${escapeHtml(detalle)}</span>
+        <small>${escapeHtml(origenTxt(e.origen))}${e.costo_usd > 0 ? ` · USD ${e.costo_usd.toFixed(3)}` : ''}</small></div>`;
+    });
+    const total = summary.costo_estimado_usd ?? 0;
+    return `<section class="cenet-card"><div class="cenet-card__title"><span class="cenet-card__title-left">Plataformas</span>${total > 0 ? `<span class="cenet-card__badge">USD ${total.toFixed(3)} estimado</span>` : ''}</div>${filas.join('')}</section>`;
+  }
+
+  function renderFiltroPlataforma(summary: SocialApiSummary): string {
+    const pls = [...new Set(summary.posts_recientes.map((p) => p.plataforma || 'facebook'))];
+    if (pls.length < 2) return '';
+    return `<div class="cenet-plat-filtro" role="group" aria-label="Filtrar publicaciones por plataforma">
+      <button type="button" class="cenet-segmented__btn is-active" data-plat-filtro="">Todas</button>
+      ${pls.map((pl) => `<button type="button" class="cenet-segmented__btn" data-plat-filtro="${escapeHtml(pl)}">${escapeHtml(NOMBRE_PLAT[pl] ?? pl)} ${summary.posts_recientes.filter((p) => (p.plataforma || 'facebook') === pl).length}</button>`).join('')}</div>`;
+  }
+
+  /** "20 publicaciones en la fuente, 0 coincidieron: N sin texto, M no mencionan el tema, K por otras razones". */
+  function resumenDescartes(summary: SocialApiSummary, fuente: number): string {
+    const det = summary.descartados_detalle || [];
+    const sinTexto = summary.sin_texto?.total ?? summary.descartados?.vacios ?? 0;
+    const noTema = det.filter((d) => d.motivo === 'no contiene el tema').length;
+    const otras = det.length - noTema;
+    const confirmar = summary.por_confirmar?.length ?? 0;
+    return `${fuente} publicaciones en la fuente, ${summary.relevantes_posts} coincidieron: ${sinTexto} sin texto, ${noTema} no mencionan el tema, ${otras} por otras razones${confirmar ? `, ${confirmar} por confirmar` : ''}.`;
+  }
+
+  function renderDescartesHtml(summary: SocialApiSummary): string {
+    const det = summary.descartados_detalle || [];
+    const sinTexto = summary.sin_texto?.posts || [];
+    if (!det.length && !sinTexto.length) {
+      return '<p class="cenet-hist__meta">No hay posts descartados registrados para esta búsqueda (puede ser una búsqueda guardada antes de este registro).</p>';
+    }
+    const grupos = new Map<string, DescartadoDetalle[]>();
+    det.forEach((d) => grupos.set(d.motivo, [...(grupos.get(d.motivo) || []), d]));
+    const link = (u: string) => (u ? ` · <a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer">ver publicación</a>` : '');
+    const bloques = [...grupos.entries()].map(([motivo, items]) => `
+      <h4 class="cenet-desc__h">${escapeHtml(motivo)} <span class="cenet-card__badge">${items.length}</span></h4>
+      ${items.map((d) => `<div class="cenet-desc__item"><b>${escapeHtml(d.autor)}</b>${d.plataforma ? ` (${escapeHtml(NOMBRE_PLAT[d.plataforma] ?? d.plataforma)})` : ''} · ${escapeHtml(formatCorridaDate(d.fecha))}${d.nota ? ` · ${escapeHtml(d.nota)}` : ''}${link(d.url)}
+        <small>${escapeHtml(d.fragmento)}</small></div>`).join('')}`).join('');
+    const bloqueSinTexto = sinTexto.length ? `<h4 class="cenet-desc__h">sin texto (se cuentan aparte) <span class="cenet-card__badge">${sinTexto.length}</span></h4>
+      ${sinTexto.map((d) => `<div class="cenet-desc__item"><b>${escapeHtml(d.user || 'Desconocido')}</b> · ${escapeHtml(formatCorridaDate(d.time || ''))}${link(d.url || '')}</div>`).join('')}` : '';
+    return `${bloques}${bloqueSinTexto}<p class="cenet-hist__meta">Umbral de coincidencia: ${summary.umbral_coincidencia ?? 60} de 100 (MATCH_UMBRAL). Los de coincidencia débil están en "Por confirmar".</p>`;
+  }
+
   function renderSearchSummaryPanel(
     summary: SocialApiSummary,
     usedTopic: string,
@@ -1922,6 +2339,8 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
       }
     }
 
+    if (summary.muestra?.preliminar && hasSentimentPosts) citizenKpiLabel = `${citizenKpiLabel} · ${summary.muestra.etiqueta}`;
+
     const modeDisplay = usedMode === 'persona' ? 'Persona' : usedMode === 'tendencias' ? 'Tendencias' : 'Tema';
 
     const noDataBannerHtml = summary.sin_datos_demo
@@ -1945,12 +2364,11 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
           <span class="cenet-card__title-left">Sin coincidencias</span>
           <span class="cenet-card__badge">${postsFiltroTema} de ${postsFuente} en fuente</span>
         </div>
-        <p style="font-size:0.8rem; font-weight:600; color:var(--text-primary);">
-          Sin publicaciones que mencionen este tema en los datos disponibles
-        </p>
+        <p style="font-size:0.8rem; font-weight:600; color:var(--text-primary);">${escapeHtml(resumenDescartes(summary, postsFuente))}</p>
         <p style="font-size:0.74rem; color:var(--text-secondary);">
-          De <strong>${postsFuente}</strong> publicaciones analizadas en la fuente, <strong>${postsFiltroTema}</strong> mencionan <strong>"${escapeHtml(usedTopic)}"</strong> en <strong>${escapeHtml(readableScope)}</strong>.
+          Tema: <strong>"${escapeHtml(usedTopic)}"</strong> en <strong>${escapeHtml(readableScope)}</strong>.
         </p>
+        <button type="button" class="cenet-hist-refresh" data-descartes-toggle>Revisar el filtro</button>
       </section>
       `
         : '';
@@ -1964,9 +2382,16 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
               const pct = pt.posts > 0 ? Math.max(10, Math.round((pt.posts / peakPostsDay) * 100)) : 3;
               const showLbl = idx === 0 || idx === dailySeries.length - 1 || idx % 3 === 0;
               const delayMs = prefersReducedMotion() ? 0 : idx * 18;
+              const porPl = Object.entries(summary.volumen_por_dia_plataforma || {}).map(([pl, serie]) => [pl, serie.find((x) => x.fecha === pt.fecha)?.posts ?? 0] as [string, number]);
+              const apilado = porPl.length > 1 && pt.posts > 0;
+              let acum = 0;
+              const grad = apilado
+                ? `background:linear-gradient(to top, ${porPl.filter(([, n]) => n > 0).map(([pl, n]) => { const ini = acum; acum += (n / pt.posts) * 100; return `${COLOR_PLAT[pl] ?? '#888'} ${ini}% ${acum}%`; }).join(', ')});`
+                : '';
+              const detallePl = porPl.length > 1 ? ` (${porPl.filter(([, n]) => n > 0).map(([pl, n]) => `${NOMBRE_PLAT[pl] ?? pl} ${n}`).join(', ')})` : '';
               return `
-                <div class="cenet-day-col" title="${escapeHtml(pt.etiqueta)}: ${pt.posts} publicaciones">
-                  <div class="cenet-day-bar ${pt.posts === 0 ? 'is-zero' : ''}" style="height:${pct}%; animation-delay:${delayMs}ms;"></div>
+                <div class="cenet-day-col" title="${escapeHtml(pt.etiqueta)}: ${pt.posts} publicaciones${escapeHtml(detallePl)}">
+                  <div class="cenet-day-bar ${pt.posts === 0 ? 'is-zero' : ''}" style="height:${pct}%; animation-delay:${delayMs}ms;${grad}"></div>
                   <span class="cenet-day-lbl">${showLbl ? escapeHtml(pt.etiqueta) : ''}</span>
                 </div>
               `;
@@ -1974,7 +2399,7 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
             .join('')}
         </div>
         `
-        : `<div class="cenet-empty-box">Sin actividad registrada en la ventana de ${windowDays} días.</div>`;
+        : `<div class="cenet-empty-box">Sin actividad registrada en el periodo (${escapeHtml(summary.periodo?.etiqueta ?? `${windowDays} días`)}).</div>`;
 
     const defaultActiveTab =
       summary.narrativa_ciudadana.length > 0 || summary.narrativa_oficial.length === 0
@@ -1993,6 +2418,7 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
           <h2 class="cenet-drawer__title">${escapeHtml(readableScope)}</h2>
           <div class="cenet-drawer__meta">
             <span class="cenet-meta-tag">Tema: <strong>${escapeHtml(usedTopic)}</strong></span>
+            <span class="cenet-meta-tag">Periodo: <strong>${escapeHtml(summary.periodo?.etiqueta ?? `${windowDays} días`)}</strong></span>
             <span class="cenet-meta-tag cenet-meta-tag--mono" title="Fecha de la corrida">${LUCIDE_SVG.clock}<span>${escapeHtml(formatCorridaDate(summary.fecha_corrida))}</span></span>
           </div>
         </div>
@@ -2003,6 +2429,9 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
 
       ${noDataBannerHtml}
 
+      ${renderQueSeSabe(summary)}
+      ${renderSentimientoBloques(summary)}
+
       <!-- 1. 4 Tarjetas KPI (posts en fuente, relevantes tras filtro, % oficial, sentimiento ciudadano) -->
       <section class="cenet-kpi-grid" aria-label="Indicadores principales de la búsqueda">
         <div class="cenet-kpi-card">
@@ -2011,7 +2440,7 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
             ${LUCIDE_SVG.layers}
           </div>
           <div class="cenet-kpi-card__val" data-count-to="${postsFuente}" data-count-decimals="0">0</div>
-          <span class="cenet-kpi-card__sub">Filtro tema: ${postsFiltroTema}</span>
+          <span class="cenet-kpi-card__sub">Filtro tema: ${postsFiltroTema} · <button type="button" class="cenet-link-btn" data-descartes-toggle>Ver por qué se descartaron</button></span>
         </div>
 
         <div class="cenet-kpi-card">
@@ -2034,13 +2463,16 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
 
         <div class="cenet-kpi-card">
           <div class="cenet-kpi-card__top">
-            <span>Sentimiento ciudadano</span>
+            <span>Terceros no afines</span>
             ${LUCIDE_SVG.activity}
           </div>
           <div class="cenet-kpi-card__val" style="color:${citizenKpiColor};" data-count-to="${citizenKpiVal}" data-count-decimals="0" data-count-suffix="%">0%</div>
           <span class="cenet-kpi-card__sub">${escapeHtml(citizenKpiLabel)}</span>
         </div>
       </section>
+
+      ${renderAvisosPeriodo(summary)}
+      ${renderEstadoPlataformas(summary)}
 
       <!-- 2. Gráfica de Volumen por día (14 días) -->
       <section class="cenet-card">
@@ -2157,7 +2589,8 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
               <span class="cenet-card__title-left">${LUCIDE_SVG.layers}<span>Publicaciones recientes</span></span>
               <span class="cenet-card__badge">${summary.posts_recientes.length}</span>
             </div>
-            <div class="cenet-post-list">
+            ${renderFiltroPlataforma(summary)}
+            <div class="cenet-post-list" id="cenet-lista-posts">
               ${summary.posts_recientes.map(renderPostCard).join('')}
             </div>
           </section>
@@ -2165,11 +2598,97 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
           : ''
       }
 
+      ${renderHistorialAnterior(summary)}
+      <section class="cenet-card" id="cenet-descartes" hidden><div class="cenet-card__title"><span class="cenet-card__title-left">Por qué se descartaron</span><span class="cenet-card__badge">${(summary.descartados_detalle?.length ?? 0) + (summary.sin_texto?.total ?? 0)}</span></div><p class="cenet-hist__meta">${escapeHtml(resumenDescartes(summary, postsFuente))}</p>${renderDescartesHtml(summary)}</section>
       ${summary.persona ? renderPersonaSection(summary) : ''}
-      ${summary.por_confirmar?.length ? `<section class="cenet-card"><div class="cenet-card__title"><span class="cenet-card__title-left"><span>Por confirmar</span></span><span class="cenet-card__badge">${summary.por_confirmar.length}</span></div><p style="font-size:0.74rem;color:var(--text-secondary);">No se pudo asegurar que traten de la persona: no entran a las cifras.</p><div class="cenet-post-list">${summary.por_confirmar.map(renderPostCard).join('')}</div></section>` : ''}
+      ${summary.por_confirmar?.length ? `<section class="cenet-card"><div class="cenet-card__title"><span class="cenet-card__title-left"><span>Por confirmar</span></span><span class="cenet-card__badge">${summary.por_confirmar.length}</span></div><p style="font-size:0.74rem;color:var(--text-secondary);">Coincidencia débil o identidad dudosa: no entran a las cifras. Cada tarjeta indica por qué.</p><div class="cenet-post-list">${summary.por_confirmar.map(renderPostCard).join('')}</div></section>` : ''}
     `;
 
     animateNumbersInContainer(drawerBody);
+
+    drawerBody.querySelectorAll<HTMLElement>('[data-plat-filtro]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const pl = b.dataset.platFiltro || '';
+        drawerBody.querySelectorAll('[data-plat-filtro]').forEach((x) => x.classList.toggle('is-active', x === b));
+        drawerBody.querySelectorAll<HTMLElement>('#cenet-lista-posts [data-plat]').forEach((c) => (c.hidden = pl !== '' && c.dataset.plat !== pl));
+      })
+    );
+
+    const flujoPagina = async () => {
+      if (!(await confirmar({ titulo: 'Agregar su página oficial', mensaje: 'Buscar páginas y perfiles consume una búsqueda de Apify. Sirve para identificar y separar lo que publica la propia persona.', aceptar: 'Buscar páginas' }))) return;
+      if (!(await buscarPerfiles(usedTopic))) setStatus('error', 'Con FUENTE=fixture no hay búsqueda de páginas.');
+    };
+    const flujoComentarios = async () => {
+      try {
+        const est = await estimadoComentarios(apiHist, summary.id);
+        const filas = Object.entries(est.plataformas).filter(([, f]) => f.posts > 0).map(([pl, f]) => `${NOMBRE_PLAT[pl] ?? pl}: ${f.posts} posts, hasta ${f.max_comentarios} comentarios, USD ${f.costo_usd.toFixed(3)}`);
+        if (!filas.length) return void setStatus('error', 'No hay posts de Facebook o X con interacción para extraer comentarios.');
+        const texto = est.en_vivo ? `${filas.join('\n')}\nTotal máximo estimado: USD ${est.total_usd.toFixed(3)}` : 'Sin costo: datos de ejemplo';
+        if (!(await confirmar({ titulo: 'Extraer comentarios', mensaje: texto, aceptar: 'Extraer' }))) return;
+        await extraerComentarios(apiHist, summary.id);
+        const entrada = await abrirHistorialEntry(apiHist, summary.id);   // ya trae comentarios y cifras recalculadas
+        renderSearchSummaryPanel(entrada.resumen, usedTopic, usedMode, readableScope);
+      } catch (err) {
+        setStatus('error', err instanceof Error ? err.message : 'No se pudieron extraer los comentarios.');
+      }
+    };
+    drawerBody.querySelector<HTMLElement>('[data-agregar-pagina]')?.addEventListener('click', () => void flujoPagina());
+    drawerBody.querySelector<HTMLElement>('[data-comentarios]')?.addEventListener('click', () => void flujoComentarios());
+
+    /** Botones de «Cómo conseguir una muestra»: cada uno hace lo que dice, con confirmación de costo cuando consume créditos. */
+    const enlazarPasos = (cont: HTMLElement): void => {
+      cont.querySelectorAll<HTMLButtonElement>('[data-paso]').forEach((btn) =>
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.paso;
+          if (id === 'comentarios') void flujoComentarios();
+          else if (id === 'pagina') void flujoPagina();
+          else if (id === 'ficha') abrirFormFicha();
+          else if (id === 'periodo') {
+            const sig = PERIODO_SIGUIENTE[periodoSelEl?.value ?? '14'];
+            if (periodoSelEl && sig) {
+              periodoSelEl.value = sig[0];
+              periodoSelEl.dispatchEvent(new Event('change'));
+              void executeExplicitSearch();
+            }
+          } else if (id === 'plataformas') {
+            platBox?.querySelectorAll<HTMLInputElement>('input').forEach((i) => (i.checked = true));
+            platBox?.dispatchEvent(new Event('change'));
+            void executeExplicitSearch();
+          }
+        })
+      );
+      // costo estimado de cada paso (los de comentarios y búsqueda consultan al backend; los demás son sin costo o una búsqueda)
+      const poner = (id: string, txt: string) => cont.querySelectorAll<HTMLElement>(`[data-costo="${id}"]`).forEach((e) => (e.textContent = txt));
+      poner('ficha', 'sin costo');
+      poner('pagina', '1 búsqueda de Apify');
+      void estimadoPlataformas(apiHist, plataformasSel(), currentMode, periodoSel()).then((e) => poner('periodo', e.en_vivo ? `hasta USD ${e.total_usd.toFixed(3)}` : 'sin costo (ejemplo)')).catch(() => undefined);
+      void estimadoPlataformas(apiHist, ['facebook', 'x', 'tiktok', 'instagram'], currentMode, periodoSel()).then((e) => poner('plataformas', e.en_vivo ? `hasta USD ${e.total_usd.toFixed(3)}` : 'sin costo (ejemplo)')).catch(() => undefined);
+      if (summary.id) void estimadoComentarios(apiHist, summary.id).then((e) => poner('comentarios', e.en_vivo ? `hasta USD ${e.total_usd.toFixed(3)}` : 'sin costo (ejemplo)')).catch(() => undefined);
+    };
+    enlazarPasos(drawerBody);
+
+    // Búsquedas guardadas antes de este panel: «Qué se sabe hoy» se calcula en código y se vuelve a pintar una vez
+    if (!summary.que_se_sabe && summary.id && !qssIntentos.has(summary.id)) {
+      qssIntentos.add(summary.id);
+      void calcularQueSeSabe(apiHist, summary.id).then((q) => {
+        summary.que_se_sabe = q;
+        summary.muestra = q.confianza;
+        renderSearchSummaryPanel(summary, usedTopic, usedMode, readableScope);
+      }).catch(() => undefined);
+    }
+    const ayuda = { pasos: () => renderPasosSiguientes(summary), enlazar: enlazarPasos };
+
+    drawerBody.querySelectorAll<HTMLElement>('[data-descartes-toggle]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const sec = drawerBody.querySelector<HTMLElement>('#cenet-descartes');
+        if (!sec) return;
+        sec.hidden = !sec.hidden;
+        if (!sec.hidden) sec.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+      })
+    );
+
+    // Pestañas de análisis (solo modo Persona con búsqueda guardada)
+    if (summary.relevantes_posts + (summary.por_confirmar?.length ?? 0) > 0) montarPestanas(drawerBody, summary, apiHist, ayuda);
 
     // Interacción de pestañas de narrativas
     const tabBtns = drawerBody.querySelectorAll<HTMLButtonElement>('[data-nar-tab]');
@@ -2196,7 +2715,7 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
   }
 
   function showTerritoryTooltip(x: number, y: number, props: Record<string, unknown>): void {
-    if (!tooltipEl) return;
+    if (!tooltipEl || interacting || !cursorOnMap) return;
     const nombre = String(props.nombre || '');
     const abrev = String(props.abrev || '');
     const hasReal = Boolean(props.hasRealSearch);
@@ -2234,7 +2753,7 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
   }
 
   function showWorldCountryTooltip(x: number, y: number, countryName: string): void {
-    if (!tooltipEl) return;
+    if (!tooltipEl || interacting || !cursorOnMap) return;
     tooltipEl.hidden = false;
     tooltipEl.style.left = `${Math.min(window.innerWidth - 200, x + 10)}px`;
     tooltipEl.style.top = `${Math.max(54, y)}px`;
@@ -2266,7 +2785,70 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
     if (map.getLayer('world-countries-hover-line')) map.setFilter('world-countries-hover-line', worldFilter);
   }
 
+  /** Quita tooltip y resaltado: se usa al salir del mapa, al hacer clic, arrastrar, hacer zoom o mover el globo. */
+  function limpiarHover(): void {
+    hideTooltip();
+    hoveredMunKey = null;
+    hoveredStateKey = null;
+    hoveredWorldIso = null;
+    setHoverFilters('', '');
+    setWorldHoverFilter('');
+    map.getCanvas().style.cursor = '';
+  }
+
+  /** Recalcula qué país hay bajo el cursor (al terminar un movimiento); si no hay ninguno, no hay tooltip. */
+  function recalcularBajoCursor(): void {
+    if (interacting || !cursorOnMap || !lastPointer) return limpiarHover();
+    const capas = ['muns-fill', 'states-fill', 'world-countries-fill'].filter((l) => map.getLayer(l));
+    const feat = map.queryRenderedFeatures([lastPointer.x, lastPointer.y], { layers: capas })[0];
+    if (!feat) return limpiarHover();
+    const r = map.getCanvas().getBoundingClientRect();
+    const cx = r.left + lastPointer.x;
+    const cy = r.top + lastPointer.y;
+    const pr = feat.properties || {};
+    if (feat.layer.id === 'world-countries-fill') {
+      showWorldCountryTooltip(cx, cy, String(pr.nombre || pr.name_en || 'País'));
+    } else {
+      showTerritoryTooltip(cx, cy, pr);
+    }
+  }
+
+  function bindTooltipLifecycle(): void {
+    const cont = map.getCanvasContainer();
+    cont.addEventListener('mouseenter', () => {
+      cursorOnMap = true;
+    });
+    cont.addEventListener('mouseleave', () => {
+      cursorOnMap = false;
+      lastPointer = null;
+      limpiarHover();
+      registrarActividad();   // el giro se reanuda unos segundos después de salir
+    });
+    map.on('mousemove', (e: maplibregl.MapMouseEvent) => {
+      cursorOnMap = true;
+      lastPointer = { x: e.point.x, y: e.point.y };
+      const capas = ['muns-fill', 'states-fill', 'world-countries-fill'].filter((l) => map.getLayer(l));
+      if (!interacting && map.queryRenderedFeatures(e.point, { layers: capas }).length === 0) limpiarHover();   // sin país bajo el cursor: sin tooltip
+    });
+    map.on('mousedown', () => limpiarHover());
+    map.on('click', () => limpiarHover());
+    // Solo los movimientos del usuario (con originalEvent) cuentan como interacción; el giro automático no
+    (['movestart', 'dragstart', 'zoomstart', 'rotatestart', 'pitchstart'] as const).forEach((ev) =>
+      map.on(ev, (e: { originalEvent?: unknown }) => {
+        if (!e.originalEvent) return;
+        interacting = true;
+        limpiarHover();
+        registrarActividad();
+      })
+    );
+    map.on('moveend', () => {
+      interacting = false;
+      recalcularBajoCursor();
+    });
+  }
+
   function bindMapInteractions(): void {
+    bindTooltipLifecycle();
     map.on('mousemove', 'muns-fill', (e: maplibregl.MapLayerMouseEvent) => {
       const feat = e.features?.[0];
       if (!feat) return;
@@ -2487,7 +3069,8 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
    */
   async function executeExplicitSearch(): Promise<void> {
     if (searchInFlight) return;
-    if (!scopeElegido) {
+    const territorioFicha = currentMode === 'persona' && fichaSel?.territorio?.nombre ? fichaSel.territorio : null;
+    if (!scopeElegido && !territorioFicha) {
       toggleScopePopover(true);
       return;
     }
@@ -2505,22 +3088,13 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
     // Si FACEBOOK_FIXTURE=false, mostrar confirmación corta antes de consumir créditos de Apify
     const health = await checkBackendSearchMode(config.apiUrl, config.facebookFixture, config.apifyMaxPosts);
     updateSourcePill(!health.facebook_fixture);
-    if (!health.facebook_fixture) {
-      const confirmed = window.confirm(
-        `Esta búsqueda consumirá créditos de Apify (máx. ${health.apify_max_posts} resultados)`
-      );
-      if (!confirmed) {
-        return;
-      }
-    }
+    const plats = plataformasSel();
+    if (!health.facebook_fixture && !(await confirmarConsumo(plats))) return;
 
-    if (currentMode === 'persona' && !health.facebook_fixture) {
-      if (fichaSel?.tipo === 'persona' && fichaSel.paginas_oficiales.length) {
-        // La ficha ya tiene páginas oficiales: se consultan siempre y no hace falta elegir página.
-        void analizarPagina(fichaSel.nombre, { nombre: fichaSel.nombre, url: fichaSel.paginas_oficiales[0], categoria: '', seguidores: 0 }, fichaSel.id);
-        return;
-      }
-      if (await buscarPerfiles(currentTopic)) return;
+    if (currentMode === 'persona') {
+      // Por defecto: menciones de terceros en las plataformas marcadas. La página oficial es opcional (enlace en los resultados).
+      await analizarMenciones(currentTopic);
+      return;
     }
 
     const searchScope: ScopeSelection = {
@@ -2540,6 +3114,9 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
         tema: currentTopic,
         modo: currentMode,
         alcance: searchScope,
+        plataformas: plats,
+        entidadId: fichaSel?.id ?? null,
+        periodo: periodoSel(),
       });
 
       mostrarResumen(summary, searchScope, currentTopic, currentMode, readableScope);
@@ -2566,6 +3143,7 @@ export function createCeNetworkApp(overrides: Partial<CeNetworkConfig> = {}): vo
     });
   });
 
+  segmentedBtns.forEach((b) => b.addEventListener('click', () => setTimeout(() => void refrescarCostoPlat(), 0)));
   selModo?.addEventListener('change', () => {
     syncModeSegmentedUi(((selModo.value as SearchMode) || 'tema'));
   });

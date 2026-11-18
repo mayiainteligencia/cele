@@ -60,11 +60,9 @@ export interface MapThemePalette {
 }
 
 /**
- * Tema oscuro (por defecto — Centro de Mando):
- * Fondo espacial muy oscuro (#04070d), océano de la esfera diferenciado (#0c1d2e),
- * países del mundo en azul-gris (#1b2a3a) con borde luminoso (#3a5a6e),
- * México destacado en verde/teal oscuro (#0f3d3a) con bordes claros y
- * territorio activo (Tlalpan/CDMX) en acento fuerte (#6ee7b7) con resplandor.
+ * Tema oscuro (por defecto): océano azul profundo, países del mundo en verde bosque (#14452f)
+ * y México en verde teal más claro (#1e8570) con borde menta (#6ee7b7). Sin tonos azul-violeta en los estados.
+ * Territorio activo en menta (#6ee7b7) con resplandor.
  */
 export const DARK_MAP_THEME: MapThemePalette = {
   mode: 'dark',
@@ -75,28 +73,28 @@ export const DARK_MAP_THEME: MapThemePalette = {
   atmosphereHighColor: '#6ee7b7',
   oceanFill: '#0b1929',
   oceanWaterFill: '#0e2136',
-  landBase: '#132436',
-  worldLandFill: '#1b2a3a',
-  worldHoverFill: '#273d52',
-  worldBorderLine: '#3a5a6e',
-  worldHoverBorder: '#6495b5',
-  countryBorder: '#3a5a6e',
-  mexicoOutline: '#2dd4bf',
+  landBase: '#0f2a1f',
+  worldLandFill: '#14452f',
+  worldHoverFill: '#1f6b47',
+  worldBorderLine: '#3fae7a',
+  worldHoverBorder: '#8df5c0',
+  countryBorder: '#3fae7a',
+  mexicoOutline: '#6ee7b7',
   volumeStops: [
-    [0, '#0f3d3a'],
-    [20, '#12544d'],
-    [40, '#157366'],
-    [60, '#189981'],
-    [80, '#34d399'],
-    [100, '#6ee7b7'],
+    [0, '#1b6f62'],
+    [20, '#1f8a73'],
+    [40, '#25a487'],
+    [60, '#34c79b'],
+    [80, '#6ee7b7'],
+    [100, '#c8fbe4'],
   ],
-  noDataFill: '#0f3d3a',
+  noDataFill: '#1e8570',
   activeTerritoryFill: '#6ee7b7',
   hoverFill: 'rgba(110, 231, 183, 0.30)',
-  borderLine: '#389e90',
+  borderLine: '#6ee7b7',
   munBorderLine: '#4cb8a6',
-  borderHover: '#6ee7b7',
-  borderSelected: '#a7f3d0',
+  borderHover: '#a7f3d0',
+  borderSelected: '#d1fae5',
   glowHover: 'rgba(110, 231, 183, 0.42)',
   glowSelected: 'rgba(110, 231, 183, 0.65)',
   labelText: '#f0fdf9',

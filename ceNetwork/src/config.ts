@@ -113,7 +113,7 @@ export function buildConfig(overrides: Partial<CeNetworkConfig> = {}): CeNetwork
       level2Label: env.VITE_LEVEL2_LABEL || 'Municipio',
       bounds: parseBounds(env.VITE_COUNTRY_BOUNDS, [-118.45, 14.53, -86.7, 32.72]),
       center: parseCoord(env.VITE_COUNTRY_CENTER, [-102.55, 23.63]),
-      initialGlobeCenter: parseCoord(env.VITE_GLOBE_CENTER, [-30, 20]),
+      initialGlobeCenter: parseCoord(env.VITE_GLOBE_CENTER, [-102.55, 23.63]),
       initialGlobeZoom: Number(env.VITE_GLOBE_ZOOM || 1.1),
       worldCountriesGeoJsonUrl: env.VITE_WORLD_GEOJSON_URL || 'geo/world_countries.geojson',
       statesGeoJsonUrl: env.VITE_ESTADOS_GEOJSON_URL || 'geo/mx_estados.geojson',

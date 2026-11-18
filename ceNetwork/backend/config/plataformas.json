@@ -1,0 +1,7 @@
+{
+  "alias_lugar": {
+    "ciudad de mexico": ["CDMX", "Ciudad de México"],
+    "tlalpan": ["Alcaldía Tlalpan"],
+    "estado de mexico": ["Edomex", "Estado de México"]
+  }
+}

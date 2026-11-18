@@ -1,0 +1,135 @@
+{
+  "categorias": [
+    "noticias locales",
+    "comedia",
+    "gastronomía",
+    "deportes",
+    "comunidad y barrio",
+    "música",
+    "política y opinión",
+    "estilo de vida"
+  ],
+  "niveles": {
+    "micro": 10000,
+    "macro": 100000,
+    "mega": 1000000
+  },
+  "cache_dias": 30,
+  "ventana_dias": 30,
+  "videos_medidos": 5,
+  "max_por_categoria": 8,
+  "alias_lugar": {
+    "ciudad de mexico": [
+      "cdmx",
+      "ciudad de mexico",
+      "chilang"
+    ]
+  },
+  "hashtags_lugar": {
+    "ciudad de mexico": [
+      "cdmx",
+      "ciudaddemexico",
+      "chilango"
+    ],
+    "gustavo a madero": [
+      "gam",
+      "gustavoamadero"
+    ],
+    "tlalpan": [
+      "tlalpan"
+    ],
+    "estado de mexico": [
+      "edomex"
+    ]
+  },
+  "temas_palabras": {
+    "humor": [
+      "humor",
+      "chiste",
+      "risa",
+      "meme",
+      "comedia",
+      "jajaja",
+      "broma",
+      "parodia"
+    ],
+    "noticias locales": [
+      "noticia",
+      "noticias",
+      "nota",
+      "urgente",
+      "reporte",
+      "alcaldia",
+      "delegacion",
+      "vialidad",
+      "obra",
+      "accidente",
+      "denuncia"
+    ],
+    "comunidad": [
+      "vecinos",
+      "colonia",
+      "barrio",
+      "comunidad",
+      "pueblo",
+      "ayuda",
+      "solidaridad",
+      "limpieza",
+      "faena"
+    ],
+    "deportes": [
+      "futbol",
+      "deporte",
+      "liga",
+      "partido",
+      "gol",
+      "torneo",
+      "box",
+      "lucha",
+      "carrera",
+      "maraton"
+    ],
+    "gastronomia": [
+      "comida",
+      "tacos",
+      "receta",
+      "taqueria",
+      "restaurante",
+      "antojitos",
+      "gastronomia",
+      "cocina",
+      "tamales",
+      "cafe"
+    ],
+    "musica": [
+      "musica",
+      "cancion",
+      "concierto",
+      "banda",
+      "rap",
+      "cumbia",
+      "sonidero",
+      "dj",
+      "baile"
+    ],
+    "politica": [
+      "politica",
+      "gobierno",
+      "morena",
+      "pan",
+      "pri",
+      "elecciones",
+      "candidato",
+      "diputado",
+      "alcalde",
+      "jefa de gobierno",
+      "congreso"
+    ]
+  },
+  "referentes": {
+    "max_autores_por_plataforma": 10,
+    "max_posts_por_fuente": 30,
+    "x_min_faves": 20,
+    "youtube_max_resultados": 25
+  }
+}

@@ -11,6 +11,7 @@ Pipeline de procesamiento para ceNetwork (Tlalpan, CDMX):
 """
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -19,13 +20,20 @@ from typing import Any, Dict, List, Optional, Tuple
 import unicodedata
 import requests
 
+from social import coincidencia, llm
+from social import periodo as periodo_mod
+from social.identidad import idioma_es
 from social.facebook import load_env_file, load_alias_config, matches_query_filter
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 FUENTES_PATH = BASE_DIR / "config" / "fuentes.json"
 
 CATEGORIAS_VALIDAS = {"seguridad", "empleo", "queja", "obras", "politica", "noticia", "otro"}
-FUENTES_VALIDAS = {"oficial", "politico", "medio", "ciudadano"}
+FUENTES_VALIDAS = {"persona", "oficial", "afin", "medio", "ciudadano"}   # "politico" del catálogo se normaliza a "afin"
+
+
+def _tipo(t: Optional[str]) -> Optional[str]:
+    return "afin" if t == "politico" else t
 
 # Singleton del modelo pysentimiento (cargado una sola vez en todo el proceso)
 _SENTIMENT_ANALYZER: Any = None
@@ -151,7 +159,7 @@ def _heuristic_classify_post(
         return {
             "relevante": False,
             "categoria": "empleo",
-            "tipo_fuente": known_source or "ciudadano",
+            "tipo_fuente": known_source or "sin_clasificar",
             "clasificador": "reglas",
         }
 
@@ -162,7 +170,7 @@ def _heuristic_classify_post(
         elif any(w in uname for w in ("noticias", "denuncias", "diario", "red ", "hilo", "pueblo manda", "embargo")):
             tipo_fuente = "medio"
         else:
-            tipo_fuente = "ciudadano"
+            tipo_fuente = "sin_clasificar"   # sin IA no se asume "ciudadano": no se cuenta como opinión
 
     # Categoría
     if any(w in tl for w in ("linchamiento", "denuncia", "queja", "bache", "fuga", "falta de agua", "bloqueo")):
@@ -186,99 +194,92 @@ def _heuristic_classify_post(
     }
 
 
-def classify_post_with_gemini(
-    post: Dict[str, Any],
+CLASIF_CACHE = BASE_DIR / ".cache" / "clasificacion.json"   # hash del texto -> clasificación de Gemini (nunca se reclasifica)
+LOTE_CLASIF = 18
+
+
+def _hash_texto(t: str) -> str:
+    return hashlib.sha1(re.sub(r"\s+", " ", (t or "").strip().lower()).encode("utf-8")).hexdigest()[:20]
+
+
+def classify_posts_batch(
+    posts: List[Dict[str, Any]],
     fuentes_cfg: Dict[str, List[Dict[str, Any]]],
-) -> Dict[str, Any]:
-    """
-    Clasifica un post con Gemini devolviendo JSON:
-    {relevante: bool, categoria: seguridad|empleo|queja|obras|politica|noticia|otro, tipo_fuente: oficial|politico|medio|ciudadano, clasificador: gemini|reglas}
-    Respeta cuentas registradas en config/fuentes.json y nunca rompe si la API falla.
-    """
-    known_source = detect_known_source_type(post, fuentes_cfg)
-    fallback = _heuristic_classify_post(post, known_source)
-
-    # Si claramente es una oferta de empleo / guardia privado, ahorrar llamada o forzar descarte
-    if fallback["categoria"] == "empleo" and not fallback["relevante"]:
-        return fallback
-
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
-    if not api_key:
-        return fallback
-
-    user_name = (post.get("user") or {}).get("name") or "Desconocido"
-    text = (post.get("text") or "")[:1200]
-    prompt = (
-        "Clasifica esta publicación de Facebook sobre Tlalpan (CDMX) y responde SOLO un objeto JSON con las claves exactas:\n"
-        '{"relevante": bool, "categoria": "seguridad"|"empleo"|"queja"|"obras"|"politica"|"noticia"|"otro", '
-        '"tipo_fuente": "oficial"|"politico"|"medio"|"ciudadano"}\n'
-        "Reglas:\n"
-        "- relevante=false si es oferta de empleo/vacante laboral (ej. contratación de guardias), spam comercial o no trata sobre la alcaldía Tlalpan.\n"
-        f"- Autor: {user_name}\n"
-        f"- Fuente preidentificada en catálogo: {known_source or 'ninguna'}\n"
-        f"- Texto: {text}"
-    )
-
-    model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
-
-    # Intento 1: SDK google.genai (convención de backend/datalab/pipeline/gemini_util.py)
+    tema: str = "",
+    ficha: Optional[Dict[str, Any]] = None,
+) -> Tuple[List[Dict[str, Any]], bool]:
+    """Clasifica en lotes de ~18 posts por llamada (JSON por id). Devuelve (clasificaciones alineadas, cuota_agotada).
+    Orden de recursos: reglas para empleo evidente -> caché por hash -> Gemini -> reglas si no hay IA o cuota."""
+    out: List[Dict[str, Any]] = []
+    known: List[Optional[str]] = []
+    pendientes: List[int] = []
     try:
-        from google import genai  # type: ignore
-        client = genai.Client(api_key=api_key)
-        resp = client.models.generate_content(
-            model=model_name,
-            contents=prompt,
-            config={"response_mime_type": "application/json", "temperature": 0},
-        )
-        parsed = json.loads(resp.text or "{}")
-        if isinstance(parsed, dict) and "relevante" in parsed:
-            cat = str(parsed.get("categoria") or fallback["categoria"]).lower()
-            tf = known_source or str(parsed.get("tipo_fuente") or fallback["tipo_fuente"]).lower()
-            rel = bool(parsed.get("relevante")) and cat != "empleo"
-            return {
-                "relevante": rel,
-                "categoria": cat if cat in CATEGORIAS_VALIDAS else fallback["categoria"],
-                "tipo_fuente": tf if tf in FUENTES_VALIDAS else fallback["tipo_fuente"],
-                "clasificador": "gemini",
-            }
+        cache = json.loads(CLASIF_CACHE.read_text(encoding="utf-8")) if CLASIF_CACHE.exists() else {}
     except Exception:
-        pass
+        cache = {}
+    from social import persona as persona_mod   # import tardío: evita ciclo
+    for i, post in enumerate(posts):
+        ks = _tipo(detect_known_source_type(post, fuentes_cfg))
+        known.append(ks)
+        fb = _heuristic_classify_post(post, ks)
+        out.append(fb)
+        if ficha and persona_mod.es_propia(post, ficha):   # regla en código, antes de Gemini: lo que publica la persona no es opinión
+            out[i] = {"relevante": True, "categoria": "politica", "tipo_fuente": "persona", "clasificador": "reglas"}
+            continue
+        if fb["categoria"] == "empleo" and not fb["relevante"]:
+            continue
+        h = _hash_texto((post.get("text") or "") + (f"|{ficha['id']}" if ficha else ""))
+        hit = cache.get(h)
+        if hit:
+            cat = hit.get("categoria") if hit.get("categoria") in CATEGORIAS_VALIDAS else fb["categoria"]
+            tf = ks or (_tipo(hit.get("tipo_fuente")) if _tipo(hit.get("tipo_fuente")) in FUENTES_VALIDAS else fb["tipo_fuente"])
+            out[i] = {"relevante": bool(hit.get("relevante")) and cat != "empleo", "categoria": cat, "tipo_fuente": tf, "clasificador": "gemini"}
+        elif llm.hay_clave():
+            pendientes.append(i)
 
-    # Intento 2: REST directo a generativelanguage.googleapis.com
+    agotada = False
+    for k in range(0, len(pendientes), LOTE_CLASIF):
+        lote = pendientes[k:k + LOTE_CLASIF]
+        items = [{"id": j, "plataforma": posts[j].get("plataforma", "facebook"), "autor": (posts[j].get("user") or {}).get("name") or "Desconocido",
+                  "fuente_catalogo": known[j] or "ninguna", "texto": (posts[j].get("text") or "")[:600]} for j in lote]
+        prompt = (
+            f"Clasifica estas publicaciones de redes sociales (Facebook, X, TikTok o Instagram) sobre «{tema or 'el tema de la búsqueda'}». Responde SOLO un arreglo JSON, "
+            'un objeto por id: {"id": n, "relevante": bool, "categoria": "seguridad"|"empleo"|"queja"|"obras"|"politica"|"noticia"|"otro", '
+            '"tipo_fuente": "oficial"|"afin"|"medio"|"ciudadano"}.\n'
+            "relevante=false si es oferta de empleo, spam comercial o no trata del tema/lugar de la búsqueda.\n"
+            + ("tipo_fuente: afin = cuenta del entorno de la persona (apoyo, fans, 'mi amigo', 'acompañamos al alcalde', hashtags de la administración, páginas que repiten el boletín); "
+               "oficial = gobierno o institución; medio = medio de noticias; ciudadano = persona común sin señales de afinidad. "
+               f"Ficha: {json.dumps({c: ficha.get(c) for c in ('nombre', 'cargo', 'partido', 'hashtags')}, ensure_ascii=False)}\n" if ficha else "")
+            + f"Publicaciones: {json.dumps(items, ensure_ascii=False)}"
+        )
+        try:
+            r = llm.generar_json(prompt, tag="clasificar-lote")
+        except llm.CuotaAgotada:
+            agotada = True
+            break
+        if r is None or not isinstance(r[0], list):
+            continue
+        for it in r[0]:
+            try:
+                j = int(it.get("id"))
+            except Exception:
+                continue
+            if j not in lote:
+                continue
+            fb = out[j]
+            cat = str(it.get("categoria") or fb["categoria"]).lower()
+            cat = cat if cat in CATEGORIAS_VALIDAS else fb["categoria"]
+            tf_ia = _tipo(str(it.get("tipo_fuente") or fb["tipo_fuente"]).lower())
+            tf = known[j] or (tf_ia if tf_ia in FUENTES_VALIDAS else fb["tipo_fuente"])
+            rel = bool(it.get("relevante")) and cat != "empleo"
+            out[j] = {"relevante": rel, "categoria": cat, "tipo_fuente": tf, "clasificador": "gemini"}
+            cache[_hash_texto((posts[j].get("text") or "") + (f"|{ficha['id']}" if ficha else ""))] = {"relevante": rel, "categoria": cat, "tipo_fuente": tf_ia if tf_ia in FUENTES_VALIDAS else tf}
     try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
-        resp = requests.post(
-            url,
-            params={"key": api_key},
-            json={
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"responseMimeType": "application/json", "temperature": 0},
-            },
-            timeout=8,
-        )
-        if resp.ok:
-            data = resp.json()
-            raw_txt = (
-                data.get("candidates", [{}])[0]
-                .get("content", {})
-                .get("parts", [{}])[0]
-                .get("text", "{}")
-            )
-            parsed = json.loads(raw_txt)
-            if isinstance(parsed, dict) and "relevante" in parsed:
-                cat = str(parsed.get("categoria") or fallback["categoria"]).lower()
-                tf = known_source or str(parsed.get("tipo_fuente") or fallback["tipo_fuente"]).lower()
-                rel = bool(parsed.get("relevante")) and cat != "empleo"
-                return {
-                    "relevante": rel,
-                    "categoria": cat if cat in CATEGORIAS_VALIDAS else fallback["categoria"],
-                    "tipo_fuente": tf if tf in FUENTES_VALIDAS else fallback["tipo_fuente"],
-                    "clasificador": "gemini",
-                }
-    except Exception:
-        pass
-
-    return fallback
+        CLASIF_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        CLASIF_CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
+    except Exception as exc:
+        print(f"[pipeline] No se pudo guardar el caché de clasificación: {exc}")
+    return out, agotada
 
 
 _EMOJI_DECORATIVE_RE = re.compile(
@@ -420,6 +421,9 @@ def are_texts_near_identical(a: str, b: str) -> bool:
     return False
 
 
+REACCIONES = ('Like', 'Love', 'Haha', 'Wow', 'Sad', 'Angry', 'Care')
+
+
 def deduplicate_narratives(posts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Agrupa textos casi idénticos en una sola narrativa con su conteo y métricas agregadas."""
     clusters: List[Dict[str, Any]] = []
@@ -438,8 +442,14 @@ def deduplicate_narratives(posts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             matched_cluster["likesCount"] += int(p.get("likesCount") or 0)
             matched_cluster["commentsCount"] += int(p.get("commentsCount") or 0)
             matched_cluster["sharesCount"] += int(p.get("sharesCount") or 0)
+            for k in REACCIONES:
+                matched_cluster["reacciones"][k] += int(p.get(f"reaction{k}Count") or 0)
+            if p.get("time") and (not matched_cluster["desde"] or p["time"] < matched_cluster["desde"]):
+                matched_cluster["desde"] = p["time"]
             if user_name not in matched_cluster["fuentes"]:
                 matched_cluster["fuentes"].append(user_name)
+            if p.get("plataforma", "facebook") not in matched_cluster["plataformas"]:
+                matched_cluster["plataformas"].append(p.get("plataforma", "facebook"))
         else:
             first_line = next((ln.strip() for ln in txt.splitlines() if ln.strip()), txt[:90])
             clusters.append({
@@ -447,6 +457,7 @@ def deduplicate_narratives(posts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 "texto": txt,
                 "fuente": user_name,
                 "fuentes": [user_name],
+                "plataformas": [p.get("plataforma", "facebook")],
                 "tipo_fuente": p.get("tipo_fuente", "ciudadano"),
                 "categoria": p.get("categoria", "seguridad"),
                 "sentimiento": p.get("sentimiento", "sin_clasificar"),
@@ -454,6 +465,8 @@ def deduplicate_narratives(posts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 "likesCount": int(p.get("likesCount") or 0),
                 "commentsCount": int(p.get("commentsCount") or 0),
                 "sharesCount": int(p.get("sharesCount") or 0),
+                "reacciones": {k: int(p.get(f"reaction{k}Count") or 0) for k in REACCIONES},   # desglose de reacciones (solo Facebook las trae)
+                "desde": p.get("time") or "",
                 "time": p.get("time") or "",
                 "url": p.get("url") or "",
             })
@@ -505,6 +518,40 @@ def build_daily_series(
     return serie_diaria, pico
 
 
+def historial_anterior(anteriores: List[Dict[str, Any]], ref: datetime, maximo: int = 10) -> List[Dict[str, Any]]:
+    """Los posts anteriores al periodo con más interacción (máx. 10). No entran en ninguna cifra."""
+    inter = lambda p: int(p.get("likesCount") or 0) + int(p.get("commentsCount") or 0) + int(p.get("sharesCount") or 0)
+    return [{"autor": (p.get("user") or {}).get("name") or "Desconocido", "plataforma": p.get("plataforma", "facebook"), "fecha": p.get("time") or "",
+             "fragmento": re.sub(r"\s+", " ", p.get("text") or "").strip()[:220], "url": p.get("url") or "", "interacciones": inter(p),
+             "dias_antiguedad": max(0, (ref - p["_dt"]).days), "usuario": (p.get("user") or {}).get("usuario", ""), "texto": (p.get("text") or "")[:600]}
+            for p in sorted(anteriores, key=inter, reverse=True)[:maximo]]
+
+
+def contenido_antiguo_repetido(anteriores: List[Dict[str, Any]], ref: datetime, min_dias: int = 90) -> List[Dict[str, Any]]:
+    """Textos de más de 90 días que aparecen casi idénticos en 2 o más cuentas distintas (insumo de la alerta «Contenido antiguo que reaparece»)."""
+    viejos = [p for p in anteriores if (ref - p["_dt"]).days > min_dias and (p.get("text") or "").strip()]
+    out = []
+    for c in deduplicate_narratives(viejos):
+        if c["count"] >= 2 and len(set(c["fuentes"])) >= 2:
+            out.append({"titulo": c["titulo"], "fragmento": c["texto"][:220], "cuentas": len(set(c["fuentes"])), "plataformas": c.get("plataformas", []),
+                        "ultima_fecha": c.get("time") or "", "url": c.get("url") or ""})
+    return out[:5]
+
+
+def descarte_registro(post: Dict[str, Any], motivo: str, nota: str = "") -> Dict[str, Any]:
+    """Registro legible de un post descartado: motivo, autor, fecha, fragmento y enlace."""
+    return {
+        "motivo": motivo, "nota": nota,
+        "autor": (post.get("user") or {}).get("name") or "Desconocido",
+        "fecha": post.get("time") or "",
+        "fragmento": re.sub(r"\s+", " ", (post.get("text") or "")).strip()[:180],
+        "url": post.get("url") or "",
+        "origen_post": post.get("origen_post"),
+        "plataforma": post.get("plataforma", "facebook"),
+        "coincidencia": (post.get("coincidencia") or {}).get("puntaje"),
+    }
+
+
 def process_facebook_posts(
     raw_mapped_posts: List[Dict[str, Any]],
     tema: str,
@@ -515,12 +562,14 @@ def process_facebook_posts(
     mensaje: Optional[str] = None,
     posts_fuente: Optional[int] = None,
     ref_time_iso: Optional[str] = None,
+    ficha: Optional[Dict[str, Any]] = None,
+    periodo: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Ejecuta el pipeline completo sobre los posts mapeados y devuelve el resumen estructurado."""
     load_env_file()
     alias_cfg = load_alias_config()
     fuentes_cfg = load_fuentes_config()
-    max_days = int(os.getenv("MAX_POST_DAYS", "14") or 14)
+    periodo = periodo or periodo_mod.resolver()
 
     now_utc = datetime.now(timezone.utc)
     # Si estamos corriendo con el fixture estático en otra fecha futura/pasada,
@@ -534,49 +583,97 @@ def process_facebook_posts(
         ref_time = max(valid_times)
     else:
         ref_time = now_utc
-    cutoff_dt = ref_time - timedelta(days=max_days)
+    desde_dt, hasta_dt = periodo_mod.ventana(periodo, ref_time)
+    if periodo["tipo"] == "rango" and hasta_dt:
+        ref_time = hasta_dt   # la gráfica termina en la fecha final elegida
+        desde_dt, hasta_dt = periodo_mod.ventana(periodo, ref_time)
+    max_days = periodo_mod.dias_serie(periodo, ref_time)
+    anteriores: List[Dict[str, Any]] = []   # descartados por ser anteriores al periodo: contexto histórico aparte
 
-    # Verificar el filtro por tema/persona también en pipeline (por si se invoca directamente)
-    filtered_by_query = [
-        p for p in raw_mapped_posts
-        if matches_query_filter(p, tema=tema, modo=modo)
-    ]
     effective_posts_fuente = int(posts_fuente) if posts_fuente is not None else len(raw_mapped_posts)
-    posts_filtro_tema = len(filtered_by_query)
-    descartados_filtro_tema = max(0, effective_posts_fuente - posts_filtro_tema)
-
+    descartados_filtro_tema = 0
     descartados_fecha = 0
     descartados_homonimo = 0
+    descartados_idioma = 0
     descartados_no_relevantes = 0
-    descartados_vacios = 0
     used_gemini = False
+    detalle: List[Dict[str, Any]] = []      # un registro por post descartado, con su motivo
+    sin_texto_posts: List[Dict[str, Any]] = []
+    por_confirmar_match: List[Dict[str, Any]] = []   # coincidencia débil: no se tiran, tampoco entran a las cifras
+    pasaron_match = 0
+
+    def _descartar(post: Dict[str, Any], motivo: str, nota: str = "") -> None:
+        detalle.append(descarte_registro(post, motivo, nota))
+        print(f"[pipeline]   -> Descartado [{(post.get('user') or {}).get('name') or '?'}] {post.get('url') or post.get('postId') or ''}: {motivo}{' (' + nota + ')' if nota else ''}")
 
     relevantes: List[Dict[str, Any]] = []
-
-    for post in filtered_by_query:
+    candidatos: List[Dict[str, Any]] = []
+    propios_pipeline: List[Dict[str, Any]] = []
+    for post in raw_mapped_posts:
         raw_text = (post.get("text") or "").strip()
+        # Sin texto: no entra al filtro; se cuenta y se lista aparte (con enlace)
         if not raw_text:
-            descartados_vacios += 1
+            sin_texto_posts.append(post)
             continue
 
-        # 1. Filtro de fecha en código (> 14 días descartado)
+        # Descarte propio de la plataforma (p. ej. retweets en X)
+        if post.get("descarte_nota"):
+            _descartar(post, "otro", post["descarte_nota"])
+            continue
+
+        # 1. Coincidencia con el tema/persona (puntaje, no todo o nada)
+        c = coincidencia.puntuar(post, tema, modo, ficha)
+        post = {**post, "coincidencia": {**c, "umbral": coincidencia.umbral()}}
+        if c["puntaje"] <= 0:
+            descartados_filtro_tema += 1
+            _descartar(post, "no contiene el tema")
+            continue
+        if not coincidencia.pasa(c):
+            por_confirmar_match.append(post)
+            print(f"[pipeline]   -> Por confirmar [{(post.get('user') or {}).get('name') or '?'}]: coincidencia débil {c['puntaje']} ({', '.join(c['coincidencias'])})")
+            continue
+        pasaron_match += 1
+
+        # 2. Filtro de fecha en código: solo cuenta lo que cae dentro del periodo elegido
         dt = parse_iso_datetime(post.get("time", ""))
-        if dt is not None and dt < cutoff_dt:
+        if dt is not None and ((desde_dt and dt < desde_dt) or (hasta_dt and dt > hasta_dt)):
             descartados_fecha += 1
+            antes = bool(desde_dt and dt < desde_dt)
+            _descartar(post, "fuera del periodo", ("anterior" if antes else "posterior") + f" al periodo ({periodo['etiqueta']})")
+            if antes:
+                anteriores.append({**post, "_dt": dt})
             continue
 
-        # 2. Filtro de homónimos ("Calzada de Tlalpan" sin contexto de alcaldía) y alias ambiguos
+        # 3. Filtro de homónimos ("Calzada de Tlalpan" sin contexto de alcaldía) y alias ambiguos
         is_hom, _reason = is_homonym_or_out_of_scope(raw_text, alias_cfg)
         if is_hom:
             descartados_homonimo += 1
+            _descartar(post, "homónimo", _reason)
             continue
 
-        # 3. Clasificación con Gemini + config/fuentes.json
-        cls = classify_post_with_gemini(post, fuentes_cfg)
+        # 4. Idioma (solo con ficha en español)
+        if ficha and (ficha.get("idioma") or "es") == "es" and not idioma_es(raw_text):
+            descartados_idioma += 1
+            _descartar(post, "otro idioma")
+            continue
+        candidatos.append(post)
+
+    posts_filtro_tema = pasaron_match
+    descartados_vacios = len(sin_texto_posts)
+
+    # 3. Clasificación en lotes con Gemini (respaldo de modelos) + config/fuentes.json; reglas si no hay IA
+    clasifs, cuota_agotada = classify_posts_batch(candidatos, fuentes_cfg, tema, ficha)
+    for post, cls in zip(candidatos, clasifs):
+        raw_text = (post.get("text") or "").strip()
         if cls.get("clasificador") == "gemini":
             used_gemini = True
         if not cls.get("relevante") or cls.get("categoria") == "empleo":
             descartados_no_relevantes += 1
+            _descartar(post, "otro", "clasificada como no relevante (empleo, spam o ajena al tema)")
+            continue
+
+        if cls["tipo_fuente"] == "persona":   # publicado por la persona: no entra a ninguna cifra de opinión
+            propios_pipeline.append(post)
             continue
 
         enriched = dict(post)
@@ -592,24 +689,32 @@ def process_facebook_posts(
             enriched["sentimiento"] = sent["label"]
             enriched["sentimiento_probas"] = sent["probas"]
             enriched["sentimiento_motor"] = sent["engine"]
-        else:
-            # Oficial / político se muestra aparte como narrativa oficial sin sesgar sentimiento ciudadano
+        elif enriched["tipo_fuente"] in ("oficial", "afin", "politico"):
+            # Oficial y afín no sesgan el sentimiento de terceros: se mide aparte, en el bloque «Afines y entorno»
             enriched["sentimiento"] = "oficial"
             enriched["sentimiento_probas"] = None
             enriched["sentimiento_motor"] = "excluido_oficial"
+            enriched["sentimiento_entorno"] = analyze_post_sentiment(enriched)["label"]
+        else:   # sin_clasificar: no se cuenta como opinión
+            enriched["sentimiento"] = "sin_clasificar"
+            enriched["sentimiento_probas"] = None
+            enriched["sentimiento_motor"] = "sin_clasificar"
 
         relevantes.append(enriched)
 
     clasificador_usado = "gemini" if used_gemini else "reglas"
     relevantes_count = len(relevantes)
     print(
-        f"[pipeline] Fuente={source_type} (origen={source_type}) tema='{tema}' modo='{modo}': "
-        f"posts_fuente={effective_posts_fuente}, posts_filtro_tema={posts_filtro_tema}, "
-        f"relevantes={relevantes_count} (descartados_fecha={descartados_fecha}, "
-        f"descartados_homonimo={descartados_homonimo}, no_relevantes={descartados_no_relevantes})"
+        f"[pipeline] Fuente={source_type} tema='{tema}' modo='{modo}': crudos={len(raw_mapped_posts)}, "
+        f"sin_texto={len(sin_texto_posts)}, con_texto={len(raw_mapped_posts) - len(sin_texto_posts)}, "
+        f"pasaron_coincidencia={posts_filtro_tema} (umbral {coincidencia.umbral()}), por_confirmar={len(por_confirmar_match)}, "
+        f"relevantes={relevantes_count}, descartados={len(detalle)} "
+        f"(no_contiene_tema={descartados_filtro_tema}, fecha={descartados_fecha}, homonimo={descartados_homonimo}, "
+        f"idioma={descartados_idioma}, otro={descartados_no_relevantes})"
     )
 
-    oficiales_posts = [p for p in relevantes if p.get("tipo_fuente") in ("oficial", "politico")]
+    oficiales_posts = [p for p in relevantes if p.get("tipo_fuente") in ("oficial", "afin", "politico")]
+    sin_clasificar_tipo = sum(1 for p in relevantes if p.get("tipo_fuente") == "sin_clasificar")
     ciudadanos_medios_posts = [p for p in relevantes if p.get("tipo_fuente") in ("medio", "ciudadano")]
 
     pct_oficial = round((len(oficiales_posts) / relevantes_count) * 100, 1) if relevantes_count > 0 else 0.0
@@ -617,6 +722,10 @@ def process_facebook_posts(
     # Sentimiento agregado SOLO sobre medio | ciudadano clasificados (excluyendo 'sin_clasificar')
     cm_total = len(ciudadanos_medios_posts)
     cm_clasificados = [p for p in ciudadanos_medios_posts if p.get("sentimiento") in ("pos", "neu", "neg")]
+    # «Afines y entorno»: oficial + afín, en un bloque aparte con su propia base
+    ent = [p for p in oficiales_posts if p.get("sentimiento_entorno") in ("pos", "neu", "neg")]
+    ent_pct = lambda k: round(100 * sum(1 for p in ent if p["sentimiento_entorno"] == k) / len(ent)) if ent else 0
+    sentimiento_afines = {"positive": ent_pct("pos"), "neutral": ent_pct("neu"), "negative": ent_pct("neg"), "base": len(ent), "universo": "afin|oficial"}
     sin_clasificar_c = sum(1 for p in ciudadanos_medios_posts if p.get("sentimiento") == "sin_clasificar")
     if len(cm_clasificados) > 0:
         denom = len(cm_clasificados)
@@ -666,6 +775,10 @@ def process_facebook_posts(
 
     # Volumen por día (ventana configurada de 14 días, contando posts por fecha y pico en posts/día)
     volumen_por_dia, pico_posts_dia = build_daily_series(relevantes, ref_time=ref_time, max_days=max_days)
+    volumen_por_plataforma = {
+        pl: build_daily_series([p for p in relevantes if p.get("plataforma", "facebook") == pl], ref_time=ref_time, max_days=max_days)[0]
+        for pl in sorted({p.get("plataforma", "facebook") for p in relevantes})
+    }
 
     total_interacciones = sum(
         int(p.get("likesCount") or 0) + int(p.get("commentsCount") or 0) + int(p.get("sharesCount") or 0)
@@ -689,8 +802,13 @@ def process_facebook_posts(
         "sin_datos_demo": bool(sin_datos_demo),
         "mensaje": effective_mensaje,
         "clasificador": clasificador_usado,
+        "aviso_ia": ("Clasificación básica (sin IA)" if clasificador_usado == "reglas" and (cuota_agotada or not llm.hay_clave())
+                     else "Clasificación parcial con IA: cuota agotada" if cuota_agotada else None),
+        "ia": llm.info_sesion(),
+        "modelos_usados": llm.info_sesion()["modelos_usados"],
         "fecha_corrida": now_utc.isoformat(),
         "ventana_dias": max_days,
+        "fecha_referencia": ref_time.isoformat(),
         "posts_fuente": effective_posts_fuente,
         "posts_filtro_tema": posts_filtro_tema,
         "total_posts": effective_posts_fuente,
@@ -702,9 +820,23 @@ def process_facebook_posts(
             "por_filtro_tema": descartados_filtro_tema,
             "por_fecha": descartados_fecha,
             "por_homonimo": descartados_homonimo,
+            "por_idioma": descartados_idioma,
             "no_relevantes_o_empleo": descartados_no_relevantes,
             "vacios": descartados_vacios,
         },
+        "descartados_detalle": detalle,
+        "periodo": periodo,
+        "historial_anterior": historial_anterior(anteriores, ref_time),
+        "historial_anterior_total": len(anteriores),
+        "antiguo_repetido": contenido_antiguo_repetido(anteriores, ref_time),
+        "por_confirmar": por_confirmar_match,
+        "sin_texto": {
+            "total": len(sin_texto_posts),
+            "publicados": sum(1 for p in sin_texto_posts if p.get("origen_post") == "publicado_por_persona"),
+            "menciones": sum(1 for p in sin_texto_posts if p.get("origen_post") == "mencion"),
+            "posts": [{"url": p.get("url"), "user": (p.get("user") or {}).get("name"), "time": p.get("time"), "origen_post": p.get("origen_post"), "plataforma": p.get("plataforma", "facebook")} for p in sin_texto_posts],
+        },
+        "umbral_coincidencia": coincidencia.umbral(),
         "volumen": relevantes_count,
         "interacciones_totales": total_interacciones,
         "sentimiento": {
@@ -713,12 +845,17 @@ def process_facebook_posts(
             "negative": neg_pct,
             "sin_clasificar": sin_clasificar_c,
             "universo": "medio|ciudadano",
+            "base": len(cm_clasificados),
             "excluye_oficial": True,
         },
+        "sentimiento_afines": sentimiento_afines,
+        "sin_clasificar_tipo": sin_clasificar_tipo,
+        "publicado_por_persona_pipeline": [descarte_registro(p, "persona") | {"interacciones": int(p.get("likesCount") or 0) + int(p.get("commentsCount") or 0) + int(p.get("sharesCount") or 0)} for p in propios_pipeline],
         "categorias": categorias_list,
         "narrativa_oficial": narrativa_oficial,
         "narrativa_ciudadana": narrativa_ciudadana,
         "posts_recientes": relevantes_sorted,
         "volumen_por_dia": volumen_por_dia,
+        "volumen_por_dia_plataforma": volumen_por_plataforma,
         "pico_posts_dia": pico_posts_dia,
     }

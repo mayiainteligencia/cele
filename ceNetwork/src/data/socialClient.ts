@@ -9,6 +9,19 @@ import type {
   PersonaProfile,
   HistorialItem,
   HistorialEntry,
+  Palabras,
+  Temas,
+  Analisis,
+  Radar,
+  EstimadoConsumo,
+  EstimadoPlataformas,
+  EstimadoComentarios,
+  EstimadoMedir,
+  ProgresoRadar,
+  FormatosRadar,
+  QueSeSabe,
+  Plataforma,
+  PeriodoReq,
   Entidad,
   Alerta,
   LineaBase,
@@ -636,6 +649,9 @@ export async function fetchSocialSearchSummary(params: {
   modo: SearchMode;
   alcance: ScopeSelection;
   refrescar?: boolean;
+  plataformas?: Plataforma[];
+  entidadId?: string | null;
+  periodo?: PeriodoReq;
 }): Promise<SocialApiSummary> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -654,6 +670,9 @@ export async function fetchSocialSearchSummary(params: {
         modo: params.modo,
         alcance: params.alcance,
         refrescar: params.refrescar ?? false,
+        plataformas: params.plataformas ?? ['facebook'],
+        entidad_id: params.entidadId ?? null,
+        ...params.periodo,
       }),
     });
 
@@ -728,18 +747,22 @@ export async function analyzePersonaPage(params: {
   apiUrl: string;
   apiToken?: string;
   nombre: string;
-  pagina: PersonaProfile;
+  pagina?: PersonaProfile;   // opcional: sin ella se buscan solo menciones de terceros
   entidadId?: string | null;
   alcance?: ScopeSelection;
   refrescar?: boolean;
+  plataformas?: Plataforma[];
+  periodo?: PeriodoReq;
 }): Promise<SocialApiSummary> {
   return postPersona(params, '/social/persona/analizar', {
     nombre: params.nombre,
-    pagina_url: params.pagina.url,
-    pagina_nombre: params.pagina.nombre,
+    pagina_url: params.pagina?.url ?? '',
+    pagina_nombre: params.pagina?.nombre ?? '',
     entidad_id: params.entidadId ?? null,
     alcance: params.alcance,
     refrescar: params.refrescar ?? false,
+    plataformas: params.plataformas ?? ['facebook'],
+    ...params.periodo,
   });
 }
 
@@ -780,3 +803,34 @@ export const listarAlertas = (a: Api) => postPersona<Alerta[]>(a, '/alertas', un
 export const lineasBase = (a: Api) => postPersona<LineaBase[]>(a, '/monitoreo/estado', undefined, 'GET');
 export const marcarAlerta = (a: Api, id: string, estado: string) => postPersona<Alerta>(a, `/alertas/${encodeURIComponent(id)}`, { estado }, 'PUT');
 export const borradorAlerta = (a: Api, id: string) => postPersona<{ borrador: string }>(a, `/alertas/${encodeURIComponent(id)}/borrador`);
+
+export const calcularPalabras = (a: Api, id: string) => postPersona<Palabras>(a, `/palabras/${encodeURIComponent(id)}`);
+export const calcularTemas = (a: Api, id: string) => postPersona<Temas>(a, `/temas/${encodeURIComponent(id)}`);
+export const estimadoAnalisis = (a: Api, id: string) => postPersona<EstimadoConsumo>(a, `/analisis/${encodeURIComponent(id)}/estimado`, undefined, 'GET');
+export interface EstadoModeloIA { modelo: string; estado: 'disponible' | 'en_espera'; tipo: string | null; ultimo_error: string | null; vuelve: string | null; ultimo_minuto: number; rpm: number; codigo: number | null; latencia_media: number | null; disponible_desde: string | null; penalizado: boolean; descubierto: boolean }
+export const estadoIA = (a: Api) => postPersona<{ modelos: EstadoModeloIA[]; agotados: boolean; mensaje: string | null }>(a, '/ia/estado', undefined, 'GET');
+export interface DiagnosticoModelo { modelo: string; ok: boolean; latencia: number; respuesta: string | null; error: string | null; codigo: number | null }
+export const diagnosticoIA = (a: Api) => postPersona<{ modelos: DiagnosticoModelo[] }>(a, '/ia/diagnostico', undefined, 'GET');
+export const reintentarIA = (a: Api) => postPersona<{ modelos: EstadoModeloIA[] }>(a, '/ia/reintentar');
+export const generarAnalisis = (a: Api, id: string) => postPersona<Analisis>(a, `/analisis/${encodeURIComponent(id)}`);
+export const estimadoRadar = (a: Api, id: string, incluirReferentes = true) => postPersona<EstimadoConsumo>(a, `/radar/${encodeURIComponent(id)}/estimado?incluir_referentes=${incluirReferentes}`, undefined, 'GET');
+export const generarRadar = (a: Api, id: string, incluirReferentes = true, refrescar = false) =>
+  postPersona<{ estado: string; radar?: Radar }>(a, `/radar/${encodeURIComponent(id)}`, { confirmar: true, refrescar, incluir_referentes: incluirReferentes });
+export const progresoRadar = (a: Api, id: string) => postPersona<ProgresoRadar>(a, `/radar/${encodeURIComponent(id)}/progreso`, undefined, 'GET');
+export const cancelarRadar = (a: Api, id: string) => postPersona<{ ok: boolean }>(a, `/radar/${encodeURIComponent(id)}/cancelar`);
+export const sugerirFormatos = (a: Api, id: string) => postPersona<FormatosRadar>(a, `/radar/${encodeURIComponent(id)}/formatos`);
+
+export const estimadoPlataformas = (a: Api, plataformas: Plataforma[], modo: string, periodo?: PeriodoReq) => {
+  const q = new URLSearchParams({ plataformas: plataformas.join(','), modo });
+  Object.entries(periodo ?? {}).forEach(([k, v]) => v !== undefined && q.set(k, String(v)));
+  return postPersona<EstimadoPlataformas>(a, `/social/estimado?${q.toString()}`, undefined, 'GET');
+};
+
+export const estimadoComentarios = (a: Api, id: string) => postPersona<EstimadoComentarios>(a, `/persona/comentarios/${encodeURIComponent(id)}/estimado`, undefined, 'GET');
+export const extraerComentarios = (a: Api, id: string) => postPersona<unknown>(a, `/persona/comentarios/${encodeURIComponent(id)}`, { confirmar: true });
+
+export const calcularQueSeSabe = (a: Api, id: string) => postPersona<QueSeSabe>(a, `/que-se-sabe/${encodeURIComponent(id)}`);
+
+export const estimadoMedir = (a: Api, id: string, nombre: string) =>
+  postPersona<EstimadoMedir>(a, `/radar/${encodeURIComponent(id)}/medir/estimado?nombre=${encodeURIComponent(nombre)}`, undefined, 'GET');
+export const medirCuenta = (a: Api, id: string, nombre: string) => postPersona<Radar>(a, `/radar/${encodeURIComponent(id)}/medir`, { nombre, confirmar: true });

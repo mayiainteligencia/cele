@@ -1,0 +1,87 @@
+[
+ {
+  "type": "tweet",
+  "id": "9000000000000000001",
+  "url": "https://x.com/vecino_ejemplo/status/9000000000000000001",
+  "text": "Otra vez sin agua en Tlalpan desde hace tres dias, nadie da respuesta en la alcaldia",
+  "retweetCount": 14,
+  "replyCount": 6,
+  "likeCount": 42,
+  "quoteCount": 2,
+  "viewCount": 1800,
+  "createdAt": "Tue Nov 10 15:02:11 +0000 2026",
+  "lang": "es",
+  "isRetweet": false,
+  "isQuote": false,
+  "author": {
+   "userName": "vecino_ejemplo",
+   "name": "Vecino Ejemplo",
+   "id": "9001",
+   "followers": 310,
+   "isVerified": false
+  }
+ },
+ {
+  "type": "tweet",
+  "id": "9000000000000000002",
+  "url": "https://x.com/noticias_ejemplo/status/9000000000000000002",
+  "text": "Alcaldia Tlalpan anuncia operativo de seguridad en Ajusco y Topilejo tras reportes de robos",
+  "retweetCount": 55,
+  "replyCount": 9,
+  "likeCount": 120,
+  "quoteCount": 5,
+  "viewCount": 9400,
+  "createdAt": "Wed Nov 11 12:30:00 +0000 2026",
+  "lang": "es",
+  "isRetweet": false,
+  "isQuote": false,
+  "author": {
+   "userName": "noticias_ejemplo",
+   "name": "Noticias Ejemplo",
+   "id": "9002",
+   "followers": 25400,
+   "isVerified": true
+  }
+ },
+ {
+  "type": "tweet",
+  "id": "9000000000000000003",
+  "url": "https://x.com/otro_ejemplo/status/9000000000000000003",
+  "text": "RT @noticias_ejemplo: Alcaldia Tlalpan anuncia operativo de seguridad en Ajusco y Topilejo tras reportes de robos",
+  "retweetCount": 0,
+  "replyCount": 0,
+  "likeCount": 0,
+  "quoteCount": 0,
+  "createdAt": "Wed Nov 11 13:10:00 +0000 2026",
+  "lang": "es",
+  "isRetweet": true,
+  "isQuote": false,
+  "author": {
+   "userName": "otro_ejemplo",
+   "name": "Otro Ejemplo",
+   "id": "9003",
+   "followers": 88
+  }
+ },
+ {
+  "type": "tweet",
+  "id": "9000000000000000004",
+  "url": "https://x.com/vecina_ejemplo/status/9000000000000000004",
+  "text": "Gracias a las cuadrillas por el bacheo en Villa Coapa, ya se nota la diferencia",
+  "retweetCount": 3,
+  "replyCount": 1,
+  "likeCount": 19,
+  "quoteCount": 0,
+  "createdAt": "Thu Nov 12 09:15:40 +0000 2026",
+  "lang": "es",
+  "isRetweet": false,
+  "isQuote": false,
+  "author": {
+   "userName": "vecina_ejemplo",
+   "name": "Vecina Ejemplo",
+   "id": "9004",
+   "followers": 1200,
+   "isVerified": false
+  }
+ }
+]

@@ -198,69 +198,10 @@ def extract_significant_topic_words(tema: str) -> List[str]:
     return [t for t in tokens if t not in STOPWORDS_ES and len(t) >= 2]
 
 
-def matches_query_filter(post: Dict[str, Any], tema: str, modo: str = "tema") -> bool:
-    """
-    Evalúa si un post coincide estrictamente con el tema/persona escrito por el usuario:
-    - Solo compara contra el término escrito por el usuario (nunca contra alias del lugar ni alcance).
-    - Normaliza a minúsculas y sin acentos.
-    - Usa límites de palabra (\\b), nunca subcadenas.
-    - Modo Persona: exige el nombre completo o, como mínimo, nombre y apellido juntos (>= 2 palabras contiguas).
-      No basta una sola palabra.
-    - Modo Tema (y Tendencias): ignora palabras vacías y exige que aparezcan TODAS las palabras significativas
-      (o la frase exacta) con límites de palabra.
-    """
-    # Lo publicado por la página elegida es de la persona aunque no escriba su propio nombre.
-    if post.get("origen_post") == "publicado_por_persona":
-        return True
-
-    clean_query = normalize_text_no_accents((tema or "").strip())
-    query_tokens = [t for t in re.split(r"[^a-z0-9]+", clean_query) if t]
-    if not query_tokens:
-        return False
-
-    post_text = str(post.get("text") or "")
-    modo_norm = (modo or "tema").strip().lower()
-
-    if modo_norm == "persona":
-        user_name = str((post.get("user") or {}).get("name") or "")
-        shared_user = post.get("sharedFromUser")
-        shared_name = str(shared_user.get("name") or "") if isinstance(shared_user, dict) else ""
-        haystack = normalize_text_no_accents(f"{post_text} {user_name} {shared_name}")
-
-        # Palabras sustantivas del nombre (sin conectores como "de", "del", "la")
-        name_words = [t for t in query_tokens if t not in NAME_CONNECTORS_ES]
-        if len(name_words) < 2:
-            # En modo persona no basta una sola palabra; requiere al menos nombre y apellido
-            return False
-
-        # 1) Nombre completo exacto con límites de palabra
-        full_pattern = r"\b" + r"\s+".join(re.escape(t) for t in query_tokens) + r"\b"
-        if re.search(full_pattern, haystack):
-            return True
-
-        # 2) Como mínimo, nombre y apellido juntos (dos palabras contiguas del nombre)
-        for i in range(len(name_words) - 1):
-            w1 = re.escape(name_words[i])
-            w2 = re.escape(name_words[i + 1])
-            pair_pattern = rf"\b{w1}\s+(?:(?:de|del|la|las|los|el)\s+)?{w2}\b"
-            if re.search(pair_pattern, haystack):
-                return True
-        return False
-
-    # Modo Tema / Tendencias: solo contra el texto del post (nunca contra el lugar/alcance)
-    haystack = normalize_text_no_accents(post_text)
-    if not haystack:
-        return False
-
-    phrase_pattern = r"\b" + r"\s+".join(re.escape(t) for t in query_tokens) + r"\b"
-    if re.search(phrase_pattern, haystack):
-        return True
-
-    sig_words = extract_significant_topic_words(tema)
-    if not sig_words:
-        return False
-
-    return all(bool(re.search(rf"\b{re.escape(w)}\b", haystack)) for w in sig_words)
+def matches_query_filter(post: Dict[str, Any], tema: str, modo: str = "tema", ficha: Optional[Dict[str, Any]] = None) -> bool:
+    """True si el puntaje de coincidencia (social/coincidencia.py) llega al umbral MATCH_UMBRAL."""
+    from social import coincidencia
+    return coincidencia.pasa(coincidencia.puntuar(post, tema, modo, ficha))
 
 
 def filter_posts_by_query(
@@ -268,8 +209,8 @@ def filter_posts_by_query(
     tema: str,
     modo: str = "tema",
 ) -> List[Dict[str, Any]]:
-    """Filtra una lista de posts mapeados aplicando matches_query_filter."""
-    return [item for item in items if matches_query_filter(item, tema=tema, modo=modo)]
+    """Ya no descarta: el filtro de tema vive solo en el pipeline para que cada descarte quede registrado con su motivo."""
+    return list(items)
 
 
 def build_facebook_queries(
@@ -391,6 +332,18 @@ def map_to_common_schema(raw: Dict[str, Any]) -> Dict[str, Any]:
     else:
         full_text = primary_text or shared_text
 
+    texto_origen = "propio"
+    if not full_text:
+        # Sin texto: usar la descripción de la imagen o el enlace externo, si existen
+        media_raw = raw.get("media") if isinstance(raw.get("media"), list) else (raw.get("attachments") if isinstance(raw.get("attachments"), list) else [])
+        imagen = next((str(m.get(k)).strip() for m in media_raw if isinstance(m, dict)
+                       for k in ("ocrText", "alt", "accessibilityCaption", "thumbnailAlt", "description") if m.get(k)), "")
+        enlace = " ".join(str(raw.get(k)).strip() for k in ("linkTitle", "linkDescription", "caption") if raw.get(k)) or str(raw.get("link") or "").strip()
+        if imagen:
+            full_text, texto_origen = imagen, "imagen"
+        elif enlace:
+            full_text, texto_origen = enlace, "enlace"
+
     user_obj = raw.get("user") or raw.get("pageName") or {}
     if not isinstance(user_obj, dict):
         user_obj = {"id": "", "name": str(user_obj)}
@@ -424,6 +377,7 @@ def map_to_common_schema(raw: Dict[str, Any]) -> Dict[str, Any]:
             "profilePic": user_obj.get("profilePic") or "",
         },
         "hasOwnText": bool(primary_text),
+        "texto_origen": texto_origen,
         "sharedFromUser": (shared_post.get("user") or shared_post.get("pageName")) if isinstance(shared_post, dict) else None,
         "link": raw.get("link") or shared_post.get("url") or None,
         "media": media_list,
@@ -787,7 +741,7 @@ def _run_actor(actor_id: str, payload: Dict[str, Any], before_call=None) -> List
         raise RuntimeError("APIFY_TOKEN no configurado en backend/.env")
     if before_call:
         before_call()
-    url = f"https://api.apify.com/v2/acts/{actor_id}/run-sync-get-dataset-items"
+    url = f"https://api.apify.com/v2/acts/{actor_id.replace('/', '~')}/run-sync-get-dataset-items"   # la API exige usuario~actor
     print(f"[facebook] Apify {actor_id}: {json.dumps(payload, ensure_ascii=False)[:200]}")
     resp = requests.post(url, params={"token": token}, json=payload, timeout=120)
     if not resp.ok:
@@ -869,6 +823,13 @@ def search_persona_profiles(nombre: str, before_call=None) -> Dict[str, Any]:
     return {"origen": origen, "perfiles": items, "mensaje": mensaje}
 
 
+def _slug_fb(url: str) -> str:
+    """Usuario de una URL de Facebook (primer tramo de la ruta); vacío para rutas genéricas como /people/."""
+    m = re.search(r"facebook\.com/([^/?#]+)", url or "")
+    g = m.group(1).lower() if m else ""
+    return "" if g in ("people", "profile.php", "permalink.php", "groups", "watch", "share") else g
+
+
 def _ficha_queries(nombre: str, ficha: Optional[Dict[str, Any]]) -> Tuple[List[str], List[str]]:
     """Queries de menciones: nombre completo + cargo y/o territorio de la ficha; y `locations` si hay territorio."""
     base = f'"{nombre}"'
@@ -915,6 +876,7 @@ def fetch_persona_posts(nombre: str, pagina_url: str, pagina_nombre: str = "", b
     )
 
     pag_norm = normalize_text_no_accents(pagina_nombre)
+    slugs_oficiales = {_slug_fb(u) for u in urls if _slug_fb(u)}
     publicados = []
     for p in propios[:max_posts]:
         p = {**p, "origen_post": "publicado_por_persona"}
@@ -923,15 +885,15 @@ def fetch_persona_posts(nombre: str, pagina_url: str, pagina_nombre: str = "", b
         publicados.append(p)
 
     urls_propios = {p["url"] for p in publicados if p.get("url")}
-    menciones = []
+    menciones, descartados_propia = [], []
     for p in terceros[:max_posts]:
+        slug_post = _slug_fb(p.get("url") or "")
+        de_la_pagina = (pag_norm and normalize_text_no_accents(p["user"]["name"]) == pag_norm) or (slug_post and slug_post in slugs_oficiales)
         if p.get("url") in urls_propios:
-            continue
-        if pag_norm and normalize_text_no_accents(p["user"]["name"]) == pag_norm:
-            continue   # lo publicó la propia página: ya está en 'publicados'
-        nombres = [nombre] + list((ficha or {}).get("variantes") or [])
-        if (p.get("text") or "").strip() and not any(matches_query_filter(p, n, "persona") for n in nombres):
-            continue   # con texto pero no menciona nombre y apellido
-        menciones.append({**p, "origen_post": "mencion"})
+            descartados_propia.append(p)   # ya está en 'publicados'
+        elif de_la_pagina:
+            publicados.append({**p, "origen_post": "publicado_por_persona"})   # de la página oficial: se acepta sin exigir el nombre
+        else:
+            menciones.append({**p, "origen_post": "mencion"})   # el filtro de coincidencia lo decide el llamador, con su motivo
 
-    return {"origen_pagina": o1, "origen_menciones": o2, "publicados": publicados, "menciones": menciones}
+    return {"origen_pagina": o1, "origen_menciones": o2, "publicados": publicados, "menciones": menciones, "descartados_propia": descartados_propia}

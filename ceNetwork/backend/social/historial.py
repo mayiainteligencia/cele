@@ -20,9 +20,9 @@ def _total(resumen: Dict[str, Any]) -> int:
 
 
 def guardar(resumen: Dict[str, Any], tema: str, modo: str, alcance: Optional[Dict[str, Any]]) -> bool:
-    """Guarda la búsqueda salvo que haya devuelto 0 resultados. Misma búsqueda = mismo id = se sobrescribe."""
+    """Guarda la búsqueda salvo que la fuente no haya devuelto nada. Misma búsqueda = mismo id = se sobrescribe."""
     path = _archivo(str(resumen.get("id") or ""))
-    if path is None or _total(resumen) == 0:
+    if path is None or (_total(resumen) == 0 and not resumen.get("posts_fuente")):   # con posts en la fuente se guarda aunque todo se descarte: sirve para revisar el filtro
         return False
     try:
         DIR.mkdir(parents=True, exist_ok=True)
@@ -34,6 +34,8 @@ def guardar(resumen: Dict[str, Any], tema: str, modo: str, alcance: Optional[Dic
             "alcance": alcance or {},
             "origen": resumen.get("origen") or resumen.get("fuente_datos") or "",
             "n_posts": _total(resumen),
+            "plataformas": resumen.get("plataformas_solicitadas") or ["facebook"],
+            "periodo": resumen.get("periodo"),
             "resumen": resumen,
         }
         path.write_text(json.dumps(entrada, ensure_ascii=False), encoding="utf-8")
@@ -50,7 +52,7 @@ def listar() -> List[Dict[str, Any]]:
     for p in DIR.glob("*.json") if DIR.exists() else []:
         try:
             e = json.loads(p.read_text(encoding="utf-8"))
-            out.append({k: e.get(k) for k in ("id", "tema", "modo", "alcance", "fecha", "origen", "n_posts")})
+            out.append({k: e.get(k) for k in ("id", "tema", "modo", "alcance", "fecha", "origen", "n_posts", "plataformas", "periodo")})
         except Exception:
             continue
     return sorted(out, key=lambda e: e.get("fecha") or "", reverse=True)
@@ -59,6 +61,16 @@ def listar() -> List[Dict[str, Any]]:
 def obtener(id: str) -> Optional[Dict[str, Any]]:
     p = _archivo(id)
     return json.loads(p.read_text(encoding="utf-8")) if p and p.exists() else None
+
+
+def anexar(id: str, clave: str, valor: Any) -> bool:
+    """Guarda un bloque generado (palabras, analisis, radar...) dentro del resumen de la búsqueda."""
+    e = obtener(id)
+    if e is None:
+        return False
+    e["resumen"][clave] = valor
+    _archivo(id).write_text(json.dumps(e, ensure_ascii=False), encoding="utf-8")
+    return True
 
 
 def borrar(id: str) -> bool:

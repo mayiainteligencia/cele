@@ -9,7 +9,8 @@ from social.cache import _get_firestore_client
 
 RESPALDO = Path(__file__).resolve().parents[1] / "config" / "entidades.json"
 TIPOS = ("persona", "tema", "partido")
-CAMPOS_LISTA = ("variantes", "paginas_oficiales", "hashtags", "palabras_descarte")
+CAMPOS_LISTA = ("variantes", "paginas_oficiales", "hashtags", "palabras_descarte", "hashtags_x", "hashtags_tiktok", "hashtags_instagram")
+CAMPOS_USUARIO = ("usuario_x", "usuario_tiktok", "usuario_instagram")
 
 
 def _coleccion() -> str:
@@ -38,12 +39,16 @@ def normalizar(data: Dict[str, Any], id: Optional[str] = None) -> Dict[str, Any]
         "tipo": tipo,
         "nombre": nombre,
         "cargo": str(data.get("cargo") or "").strip(),
+        "apodo": str(data.get("apodo") or "").strip(),
         "partido": str(data.get("partido") or "").strip(),
         # 'nombre' del territorio es un añadido a {estado_id, municipio_id}: hace falta texto para las queries.
         "territorio": {k: (str(terr.get(k)).strip() or None) if terr.get(k) else None for k in ("estado_id", "municipio_id", "nombre")},
         "idioma": str(data.get("idioma") or "es").strip().lower() or "es",
+        "logros_verificables": str(data.get("logros_verificables") or "").strip()[:3000],   # texto libre: única base de ideas de contenido propio
         "monitoreo": bool(data.get("monitoreo")),   # activa la corrida programada de /monitoreo/ejecutar
     }
+    for campo in CAMPOS_USUARIO:   # handle sin @ ni URL
+        ficha[campo] = str(data.get(campo) or "").strip().rstrip("/").split("/")[-1].lstrip("@")
     for campo in CAMPOS_LISTA:
         vals = data.get(campo) or []
         ficha[campo] = [str(v).strip() for v in vals if str(v).strip()] if isinstance(vals, list) else []

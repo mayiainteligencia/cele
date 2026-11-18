@@ -1,0 +1,47 @@
+[
+ {
+  "facebookUrl": "https://www.facebook.com/ejemplo/posts/1",
+  "commentUrl": "https://www.facebook.com/ejemplo/posts/1?comment_id=1",
+  "date": "2026-11-11T12:00:00.000Z",
+  "text": "Gracias por atender la colonia, buen trabajo",
+  "profileName": "Vecina Ejemplo",
+  "profileId": "c1",
+  "likesCount": "4"
+ },
+ {
+  "facebookUrl": "https://www.facebook.com/ejemplo/posts/1",
+  "commentUrl": "https://www.facebook.com/ejemplo/posts/1?comment_id=2",
+  "date": "2026-11-11T13:00:00.000Z",
+  "text": "Puras promesas, nunca cumple y no responde a los vecinos",
+  "profileName": "Vecino Ejemplo",
+  "profileId": "c2",
+  "likesCount": "9"
+ },
+ {
+  "facebookUrl": "https://www.facebook.com/ejemplo/posts/1",
+  "commentUrl": "https://www.facebook.com/ejemplo/posts/1?comment_id=3",
+  "date": "2026-11-12T09:30:00.000Z",
+  "text": "Exigimos seguridad y alumbrado, estamos hartos del abandono",
+  "profileName": "Colonia Ejemplo",
+  "profileId": "c3",
+  "likesCount": "15"
+ },
+ {
+  "facebookUrl": "https://www.facebook.com/ejemplo/posts/1",
+  "commentUrl": "https://www.facebook.com/ejemplo/posts/1?comment_id=4",
+  "date": "2026-11-12T10:10:00.000Z",
+  "text": "Excelente avance con el bacheo, felicidades",
+  "profileName": "Otro Vecino",
+  "profileId": "c4",
+  "likesCount": "2"
+ },
+ {
+  "facebookUrl": "https://www.facebook.com/ejemplo/posts/1",
+  "commentUrl": "https://www.facebook.com/ejemplo/posts/1?comment_id=5",
+  "date": "2026-11-12T11:45:00.000Z",
+  "text": "Es un corrupto, fuera de la alcaldia",
+  "profileName": "Cuenta Ejemplo",
+  "profileId": "c5",
+  "likesCount": "1"
+ }
+]

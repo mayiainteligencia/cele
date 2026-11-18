@@ -5,6 +5,7 @@ import re
 from typing import Any, Dict, List, Tuple
 from urllib.parse import urlparse
 
+from social import llm
 from social.facebook import normalize_text_no_accents, matches_query_filter
 
 # Pesos: el nombre completo solo llega justo al umbral (40); nombre parcial necesita corroboración.
@@ -77,8 +78,7 @@ def puntaje_identidad(post: Dict[str, Any], ficha: Dict[str, Any]) -> Tuple[int,
 
 def verificar_con_gemini(post: Dict[str, Any], ficha: Dict[str, Any]) -> Dict[str, str]:
     """Pregunta a Gemini, con la ficha completa como contexto, si el post trata de ESA persona. Nunca rompe."""
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
-    if not api_key:
+    if not llm.hay_clave():
         return {"es_la_persona": "incierto", "razon": "Sin GEMINI_API_KEY: no se pudo verificar"}
     prompt = (
         "Decide si esta publicación de Facebook trata de la persona descrita en la ficha (hay homónimos). "
@@ -88,16 +88,50 @@ def verificar_con_gemini(post: Dict[str, Any], ficha: Dict[str, Any]) -> Dict[st
         f"Texto: {(post.get('text') or '')[:1200]}"
     )
     try:
-        from google import genai  # type: ignore
-        resp = genai.Client(api_key=api_key).models.generate_content(
-            model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash",
-            contents=prompt, config={"response_mime_type": "application/json", "temperature": 0})
-        out = json.loads(resp.text or "{}")
+        r = llm.generar_json(prompt, tag="identidad")
+        out = r[0] if r else {}
         val = str(out.get("es_la_persona") or "").strip().lower()
         if val in ("si", "sí"):
             val = "si"
         if val in ("si", "no", "incierto"):
             return {"es_la_persona": val, "razon": str(out.get("razon") or "")[:200]}
+    except llm.CuotaAgotada:
+        return {"es_la_persona": "incierto", "razon": llm.mensaje_cuota() + ": por confirmar"}
     except Exception as exc:
         print(f"[identidad] Gemini falló: {exc}")
     return {"es_la_persona": "incierto", "razon": "Gemini no respondió: por confirmar"}
+
+
+LOTE_IDENTIDAD = 15
+
+
+def verificar_lote(posts: List[Dict[str, Any]], ficha: Dict[str, Any]) -> List[Dict[str, str]]:
+    """es_la_persona (si | no | incierto) para varios posts en pocas llamadas, con el contexto completo de la ficha. Nunca rompe."""
+    res = [{"es_la_persona": "incierto", "razon": "Sin GEMINI_API_KEY: no se pudo verificar"} for _ in posts]
+    if not llm.hay_clave():
+        return res
+    contexto = {k: ficha.get(k) for k in ("nombre", "variantes", "apodo", "cargo", "partido", "territorio", "hashtags")}
+    for k in range(0, len(posts), LOTE_IDENTIDAD):
+        idx = list(range(k, min(k + LOTE_IDENTIDAD, len(posts))))
+        items = [{"id": i, "autor": (posts[i].get("user") or {}).get("name") or "Desconocido", "plataforma": posts[i].get("plataforma", "facebook"),
+                  "texto": (posts[i].get("text") or "")[:500]} for i in idx]
+        prompt = ("Decide, para cada publicación, si trata de la persona descrita en la ficha (hay homónimos). Responde SOLO un arreglo JSON: "
+                  '{"id": n, "es_la_persona": "si"|"no"|"incierto", "razon": "máx. 20 palabras"}.\n'
+                  f"Ficha: {json.dumps(contexto, ensure_ascii=False)}\nPublicaciones: {json.dumps(items, ensure_ascii=False)}")
+        try:
+            r = llm.generar_json(prompt, tag="identidad-lote")
+        except llm.CuotaAgotada:
+            for i in idx:
+                res[i] = {"es_la_persona": "incierto", "razon": llm.mensaje_cuota() + ": por confirmar"}
+            continue
+        if r is None or not isinstance(r[0], list):
+            continue
+        for it in r[0]:
+            try:
+                i = int(it.get("id"))
+            except Exception:
+                continue
+            val = str(it.get("es_la_persona") or "").strip().lower().replace("sí", "si")
+            if i in idx and val in ("si", "no", "incierto"):
+                res[i] = {"es_la_persona": val, "razon": str(it.get("razon") or "")[:200]}
+    return res

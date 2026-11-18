@@ -1,0 +1,23 @@
+{
+  "_nota": "Editable. Cada grupo agrupa variantes. Una entrada de 5 letras o más coincide como raíz (corrupt = corrupto, corrupción); de 4 o menos, solo la palabra exacta. Las expresiones con espacios coinciden como frase. Sin acentos ni mayúsculas.",
+  "positivas": {
+    "apoyo": ["apoy", "respald", "acompan", "solidari"],
+    "felicitación": ["felicit", "enhorabuena", "bien hecho", "buen trabajo", "excelente"],
+    "agradecimiento": ["gracias", "agradec", "reconoc"],
+    "confianza": ["confi", "honest", "honrad", "transparent", "cumple", "cumplio"],
+    "logro": ["logro", "avance", "mejora", "resultado", "benefici", "inaugur", "rehabilit"],
+    "cercanía": ["cercan", "atiende", "atendio", "escucha", "presente"],
+    "elogio": ["admir", "orgullo", "ejemplo", "ejemplar", "comprometid", "trabajador"]
+  },
+  "negativas": {
+    "corrupción": ["corrupt", "robo", "robar", "ladron", "transa", "moche", "desvio", "mordida", "impunidad"],
+    "mentira": ["mentir", "mentiros", "mentira", "enganar", "engano", "falso", "falsa", "farsa", "traicion"],
+    "abandono": ["abandon", "descuid", "olvid", "ignor", "no cumple", "no cumplio", "incumpl", "promesa"],
+    "inseguridad": ["inseguridad", "violenc", "asalt", "extorsi", "balacera", "crimen"],
+    "servicios": ["bache", "fuga", "sin agua", "sin luz", "basura", "alumbrado", "apagon"],
+    "rechazo": ["renuncie", "renuncia", "fuera", "verguenza", "pesim", "inutil", "incompetent", "ineficien", "desastre"],
+    "enojo": ["indign", "harto", "hartos", "coraje", "molest", "cansad", "queja", "denunci", "exigimos", "exigir"],
+    "abuso": ["abuso", "prepotent", "autoritar", "amenaz", "acoso", "arbitrari"]
+  },
+  "stopwords": ["de", "la", "el", "en", "y", "a", "los", "las", "un", "una", "que", "es", "por", "con", "para", "se", "su", "al", "lo", "del", "como", "mas", "pero", "sus", "le", "ya", "o", "este", "si", "porque", "esta", "entre", "cuando", "muy", "sin", "sobre", "tambien", "me", "hasta", "hay", "donde", "quien", "desde", "todo", "nos", "durante", "todos", "uno", "les", "ni", "contra", "otros", "ese", "eso", "ante", "ellos", "e", "esto", "mi", "antes", "algunos", "que", "unos", "yo", "otro", "otras", "otra", "el", "tanto", "esa", "estos", "mucho", "quienes", "nada", "muchos", "cual", "poco", "ella", "estar", "estas", "algunas", "algo", "nosotros"]
+}

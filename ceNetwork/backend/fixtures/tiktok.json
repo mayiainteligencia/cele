@@ -1,0 +1,53 @@
+[
+ {
+  "id": "7000000000000000001",
+  "text": "Asi quedo la calle tras la fuga de agua en Tlalpan #tlalpan #cdmx",
+  "createTimeISO": "2026-11-10T18:20:00.000Z",
+  "webVideoUrl": "https://www.tiktok.com/@vecino.ejemplo/video/7000000000000000001",
+  "authorMeta": {
+   "id": "7101",
+   "name": "vecino.ejemplo",
+   "nickName": "Vecino Ejemplo",
+   "verified": false,
+   "fans": 950
+  },
+  "diggCount": 820,
+  "shareCount": 40,
+  "playCount": 15300,
+  "commentCount": 61
+ },
+ {
+  "id": "7000000000000000002",
+  "text": "Recorrido por Ajusco: inseguridad y falta de alumbrado, esto dicen los vecinos de Tlalpan",
+  "createTimeISO": "2026-11-11T20:05:00.000Z",
+  "webVideoUrl": "https://www.tiktok.com/@noticias.ejemplo/video/7000000000000000002",
+  "authorMeta": {
+   "id": "7102",
+   "name": "noticias.ejemplo",
+   "nickName": "Noticias Ejemplo",
+   "verified": true,
+   "fans": 48200
+  },
+  "diggCount": 2100,
+  "shareCount": 160,
+  "playCount": 61000,
+  "commentCount": 143
+ },
+ {
+  "id": "7000000000000000003",
+  "text": "",
+  "createTimeISO": "2026-11-12T10:00:00.000Z",
+  "webVideoUrl": "https://www.tiktok.com/@sinletra.ejemplo/video/7000000000000000003",
+  "authorMeta": {
+   "id": "7103",
+   "name": "sinletra.ejemplo",
+   "nickName": "Sin Letra",
+   "verified": false,
+   "fans": 200
+  },
+  "diggCount": 12,
+  "shareCount": 0,
+  "playCount": 400,
+  "commentCount": 1
+ }
+]

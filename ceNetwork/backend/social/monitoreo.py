@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import HTTPException
 
 from social import facebook as fb
+from social import llm
 from social.cache import _get_firestore_client
 from social.identidad import puntaje_identidad
 from social.pipeline import analyze_post_sentiment, detect_known_source_type, load_fuentes_config, parse_iso_datetime
@@ -115,14 +116,9 @@ def _resumen_grupo(g: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 # ───────── Gemini ─────────
 def _gemini(prompt: str, json_mode: bool) -> Optional[str]:
-    key = os.getenv("GEMINI_API_KEY", "").strip()
-    if not key:
-        return None
     try:
-        from google import genai  # type: ignore
-        cfg = {"temperature": 0, **({"response_mime_type": "application/json"} if json_mode else {})}
-        return genai.Client(api_key=key).models.generate_content(
-            model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash", contents=prompt, config=cfg).text
+        r = llm.generar(prompt, json_mode=json_mode, tag="monitoreo")
+        return r[0] if r else None
     except Exception as exc:
         print(f"[monitoreo] Gemini falló: {exc}")
         return None
@@ -288,3 +284,40 @@ def cambiar_estado(aid: str, estado: str) -> Optional[Dict[str, Any]]:
         ALERTAS.poner(a)
         return a
     return None
+
+
+def alertas_contenido_antiguo(resumen: Dict[str, Any], ficha: Optional[Dict[str, Any]]) -> List[str]:
+    """«Contenido antiguo que reaparece»: un post de más de 90 días con interacción que creció entre dos búsquedas guardadas,
+    o un texto antiguo repetido por varias cuentas. Solo describe; no juzga si es verdadero."""
+    from social import historial
+    ahora = datetime.now(timezone.utc)
+    f = ficha or {"id": "busqueda-" + str(resumen.get("id")), "nombre": (resumen.get("query") or {}).get("tema") or "Búsqueda"}
+    creadas: List[Optional[str]] = []
+    inter = lambda p: int(p.get("likesCount") or 0) + int(p.get("commentsCount") or 0) + int(p.get("sharesCount") or 0)
+    previos: Dict[str, int] = {}
+    for h in historial.listar()[:30]:
+        if h["id"] == resumen.get("id"):
+            continue
+        r = (historial.obtener(h["id"]) or {}).get("resumen") or {}
+        for p in (r.get("posts_recientes") or []) + (r.get("por_confirmar") or []):
+            if p.get("url"):
+                previos[p["url"]] = max(previos.get(p["url"], 0), inter(p))
+        for p in r.get("historial_anterior") or []:
+            if p.get("url"):
+                previos[p["url"]] = max(previos.get(p["url"], 0), int(p.get("interacciones") or 0))
+    for p in resumen.get("historial_anterior") or []:
+        if p["dias_antiguedad"] <= 90 or not p.get("url") or p["url"] not in previos:
+            continue
+        antes, ahora_i = previos[p["url"]], int(p.get("interacciones") or 0)
+        if ahora_i >= antes * 1.5 and ahora_i - antes >= 20:
+            creadas.append(_crear_alerta(f, "contenido_antiguo", ahora, {
+                "gravedad": "media", "resumen": f"Publicación de hace {p['dias_antiguedad']} días con interacción en aumento ({antes} a {ahora_i}).",
+                "afirmacion": p["fragmento"], "tono": None, "explicacion": "Contenido antiguo que reaparece: su interacción creció entre dos búsquedas guardadas.",
+                "datos": {"url": p["url"], "fecha": p["fecha"], "dias_antiguedad": p["dias_antiguedad"], "interacciones": ahora_i, "antes": antes, "plataforma": p["plataforma"]},
+                "linea_tiempo": []}, "pico|" + p["url"]))
+    for g in resumen.get("antiguo_repetido") or []:
+        creadas.append(_crear_alerta(f, "contenido_antiguo", ahora, {
+            "gravedad": "media", "resumen": f"Un texto de más de 90 días aparece repetido por {g['cuentas']} cuentas.",
+            "afirmacion": g["fragmento"], "tono": None, "explicacion": "Contenido antiguo que reaparece: mismo texto en varias cuentas.",
+            "datos": {"url": g.get("url"), "cuentas": g["cuentas"], "plataformas": g.get("plataformas")}, "linea_tiempo": []}, "repetido|" + g["titulo"]))
+    return [a for a in creadas if a]

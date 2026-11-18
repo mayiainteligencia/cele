@@ -1,0 +1,44 @@
+[
+ {
+  "id": "3900000000000000001",
+  "type": "Image",
+  "shortCode": "EJEMPLO1",
+  "caption": "Jornada de limpieza en Villa Coapa, Tlalpan. Gracias a los vecinos que participaron #tlalpan",
+  "url": "https://www.instagram.com/p/EJEMPLO1/",
+  "commentsCount": 18,
+  "likesCount": 340,
+  "timestamp": "2026-11-09T16:00:00.000Z",
+  "ownerFullName": "Colectivo Ejemplo",
+  "ownerUsername": "colectivo_ejemplo",
+  "ownerId": "8101"
+ },
+ {
+  "id": "3900000000000000002",
+  "type": "Video",
+  "shortCode": "EJEMPLO2",
+  "caption": "Seguridad en Tlalpan: lo que piden los vecinos de Ajusco a la alcaldia",
+  "url": "https://www.instagram.com/p/EJEMPLO2/",
+  "commentsCount": 52,
+  "likesCount": 910,
+  "timestamp": "2026-11-11T19:30:00.000Z",
+  "ownerFullName": "Medio Ejemplo",
+  "ownerUsername": "medio_ejemplo",
+  "ownerId": "8102",
+  "videoViewCount": 8800,
+  "videoPlayCount": 15400,
+  "productType": "clips"
+ },
+ {
+  "id": "3900000000000000003",
+  "type": "Image",
+  "shortCode": "EJEMPLO3",
+  "caption": "",
+  "url": "https://www.instagram.com/p/EJEMPLO3/",
+  "commentsCount": 2,
+  "likesCount": 30,
+  "timestamp": "2026-11-12T08:00:00.000Z",
+  "ownerFullName": "Foto Ejemplo",
+  "ownerUsername": "foto_ejemplo",
+  "ownerId": "8103"
+ }
+]
